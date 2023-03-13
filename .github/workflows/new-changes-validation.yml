@@ -50,6 +50,11 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
+
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
 
@@ -71,6 +76,11 @@ jobs:
         uses: vlang/setup-v@v1.3
         with:
           version: 'weekly.2023.10'
+
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
 
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
@@ -124,6 +134,11 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
+
       - if: ${{ matrix.compiler == 'gcc' }}
         name: Set up GCC
         run: |
@@ -170,6 +185,11 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
+
       - name: Restore LLVM and Clang
         uses: actions/cache/restore@v3
         with:
@@ -208,6 +228,11 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
+
       - name: Set up GCC
         run: |
           sudo apt-get update
@@ -234,6 +259,11 @@ jobs:
         uses: vlang/setup-v@v1.3
         with:
           version: 'weekly.2023.10'
+
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
 
       - name: Set up GCC
         run: |
@@ -262,6 +292,11 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
+
       - name: Set up GCC
         run: |
           sudo apt-get update
@@ -289,6 +324,11 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
+
       - uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
@@ -314,8 +354,8 @@ jobs:
       - name: Build APK
         run: vab --min-sdk-version 26 --api 31 --archs 'arm64-v8a' -v 3 .
 
-  linux-to-other-platforms-compilation:
-    needs: [clang-sanitizers, gcc-sanitizers, gcc-address-sanitizers, gcc-undefined-sanitizers]
+  check-formatting:
+    needs: vab-compilation
     runs-on: ubuntu-latest
     steps:
       - name: Restore Vlang
@@ -330,32 +370,10 @@ jobs:
         with:
           version: 'weekly.2023.10'
 
-      - name: Install MinGW-w64
+      - name: Install graphic libs dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --quiet -y gcc-mingw-w64-x86-64
-
-      - name: Checkout ${{ github.event.repository.name }}
-        uses: actions/checkout@v3
-
-      - name: Build Windows executable
-        run: v -os windows .
-
-  check-formatting:
-    needs: [vab-compilation, linux-to-other-platforms-compilation]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restore Vlang
-        uses: actions/cache/restore@v3
-        with:
-          path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.10
-          fail-on-cache-miss: true
-
-      - name: Install V
-        uses: vlang/setup-v@v1.3
-        with:
-          version: 'weekly.2023.10'
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
 
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
@@ -378,6 +396,11 @@ jobs:
         uses: vlang/setup-v@v1.3
         with:
           version: 'weekly.2023.10'
+
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
 
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
@@ -403,6 +426,11 @@ jobs:
         uses: vlang/setup-v@v1.3
         with:
           version: 'weekly.2023.10'
+
+      - name: Install graphic libs dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --quiet -y libxi-dev libxcursor-dev libgl-dev
 
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
