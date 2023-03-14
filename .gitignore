@@ -21,3 +21,6 @@ bin/
 # vweb and database
 *.db
 *.js
+
+assets/
+v_test_app.apk
