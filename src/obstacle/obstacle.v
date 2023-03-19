@@ -1,6 +1,7 @@
 module obstacle
 
 pub struct Position {
+pub:
 	x f32
 	y f32
 }
