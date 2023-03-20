@@ -1,9 +1,9 @@
 module main
 
 import graphics
+import time
 import obstacle
 import world
-import time
 
 fn main() {
 	mut app := graphics.create_app()
@@ -24,27 +24,36 @@ fn update_world(mut app graphics.GraphicalApp) {
 
 		if current_time - start_time >= time_step_milliseconds {
 			start_time = current_time
-			generate_obstacle(mut app)
+			create_obstacle(mut app) or { panic(err) }
 		}
 	}
 }
 
-fn generate_obstacle(mut app graphics.GraphicalApp) {
+fn create_obstacle(mut app graphics.GraphicalApp) ! {
+	new_model := update(app, world.Command.generate_obstacle)!
+	graphics.update_world_model(mut app, new_model)
+}
+
+fn update(app graphics.GraphicalApp, command world.Command) !world.Model {
+	match command {
+		.generate_obstacle {
+			return generate_obstacle(app)!
+		}
+	}
+}
+
+fn generate_obstacle(app graphics.GraphicalApp) !world.Model {
 	screen_size := graphics.get_screen_size(app)
 	obstacle_section_width := graphics.get_obstacle_section_width(app)
 
 	max_count_of_obstacle_blocks := obstacle.calculate_max_count_of_obstacle_blocks(screen_size.width,
-		obstacle_section_width) or {
-		println(err)
-		return
-	}
+		obstacle_section_width)!
 
 	obstacle_blocks_positions := obstacle.calculate_obstacle_blocks_positions(obstacle_section_width,
-		max_count_of_obstacle_blocks) or {
-		println(err)
-		return
-	}
+		max_count_of_obstacle_blocks)!
 
-	graphics.update_model(mut app, world.Model{ obstacle_positions: obstacle_blocks_positions })
-	graphics.trigger_frame_draw(mut app)
+	return world.Model{
+		...graphics.get_world_model(app)
+		obstacle_positions: obstacle_blocks_positions
+	}
 }

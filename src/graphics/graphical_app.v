@@ -98,12 +98,8 @@ pub fn get_screen_size(app GraphicalApp) gg.Size {
 	return app.graphical_context.window_size()
 }
 
-pub fn update_model(mut app GraphicalApp, new_model world.Model) {
+pub fn update_world_model(mut app GraphicalApp, new_model world.Model) {
 	app.world_model = new_model
-}
-
-pub fn trigger_frame_draw(mut app GraphicalApp) {
-	app.graphical_context.refresh_ui()
 }
 
 pub fn is_initialized(app GraphicalApp) bool {
@@ -112,4 +108,8 @@ pub fn is_initialized(app GraphicalApp) bool {
 
 pub fn is_quited(app GraphicalApp) bool {
 	return app.is_quited
+}
+
+pub fn get_world_model(app GraphicalApp) world.Model {
+	return app.world_model
 }
