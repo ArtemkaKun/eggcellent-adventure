@@ -6,3 +6,7 @@ pub struct Model {
 pub:
 	obstacle_positions []obstacle.Position
 }
+
+pub enum Command {
+	generate_obstacle
+}
