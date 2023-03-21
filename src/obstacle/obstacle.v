@@ -21,7 +21,7 @@ const (
 // 	block_width = 100
 //
 // max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width, block_width)
-// println(max_count_of_obstacle_blocks) // 10
+// println(max_count_of_obstacle_blocks) -> 10
 pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int) !int {
 	if screen_width <= 0 {
 		return error('screen_width' + obstacle.must_be_greater_than_zero_error)
@@ -51,7 +51,7 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 // 	blocks_count = 5
 //
 // positions := calculate_obstacle_blocks_positions(block_width, blocks_count)
-// println(positions) // [Position{0, 0}, Position{100, 0}, Position{200, 0}, Position{300, 0}, Position{400, 0}]
+// println(positions) -> [Position[0, 0], Position[100, 0], Position[200, 0], Position[300, 0], Position[400, 0]]
 pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int) ![]world.Position {
 	validate_block_width(block_width)!
 
