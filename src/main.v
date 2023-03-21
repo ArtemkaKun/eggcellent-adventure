@@ -16,12 +16,10 @@ fn main() {
 }
 
 fn update_world(mut app graphics.GraphicalApp) {
+	wait_for_graphic_app_initialization(app)
+
 	mut start_time := time.now()
 	time_step_milliseconds := 1000.0 / 60.0
-
-	for graphics.is_initialized(app) == false {
-		time.sleep(1)
-	}
 
 	for graphics.is_quited(app) == false {
 		current_time := time.now()
@@ -30,6 +28,13 @@ fn update_world(mut app graphics.GraphicalApp) {
 			start_time = current_time
 			create_obstacle(mut app) or { panic(err) }
 		}
+	}
+}
+
+// wait_for_graphic_app_initialization NOTE: Pass app by reference to be able to check if it is initialized (copy will be always false).
+fn wait_for_graphic_app_initialization(app &graphics.GraphicalApp) {
+	for graphics.is_initialized(app) == false {
+		time.sleep(1)
 	}
 }
 
@@ -47,12 +52,8 @@ fn update(app graphics.GraphicalApp, command Command) !world.WorldModel {
 }
 
 fn generate_obstacle(app graphics.GraphicalApp) !world.WorldModel {
-	screen_size := graphics.get_screen_size(app)
 	obstacle_section_width := graphics.get_obstacle_section_width(app)
-
-	max_count_of_obstacle_blocks := obstacle.calculate_max_count_of_obstacle_blocks(screen_size.width,
-		obstacle_section_width)!
-
+	max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(app, obstacle_section_width)!
 	obstacle_blocks_positions := obstacle.calculate_obstacle_blocks_positions(obstacle_section_width,
 		max_count_of_obstacle_blocks)!
 
@@ -60,4 +61,10 @@ fn generate_obstacle(app graphics.GraphicalApp) !world.WorldModel {
 		...graphics.get_world_model(app)
 		obstacle_positions: obstacle_blocks_positions
 	}
+}
+
+fn calculate_max_count_of_obstacle_blocks(app graphics.GraphicalApp, obstacle_section_width int) !int {
+	screen_size := graphics.get_screen_size(app)
+
+	return obstacle.calculate_max_count_of_obstacle_blocks(screen_size.width, obstacle_section_width)!
 }
