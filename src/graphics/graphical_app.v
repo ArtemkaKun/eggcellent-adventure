@@ -5,7 +5,6 @@ module graphics
 import gg
 import gx
 import os
-import obstacle
 import world
 
 // Window sie on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -20,7 +19,7 @@ pub struct GraphicalApp {
 mut:
 	graphical_context &gg.Context
 	obstacle_image    gg.Image
-	world_model       world.Model
+	world_model       world.WorldModel
 	is_initialized    bool
 	is_quited         bool
 }
@@ -75,7 +74,7 @@ fn draw_frame(app &GraphicalApp) {
 	app.graphical_context.end()
 }
 
-fn draw_obstacle(app GraphicalApp, position obstacle.Position) {
+fn draw_obstacle(app GraphicalApp, position world.Position) {
 	app.graphical_context.draw_image(position.x, position.y, get_obstacle_section_width(app),
 		app.obstacle_image.height * 5, app.obstacle_image)
 }
@@ -98,7 +97,7 @@ pub fn get_screen_size(app GraphicalApp) gg.Size {
 	return app.graphical_context.window_size()
 }
 
-pub fn update_world_model(mut app GraphicalApp, new_model world.Model) {
+pub fn update_world_model(mut app GraphicalApp, new_model world.WorldModel) {
 	app.world_model = new_model
 }
 
@@ -110,6 +109,6 @@ pub fn is_quited(app GraphicalApp) bool {
 	return app.is_quited
 }
 
-pub fn get_world_model(app GraphicalApp) world.Model {
+pub fn get_world_model(app GraphicalApp) world.WorldModel {
 	return app.world_model
 }
