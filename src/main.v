@@ -4,6 +4,7 @@ import graphics
 import time
 import obstacle
 import world
+import transform
 
 pub enum Command {
 	generate_obstacle
@@ -57,9 +58,20 @@ fn generate_obstacle(app graphics.GraphicalApp) !world.WorldModel {
 	obstacle_blocks_positions := obstacle.calculate_obstacle_blocks_positions(obstacle_section_width,
 		max_count_of_obstacle_blocks)!
 
+	y_position_above_screen := 0 - graphics.get_obstacle_section_height(app)
+
+	mut obstacle_blocks_positions_above_screen := []transform.Position{cap: obstacle_blocks_positions.len}
+
+	for obstacle_block_position in obstacle_blocks_positions {
+		obstacle_blocks_positions_above_screen << transform.Position{
+			x: obstacle_block_position.x
+			y: y_position_above_screen
+		}
+	}
+
 	return world.WorldModel{
 		...graphics.get_world_model(app)
-		obstacle_positions: obstacle_blocks_positions
+		obstacle_positions: obstacle_blocks_positions_above_screen
 	}
 }
 
