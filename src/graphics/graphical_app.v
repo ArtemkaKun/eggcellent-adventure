@@ -6,6 +6,7 @@ import gg
 import gx
 import os
 import world
+import transform
 
 // Window sie on Android works a bit like changing DPI, since app in the full screen mode all the time.
 // For now I just set it to half of the my phone's screen size (Xiaomi Mi 10T).
@@ -75,7 +76,7 @@ fn draw_frame(app &GraphicalApp) {
 	app.graphical_context.end()
 }
 
-fn draw_obstacle(app GraphicalApp, position world.Position) {
+fn draw_obstacle(app GraphicalApp, position transform.Position) {
 	app.graphical_context.draw_image(position.x, position.y, get_obstacle_section_width(app),
 		app.obstacle_image.height * graphics.obstacle_block_scale, app.obstacle_image)
 }
