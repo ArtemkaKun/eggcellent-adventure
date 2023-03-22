@@ -78,12 +78,16 @@ fn draw_frame(app &GraphicalApp) {
 
 fn draw_obstacle(app GraphicalApp, position transform.Position) {
 	app.graphical_context.draw_image(position.x, position.y, get_obstacle_section_width(app),
-		app.obstacle_image.height * graphics.obstacle_block_scale, app.obstacle_image)
+		get_obstacle_section_height(app), app.obstacle_image)
 }
 
 // get_obstacle_section_width Returns obstacle section width with scale applied.
 pub fn get_obstacle_section_width(app GraphicalApp) int {
 	return app.obstacle_image.width * graphics.obstacle_block_scale
+}
+
+pub fn get_obstacle_section_height(app GraphicalApp) int {
+	return app.obstacle_image.height * graphics.obstacle_block_scale
 }
 
 fn quit(_ &gg.Event, mut app GraphicalApp) {
