@@ -125,3 +125,7 @@ pub fn is_quited(app GraphicalApp) bool {
 pub fn get_world_model(app GraphicalApp) world.WorldModel {
 	return app.world_model
 }
+
+pub fn invoke_frame_draw(mut app GraphicalApp) {
+	app.graphical_context.refresh_ui()
+}
