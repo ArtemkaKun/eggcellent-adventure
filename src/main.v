@@ -6,10 +6,6 @@ import obstacle
 import world
 import transform
 
-pub enum Command {
-	generate_obstacle
-}
-
 fn main() {
 	mut app := graphics.create_app()
 	spawn update_world(mut app)
@@ -18,16 +14,18 @@ fn main() {
 
 fn update_world(mut app graphics.GraphicalApp) {
 	wait_for_graphic_app_initialization(app)
+	create_obstacle(mut app) or { panic(err) }
 
-	mut start_time := time.now()
-	time_step_milliseconds := 1000.0 / 60.0
+	time_step_seconds := 1.0 / 144.0
+	mut game_loop_stopwatch := time.new_stopwatch()
+	game_loop_stopwatch.start()
 
 	for graphics.is_quited(app) == false {
-		current_time := time.now()
+		if game_loop_stopwatch.elapsed().seconds() >= time_step_seconds {
+			move_obstacle(mut app, time_step_seconds) or { panic(err) }
+			graphics.invoke_frame_draw(mut app)
 
-		if current_time - start_time >= time_step_milliseconds {
-			start_time = current_time
-			create_obstacle(mut app) or { panic(err) }
+			game_loop_stopwatch.restart()
 		}
 	}
 }
@@ -40,16 +38,8 @@ fn wait_for_graphic_app_initialization(app &graphics.GraphicalApp) {
 }
 
 fn create_obstacle(mut app graphics.GraphicalApp) ! {
-	new_model := update(app, Command.generate_obstacle)!
+	new_model := generate_obstacle(app)!
 	graphics.update_world_model(mut app, new_model)
-}
-
-fn update(app graphics.GraphicalApp, command Command) !world.WorldModel {
-	match command {
-		.generate_obstacle {
-			return generate_obstacle(app)!
-		}
-	}
 }
 
 fn generate_obstacle(app graphics.GraphicalApp) !world.WorldModel {
@@ -79,4 +69,23 @@ fn calculate_max_count_of_obstacle_blocks(app graphics.GraphicalApp, obstacle_se
 	screen_size := graphics.get_screen_size(app)
 
 	return obstacle.calculate_max_count_of_obstacle_blocks(screen_size.width, obstacle_section_width)!
+}
+
+fn move_obstacle(mut app graphics.GraphicalApp, delta_time f64) ! {
+	new_model := move_obstacle_positions(app, delta_time)!
+	graphics.update_world_model(mut app, new_model)
+}
+
+fn move_obstacle_positions(app graphics.GraphicalApp, delta_time f64) !world.WorldModel {
+	mut new_obstacle_positions := []transform.Position{cap: graphics.get_world_model(app).obstacle_positions.len}
+
+	for obstacle_position in graphics.get_world_model(app).obstacle_positions {
+		new_obstacle_positions << transform.move(transform.Vector{0, 1}, obstacle_position,
+			50, delta_time)!
+	}
+
+	return world.WorldModel{
+		...graphics.get_world_model(app)
+		obstacle_positions: new_obstacle_positions
+	}
 }
