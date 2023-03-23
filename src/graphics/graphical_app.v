@@ -77,7 +77,7 @@ fn draw_frame(app &GraphicalApp) {
 }
 
 fn draw_obstacle(app GraphicalApp, position transform.Position) {
-	app.graphical_context.draw_image(position.x, position.y, get_obstacle_section_width(app),
+	app.graphical_context.draw_image(f32(position.x), f32(position.y), get_obstacle_section_width(app),
 		get_obstacle_section_height(app), app.obstacle_image)
 }
 

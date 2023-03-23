@@ -3,16 +3,16 @@ module transform
 // Position This is a simple game, so we use f32 instead of f64.
 pub struct Position {
 pub:
-	x f32
-	y f32
+	x f64
+	y f64
 }
 
 pub struct Vector {
-	x f32
-	y f32
+	x f64
+	y f64
 }
 
-pub fn move(direction Vector, position Position, speed f32, delta_time f32) !Position {
+pub fn move(direction Vector, position Position, speed f64, delta_time f64) !Position {
 	if speed == 0 {
 		return error('speed must be greater than 0!')
 	}
