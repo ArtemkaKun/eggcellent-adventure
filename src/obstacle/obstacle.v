@@ -79,3 +79,11 @@ fn calculate_positions(block_width int, blocks_count int) []transform.Position {
 
 	return positions
 }
+
+pub fn is_obstacle_block_below_screen(position transform.Position, screen_height int) !bool {
+	if screen_height <= 0 {
+		return error('screen_height' + obstacle.must_be_greater_than_zero_error)
+	}
+
+	return position.y >= screen_height
+}
