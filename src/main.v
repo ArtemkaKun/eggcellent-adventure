@@ -17,16 +17,14 @@ fn update_world(mut app graphics.GraphicalApp) {
 	create_obstacle(mut app) or { panic(err) }
 
 	time_step_seconds := 1.0 / 144.0
-	mut game_loop_stopwatch := time.new_stopwatch()
-	game_loop_stopwatch.start()
+	time_step_nanoseconds := i64(time_step_seconds * 1e9)
 
 	for graphics.is_quited(app) == false {
-		if game_loop_stopwatch.elapsed().seconds() >= time_step_seconds {
-			move_obstacle(mut app, time_step_seconds) or { panic(err) }
-			graphics.invoke_frame_draw(mut app)
+		move_obstacle(mut app, time_step_seconds) or { panic(err) }
+		destroy_obstacle_below_screen(mut app) or { panic(err) }
+		graphics.invoke_frame_draw(mut app)
 
-			game_loop_stopwatch.restart()
-		}
+		time.sleep(time_step_nanoseconds * time.nanosecond)
 	}
 }
 
@@ -88,4 +86,26 @@ fn move_obstacle_positions(app graphics.GraphicalApp, delta_time f64) !world.Wor
 		...graphics.get_world_model(app)
 		obstacle_positions: new_obstacle_positions
 	}
+}
+
+fn destroy_obstacle_below_screen(mut app graphics.GraphicalApp) ! {
+	if graphics.get_world_model(app).obstacle_positions.len == 0 {
+		return
+	}
+
+	mut valid_obstacle_positions := []transform.Position{}
+	screen_size := graphics.get_screen_size(app)
+
+	for obstacle_position in graphics.get_world_model(app).obstacle_positions {
+		if obstacle.is_obstacle_block_below_screen(obstacle_position, screen_size.height)! == false {
+			valid_obstacle_positions << obstacle_position
+		}
+	}
+
+	new_model := world.WorldModel{
+		...graphics.get_world_model(app)
+		obstacle_positions: valid_obstacle_positions
+	}
+
+	graphics.update_world_model(mut app, new_model)
 }
