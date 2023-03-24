@@ -62,7 +62,7 @@ fn load_assets(mut app GraphicalApp) {
 
 		app.obstacle_image = app.graphical_context.create_image_from_byte_array(obstacle_image)
 	} $else {
-		app.obstacle_image = app.graphical_context.create_image(os.resource_abs_path('../assets/obstacle/left/obstacle_section_left.png'))
+		app.obstacle_image = app.graphical_context.create_image(os.resource_abs_path('/assets/obstacle/left/obstacle_section_left.png'))
 	}
 }
 
