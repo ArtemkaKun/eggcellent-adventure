@@ -83,6 +83,8 @@ fn calculate_positions(block_width int, blocks_count int) []transform.Position {
 // is_obstacle_block_below_screen Checks if the obstacle block is below the screen.
 // If the obstacle is on the edge of the screen, this method will return true.
 //
+// ATTENTION!⚠ screen_height must be greater than zero.
+//
 // Example:
 // ```v
 // 	position := transform.Position{y: 15}
