@@ -86,6 +86,7 @@ pub fn get_obstacle_section_width(app GraphicalApp) int {
 	return app.obstacle_image.width * graphics.obstacle_block_scale
 }
 
+// get_obstacle_section_height Returns obstacle section height with scale applied.
 pub fn get_obstacle_section_height(app GraphicalApp) int {
 	return app.obstacle_image.height * graphics.obstacle_block_scale
 }

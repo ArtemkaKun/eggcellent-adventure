@@ -87,7 +87,7 @@ fn calculate_positions(block_width int, blocks_count int) []transform.Position {
 //
 // Example:
 // ```v
-// 	position := transform.Position{y: 15}
+// 	position := transform.Position[y: 15]
 // 	screen_height := 10
 // 	is_obstacle_block_below_screen(position, screen_height) // true
 // ```

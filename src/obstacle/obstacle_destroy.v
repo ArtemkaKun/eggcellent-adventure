@@ -8,24 +8,24 @@ import transform
 //
 // Example:
 // ```v
-//  current_model := world.WorldModel{
+//  current_model := world.WorldModel(
 // 		obstacle_positions: [
-// 			transform.Position{X: 0, Y: 0},
-// 			transform.Position{X: 0, Y: 1},
-// 			transform.Position{X: 0, Y: 2},
-// 			transform.Position{X: 0, Y: 3},
-// 			transform.Position{X: 0, Y: 4},
-// 			transform.Position{X: 0, Y: 5}
+// 			transform.Position(X: 0, Y: 0),
+// 			transform.Position(X: 0, Y: 1),
+// 			transform.Position(X: 0, Y: 2),
+// 			transform.Position(X: 0, Y: 3),
+// 			transform.Position(X: 0, Y: 4),
+// 			transform.Position(X: 0, Y: 5)
 // 		]
-// 	}
+// 	)
 //
-// 	destroy_obstacle_below_screen(current_model, 3) == world.WorldModel{
+// 	destroy_obstacle_below_screen(current_model, 3) == world.WorldModel(
 // 		obstacle_positions: [
-// 			transform.Position{X: 0, Y: 0},
-// 			transform.Position{X: 0, Y: 1},
-// 			transform.Position{X: 0, Y: 2}
+// 			transform.Position(X: 0, Y: 0),
+// 			transform.Position(X: 0, Y: 1),
+// 			transform.Position(X: 0, Y: 2)
 // 		]
-// 	}
+// 	)
 // ```
 pub fn destroy_obstacle_below_screen(current_model world.WorldModel, screen_height int) !world.WorldModel {
 	if current_model.obstacle_positions.len == 0 {

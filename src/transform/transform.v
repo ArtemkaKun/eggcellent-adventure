@@ -17,7 +17,7 @@ pub:
 //
 // Example:
 // ```v
-// move(Vector{ x: 1, y: 0 }, Position{ x: 0, y: 0 }, 1, 1) == Position{ x: 1, y: 0 }
+// move(Vector( x: 1, y: 0 ), Position( x: 0, y: 0 ), 1, 1) == Position( x: 1, y: 0 )
 // ```
 pub fn move(direction Vector, position Position, speed f64, delta_time f64) !Position {
 	if speed == 0 {

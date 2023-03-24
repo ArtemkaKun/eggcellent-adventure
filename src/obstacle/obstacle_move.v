@@ -16,23 +16,23 @@ const (
 // ```v
 // const (
 //	obstacle_moving_speed     = 50.0
-//	obstacle_moving_direction = transform.Vector{0, 1} // Down
+//	obstacle_moving_direction = transform.Vector(0, 1) // Down
 //)
 //
-// current_model := world.WorldModel{
+// current_model := world.WorldModel(
 // 	obstacle_positions: [
-// 		transform.Position{0, 0},
-// 		transform.Position{0, 1},
-// 		transform.Position{0, 2}
+// 		transform.Position(0, 0),
+// 		transform.Position(0, 1),
+// 		transform.Position(0, 2)
 // 	]
-// }
+// )
 //
 // new_model := move_obstacles(current_model, 1.0)
 //
 // assert new_model.obstacle_positions == [
-// 	transform.Position{0, 50},
-// 	transform.Position{0, 51},
-// 	transform.Position{0, 52}
+// 	transform.Position(0, 50),
+// 	transform.Position(0, 51),
+// 	transform.Position(0, 52)
 // ]
 // ```
 pub fn move_obstacles(current_model world.WorldModel, delta_time_seconds f64) !world.WorldModel {
