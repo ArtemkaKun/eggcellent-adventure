@@ -6,6 +6,7 @@ import gg
 import gx
 import os
 import world
+import transform
 
 // Window sie on Android works a bit like changing DPI, since app in the full screen mode all the time.
 // For now I just set it to half of the my phone's screen size (Xiaomi Mi 10T).
@@ -61,7 +62,7 @@ fn load_assets(mut app GraphicalApp) {
 
 		app.obstacle_image = app.graphical_context.create_image_from_byte_array(obstacle_image)
 	} $else {
-		app.obstacle_image = app.graphical_context.create_image(os.resource_abs_path('../assets/obstacle/left/obstacle_section_left.png'))
+		app.obstacle_image = app.graphical_context.create_image(os.resource_abs_path('/assets/obstacle/left/obstacle_section_left.png'))
 	}
 }
 
@@ -75,14 +76,19 @@ fn draw_frame(app &GraphicalApp) {
 	app.graphical_context.end()
 }
 
-fn draw_obstacle(app GraphicalApp, position world.Position) {
-	app.graphical_context.draw_image(position.x, position.y, get_obstacle_section_width(app),
-		app.obstacle_image.height * graphics.obstacle_block_scale, app.obstacle_image)
+fn draw_obstacle(app GraphicalApp, position transform.Position) {
+	app.graphical_context.draw_image(f32(position.x), f32(position.y), get_obstacle_section_width(app),
+		get_obstacle_section_height(app), app.obstacle_image)
 }
 
 // get_obstacle_section_width Returns obstacle section width with scale applied.
 pub fn get_obstacle_section_width(app GraphicalApp) int {
 	return app.obstacle_image.width * graphics.obstacle_block_scale
+}
+
+// get_obstacle_section_height Returns obstacle section height with scale applied.
+pub fn get_obstacle_section_height(app GraphicalApp) int {
+	return app.obstacle_image.height * graphics.obstacle_block_scale
 }
 
 fn quit(_ &gg.Event, mut app GraphicalApp) {
@@ -119,4 +125,9 @@ pub fn is_quited(app GraphicalApp) bool {
 // get_world_model Returns world model structure from the GraphicalApp structure.
 pub fn get_world_model(app GraphicalApp) world.WorldModel {
 	return app.world_model
+}
+
+// invoke_frame_draw Invokes frame draw (only should be used if `ui_mode` is set to `true`).
+pub fn invoke_frame_draw(mut app GraphicalApp) {
+	app.graphical_context.refresh_ui()
 }

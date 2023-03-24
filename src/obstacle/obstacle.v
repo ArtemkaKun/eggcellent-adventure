@@ -2,7 +2,7 @@
 
 module obstacle
 
-import world
+import transform
 
 const (
 	must_be_greater_than_zero_error = ' must be greater than 0!'
@@ -52,7 +52,7 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 //
 // positions := calculate_obstacle_blocks_positions(block_width, blocks_count)
 // println(positions) -> [Position[0, 0], Position[100, 0], Position[200, 0], Position[300, 0], Position[400, 0]]
-pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int) ![]world.Position {
+pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int) ![]transform.Position {
 	validate_block_width(block_width)!
 
 	if blocks_count <= 0 {
@@ -68,14 +68,33 @@ fn validate_block_width(block_width int) ! {
 	}
 }
 
-fn calculate_positions(block_width int, blocks_count int) []world.Position {
-	mut positions := []world.Position{cap: blocks_count}
+fn calculate_positions(block_width int, blocks_count int) []transform.Position {
+	mut positions := []transform.Position{cap: blocks_count}
 
 	for block_index in 0 .. blocks_count {
-		positions << world.Position{
+		positions << transform.Position{
 			x: block_index * block_width
 		}
 	}
 
 	return positions
+}
+
+// is_obstacle_block_below_screen Checks if the obstacle block is below the screen.
+// If the obstacle is on the edge of the screen, this method will return true.
+//
+// ATTENTION!⚠ screen_height must be greater than zero.
+//
+// Example:
+// ```v
+// 	position := transform.Position[y: 15]
+// 	screen_height := 10
+// 	is_obstacle_block_below_screen(position, screen_height) // true
+// ```
+pub fn is_obstacle_block_below_screen(position transform.Position, screen_height int) !bool {
+	if screen_height <= 0 {
+		return error('screen_height' + obstacle.must_be_greater_than_zero_error)
+	}
+
+	return position.y >= screen_height
 }
