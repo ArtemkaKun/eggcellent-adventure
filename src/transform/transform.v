@@ -20,7 +20,7 @@ pub:
 // move(Vector( x: 1, y: 0 ), Position( x: 0, y: 0 ), 1, 1) == Position( x: 1, y: 0 )
 // ```
 pub fn move(direction Vector, position Position, speed f64, delta_time f64) !Position {
-	if speed == 0 {
+	if speed.eq_epsilon(0.0) {
 		return error('speed must be greater than 0!')
 	}
 
@@ -28,7 +28,7 @@ pub fn move(direction Vector, position Position, speed f64, delta_time f64) !Pos
 		return error("Don't use negative speed! Use a negative vector instead.")
 	}
 
-	if delta_time <= 0 {
+	if delta_time.eq_epsilon(0.0) || delta_time < 0 {
 		return error('delta_time must be greater than 0!')
 	}
 

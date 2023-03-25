@@ -46,6 +46,6 @@ fn test_move_returns_expected_position() {
 
 	new_position := transform.move(transform.Vector{0, -1}, old_position, 1, 1)!
 
-	assert new_position.x == 0
-	assert new_position.y == -1
+	assert new_position.x.eq_epsilon(0.0)
+	assert new_position.y.eq_epsilon(-1.0)
 }
