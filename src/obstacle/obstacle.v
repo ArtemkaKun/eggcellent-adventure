@@ -51,7 +51,7 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 // 	blocks_count = 5
 //
 // positions := calculate_obstacle_blocks_positions(block_width, blocks_count)
-// println(positions) -> [Position[0, 0], Position[100, 0], Position[200, 0], Position[300, 0], Position[400, 0]]
+// println(positions) -> [Position{0, 0}, Position{100, 0}, Position{200, 0}, Position{300, 0}, Position{400, 0}]
 pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int) ![]transform.Position {
 	validate_block_width(block_width)!
 
@@ -87,7 +87,7 @@ fn calculate_positions(block_width int, blocks_count int) []transform.Position {
 //
 // Example:
 // ```v
-// 	position := transform.Position[y: 15]
+// 	position := transform.Position{ y: 15 }
 // 	screen_height := 10
 // 	is_obstacle_block_below_screen(position, screen_height) // true
 // ```

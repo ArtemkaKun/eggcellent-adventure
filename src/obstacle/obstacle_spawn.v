@@ -7,16 +7,16 @@ import world
 //
 // Example:
 // ```v
-// current_model := world.WorldModel()
+// current_model := world.WorldModel{}
 //
 // new_model := spawn_obstacle(current_model, 5, 1, 1)
 //
 // assert new_model.obstacle_positions == [
-// 	transform.Position( x: 0, y: -1 ),
-// 	transform.Position( x: 1, y: -1 ),
-// 	transform.Position( x: 2, y: -1 ),
-// 	transform.Position( x: 3, y: -1 ),
-// 	transform.Position( x: 4, y: -1 )
+// 	transform.Position{ x: 0, y: -1 },
+// 	transform.Position{ x: 1, y: -1 },
+// 	transform.Position{ x: 2, y: -1 },
+// 	transform.Position{ x: 3, y: -1 },
+// 	transform.Position{ x: 4, y: -1 }
 // ]
 // ```
 pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int) !world.WorldModel {
