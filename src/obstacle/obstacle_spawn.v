@@ -23,10 +23,12 @@ pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle
 	obstacle_blocks_positions := calculate_new_obstacle_blocks_positions(screen_width,
 		obstacle_section_width)!
 
+	mut new_obstacles := current_model.obstacle_positions.clone()
+	new_obstacles << place_obstacle_above_screen(obstacle_section_height, obstacle_blocks_positions)
+
 	return world.WorldModel{
 		...current_model
-		obstacle_positions: shift_obstacles_to_be_above_screen(obstacle_section_height,
-			obstacle_blocks_positions)
+		obstacle_positions: new_obstacles
 	}
 }
 
@@ -37,7 +39,7 @@ fn calculate_new_obstacle_blocks_positions(screen_width int, obstacle_section_wi
 	return calculate_obstacle_blocks_positions(obstacle_section_width, max_count_of_obstacle_blocks)!
 }
 
-fn shift_obstacles_to_be_above_screen(obstacle_section_height int, obstacle_blocks_positions []transform.Position) []transform.Position {
+fn place_obstacle_above_screen(obstacle_section_height int, obstacle_blocks_positions []transform.Position) []transform.Position {
 	y_position_above_screen := 0 - obstacle_section_height
 
 	mut obstacle_blocks_positions_above_screen := []transform.Position{cap: obstacle_blocks_positions.len}
