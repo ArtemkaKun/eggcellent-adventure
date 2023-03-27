@@ -3,11 +3,6 @@ module obstacle
 import world
 import transform
 
-const (
-	obstacle_moving_speed     = 50.0
-	obstacle_moving_direction = transform.Vector{0, 1} // Down
-)
-
 // move_obstacles Moves all obstacles in the world model.
 // Speed is defined by obstacle_moving_speed constant.
 // Direction is defined by obstacle_moving_direction constant.
@@ -35,7 +30,7 @@ const (
 // 	transform.Position{0, 52}
 // ]
 // ```
-pub fn move_obstacles(current_model world.WorldModel, delta_time_seconds f64) !world.WorldModel {
+pub fn move_obstacles(current_model world.WorldModel, direction transform.Vector, speed f64, delta_time_seconds f64) !world.WorldModel {
 	if current_model.obstacle_positions.len == 0 {
 		return current_model
 	}
@@ -43,8 +38,8 @@ pub fn move_obstacles(current_model world.WorldModel, delta_time_seconds f64) !w
 	mut new_obstacle_positions := []transform.Position{cap: current_model.obstacle_positions.len}
 
 	for obstacle_position in current_model.obstacle_positions {
-		new_obstacle_positions << transform.move(obstacle.obstacle_moving_direction, obstacle_position,
-			obstacle.obstacle_moving_speed, delta_time_seconds)!
+		new_obstacle_positions << transform.move(direction, obstacle_position, speed,
+			delta_time_seconds)!
 	}
 
 	return world.WorldModel{
