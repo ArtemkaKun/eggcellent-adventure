@@ -69,8 +69,10 @@ fn load_assets(mut app GraphicalApp) {
 fn draw_frame(app &GraphicalApp) {
 	app.graphical_context.begin()
 
-	for obstacle_position in app.world_model.obstacle_positions {
-		draw_obstacle(app, obstacle_position)
+	for obstacle in app.world_model.obstacles {
+		for section_position in obstacle {
+			draw_obstacle(app, section_position)
+		}
 	}
 
 	app.graphical_context.end()

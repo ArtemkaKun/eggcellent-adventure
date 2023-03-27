@@ -28,20 +28,20 @@ import transform
 // 	}
 // ```
 pub fn destroy_obstacle_below_screen(current_model world.WorldModel, screen_height int) !world.WorldModel {
-	if current_model.obstacle_positions.len == 0 {
+	if current_model.obstacles.len == 0 {
 		return current_model
 	}
 
-	mut valid_obstacle_positions := []transform.Position{}
+	mut valid_obstacles := [][]transform.Position{}
 
-	for obstacle_position in current_model.obstacle_positions {
-		if is_obstacle_block_below_screen(obstacle_position, screen_height)! == false {
-			valid_obstacle_positions << obstacle_position
+	for obstacle in current_model.obstacles {
+		if is_obstacle_block_below_screen(obstacle[0], screen_height)! == false {
+			valid_obstacles << obstacle
 		}
 	}
 
 	return world.WorldModel{
 		...current_model
-		obstacle_positions: valid_obstacle_positions
+		obstacles: valid_obstacles
 	}
 }

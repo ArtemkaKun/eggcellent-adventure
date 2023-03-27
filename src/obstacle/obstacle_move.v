@@ -31,19 +31,25 @@ import transform
 // ]
 // ```
 pub fn move_obstacles(current_model world.WorldModel, direction transform.Vector, speed f64, delta_time_seconds f64) !world.WorldModel {
-	if current_model.obstacle_positions.len == 0 {
+	if current_model.obstacles.len == 0 {
 		return current_model
 	}
 
-	mut new_obstacle_positions := []transform.Position{cap: current_model.obstacle_positions.len}
+	mut new_obstacles := [][]transform.Position{cap: current_model.obstacles.len}
 
-	for obstacle_position in current_model.obstacle_positions {
-		new_obstacle_positions << transform.move(direction, obstacle_position, speed,
-			delta_time_seconds)!
+	for obstacle in current_model.obstacles {
+		mut new_section_positions := []transform.Position{cap: obstacle.len}
+
+		for section_position in obstacle {
+			new_section_positions << transform.move(direction, section_position, speed,
+				delta_time_seconds)!
+		}
+
+		new_obstacles << new_section_positions
 	}
 
 	return world.WorldModel{
 		...current_model
-		obstacle_positions: new_obstacle_positions
+		obstacles: new_obstacles
 	}
 }

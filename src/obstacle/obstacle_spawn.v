@@ -23,12 +23,12 @@ pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle
 	obstacle_blocks_positions := calculate_new_obstacle_blocks_positions(screen_width,
 		obstacle_section_width)!
 
-	mut new_obstacles := current_model.obstacle_positions.clone()
+	mut new_obstacles := current_model.obstacles.clone()
 	new_obstacles << place_obstacle_above_screen(obstacle_section_height, obstacle_blocks_positions)
 
 	return world.WorldModel{
 		...current_model
-		obstacle_positions: new_obstacles
+		obstacles: new_obstacles
 	}
 }
 
