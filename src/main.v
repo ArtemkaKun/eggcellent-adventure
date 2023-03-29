@@ -17,6 +17,7 @@ const (
 	obstacle_moving_speed        = 50.0
 
 	obstacles_spawn_rate_seconds = 5
+	obstacle_min_blocks_count    = 2
 )
 
 fn main() {
@@ -31,9 +32,8 @@ fn start_world_loop(mut app graphics.GraphicalApp) {
 	screen_size := graphics.get_screen_size(app)
 
 	model_with_first_spawned_obstacle := obstacle.spawn_obstacle(graphics.get_world_model(app),
-		screen_size.width, graphics.get_obstacle_section_width(app), graphics.get_obstacle_section_height(app)) or {
-		panic(err)
-	}
+		screen_size.width, graphics.get_obstacle_section_width(app), graphics.get_obstacle_section_height(app),
+		obstacle_min_blocks_count) or { panic(err) }
 
 	graphics.update_world_model(mut app, model_with_first_spawned_obstacle)
 
@@ -56,7 +56,9 @@ fn start_world_loop(mut app graphics.GraphicalApp) {
 
 		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
 			new_model = obstacle.spawn_obstacle(new_model, screen_size.width, graphics.get_obstacle_section_width(app),
-				graphics.get_obstacle_section_height(app)) or { panic(err) }
+				graphics.get_obstacle_section_height(app), obstacle_min_blocks_count) or {
+				panic(err)
+			}
 
 			obstacle_spawner_stopwatch.restart()
 		}

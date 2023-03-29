@@ -22,11 +22,11 @@ import rand
 // 	transform.Position{ x: 3, y: -1 }
 // ]
 // ```
-pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int) !world.WorldModel { // TODO: Screen width must be at least 3 times bigger than obstacle_section_width
+pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !world.WorldModel { // TODO: Screen width must be at least 3 times bigger than obstacle_section_width
 	screen_width_obstacle := spawn_screen_width_obstacle(screen_width, obstacle_section_width,
 		obstacle_section_height)!
 
-	random_obstacle_width := rand.int_in_range(2, screen_width_obstacle.len)!
+	random_obstacle_width := rand.int_in_range(min_blocks_count, screen_width_obstacle.len)!
 	trimmed_obstacle := screen_width_obstacle[..random_obstacle_width]
 
 	mut new_obstacles := current_model.obstacles.clone()
