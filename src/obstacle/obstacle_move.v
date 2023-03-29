@@ -31,7 +31,7 @@ import transform
 // ]
 // ```
 pub fn move_obstacles(current_model world.WorldModel, direction transform.Vector, speed f64, delta_time_seconds f64) !world.WorldModel {
-	if current_model.obstacles.len == 0 {
+	if should_skip_operation(current_model) {
 		return current_model
 	}
 

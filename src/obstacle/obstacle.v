@@ -115,3 +115,9 @@ pub fn is_obstacle_block_below_screen(position transform.Position, screen_height
 
 	return position.y >= screen_height
 }
+
+// should_skip_operation This method checks if there is a sense to perform operation on obstacles.
+// If there is no obstacles, there is no sense to perform operation on them.
+pub fn should_skip_operation(current_model world.WorldModel) bool {
+	return current_model.obstacles.len == 0
+}

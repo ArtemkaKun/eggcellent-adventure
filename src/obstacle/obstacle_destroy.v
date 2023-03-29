@@ -28,13 +28,14 @@ import transform
 // 	}
 // ```
 pub fn destroy_obstacle_below_screen(current_model world.WorldModel, screen_height int) !world.WorldModel {
-	if current_model.obstacles.len == 0 {
+	if should_skip_operation(current_model) {
 		return current_model
 	}
 
 	mut valid_obstacles := [][]transform.Position{}
 
 	for obstacle in current_model.obstacles {
+		// NOTE: We can only check the first block of the obstacle, because all blocks have the same y position.
 		if is_obstacle_block_below_screen(obstacle[0], screen_height)! == false {
 			valid_obstacles << obstacle
 		}
