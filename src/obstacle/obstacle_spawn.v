@@ -44,11 +44,8 @@ pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle
 		return error(obstacle.min_blocks_count_too_big_error)
 	}
 
-	random_obstacle_width := rand.int_in_range(min_blocks_count, screen_width_obstacle.len)!
-	trimmed_obstacle := screen_width_obstacle[..random_obstacle_width]
-
 	mut new_obstacles := current_model.obstacles.clone()
-	new_obstacles << trimmed_obstacle
+	new_obstacles << randomize_obstacle_blocks_count(min_blocks_count, screen_width_obstacle)!
 
 	return world.WorldModel{
 		...current_model
@@ -83,4 +80,10 @@ fn place_obstacle_above_screen(obstacle_section_height int, obstacle_blocks_posi
 	}
 
 	return obstacle_blocks_positions_above_screen
+}
+
+fn randomize_obstacle_blocks_count(min_blocks_count int, screen_width_obstacle []transform.Position) ![]transform.Position {
+	random_obstacle_width := rand.int_in_range(min_blocks_count, screen_width_obstacle.len)!
+
+	return screen_width_obstacle[..random_obstacle_width]
 }
