@@ -22,9 +22,21 @@ import rand
 // 	transform.Position{ x: 3, y: -1 }
 // ]
 // ```
-pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !world.WorldModel { // TODO: Screen width must be at least 3 times bigger than obstacle_section_width
+pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !world.WorldModel {
+	if screen_width < obstacle_section_width * 3 {
+		return error('screen_width must be at least 3 times bigger than obstacle_section_width!')
+	}
+
+	if min_blocks_count < 2 {
+		return error('min_blocks_count must be at least 2!')
+	}
+
 	screen_width_obstacle := spawn_screen_width_obstacle(screen_width, obstacle_section_width,
 		obstacle_section_height)!
+
+	if min_blocks_count >= screen_width_obstacle.len {
+		return error('min_blocks_count must be less than max possible count of obstacle blocks!')
+	}
 
 	random_obstacle_width := rand.int_in_range(min_blocks_count, screen_width_obstacle.len)!
 	trimmed_obstacle := screen_width_obstacle[..random_obstacle_width]
