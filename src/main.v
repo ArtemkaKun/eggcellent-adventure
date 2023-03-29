@@ -9,33 +9,32 @@ import transform
 import world
 
 const (
-	target_fps                   = 144.0
-	time_step_seconds            = 1.0 / target_fps
+	target_fps                   = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
+	time_step_seconds            = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
 	time_step_nanoseconds        = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
 
 	obstacle_moving_direction    = transform.Vector{0, 1} // Down
-	obstacle_moving_speed        = 50.0
+	obstacle_moving_speed        = 50.0 // NOTE: 50.0 was set only for testing. It may change in the future.
 
-	obstacles_spawn_rate_seconds = 5
-	obstacle_min_blocks_count    = 2
+	obstacles_spawn_rate_seconds = 5 // NOTE: 5 was set only for testing. It may change in the future.
+	obstacle_min_blocks_count    = 2 // NOTE: there is no sense to spawn obstacles only with 1 block, but need to be discussed with Igor.
 )
 
 fn main() {
 	mut app := graphics.create_app()
-	spawn start_world_loop(mut app)
+	spawn start_main_game_loop(mut app)
 	graphics.start_app(mut app)
 }
 
-fn start_world_loop(mut app graphics.GraphicalApp) {
+fn start_main_game_loop(mut app graphics.GraphicalApp) {
 	wait_for_graphic_app_initialization(app)
 
 	screen_size := graphics.get_screen_size(app)
+	screen_width := screen_size.width
+	obstacle_section_width := graphics.get_obstacle_section_width(app)
+	obstacle_section_height := graphics.get_obstacle_section_height(app)
 
-	model_with_first_spawned_obstacle := obstacle.spawn_obstacle(graphics.get_world_model(app),
-		screen_size.width, graphics.get_obstacle_section_width(app), graphics.get_obstacle_section_height(app),
-		obstacle_min_blocks_count) or { panic(err) }
-
-	graphics.update_world_model(mut app, model_with_first_spawned_obstacle)
+	spawn_first_obstacle(mut app, screen_width, obstacle_section_width, obstacle_section_height)
 
 	mut obstacle_spawner_stopwatch := time.new_stopwatch()
 	obstacle_spawner_stopwatch.start()
@@ -55,10 +54,8 @@ fn start_world_loop(mut app graphics.GraphicalApp) {
 		}
 
 		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
-			new_model = obstacle.spawn_obstacle(new_model, screen_size.width, graphics.get_obstacle_section_width(app),
-				graphics.get_obstacle_section_height(app), obstacle_min_blocks_count) or {
-				panic(err)
-			}
+			new_model = spawn_obstacle(new_model, screen_width, obstacle_section_width,
+				obstacle_section_height) or { panic(err) }
 
 			obstacle_spawner_stopwatch.restart()
 		}
@@ -72,10 +69,21 @@ fn start_world_loop(mut app graphics.GraphicalApp) {
 	}
 }
 
-// NOTE: Pass app by reference to be able to check if it is initialized (copy will be always false).
-
+// wait_for_graphic_app_initialization NOTE: Pass app by reference to be able to check if it is initialized (copy will be always false).
 fn wait_for_graphic_app_initialization(app &graphics.GraphicalApp) {
 	for graphics.is_initialized(app) == false {
 		time.sleep(1 * time.nanosecond)
 	}
+}
+
+fn spawn_first_obstacle(mut app graphics.GraphicalApp, screen_width int, obstacle_section_width int, obstacle_section_height int) {
+	model_with_first_spawned_obstacle := spawn_obstacle(graphics.get_world_model(app),
+		screen_width, obstacle_section_width, obstacle_section_height) or { panic(err) }
+
+	graphics.update_world_model(mut app, model_with_first_spawned_obstacle)
+}
+
+fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int) !world.WorldModel {
+	return obstacle.spawn_obstacle(current_model, screen_width, obstacle_section_width,
+		obstacle_section_height, obstacle_min_blocks_count)!
 }
