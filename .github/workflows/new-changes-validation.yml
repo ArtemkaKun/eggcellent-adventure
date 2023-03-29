@@ -15,20 +15,20 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
 
       - if: ${{ steps.check-v-cache.outputs.cache-hit != 'true' }}
         name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - if: ${{ steps.check-v-cache.outputs.cache-hit != 'true' }}
         name: Cache Vlang
         uses: actions/cache/save@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
 
   simple-build:
     needs: cache-V
@@ -42,13 +42,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -69,13 +69,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -126,13 +126,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -177,13 +177,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -220,13 +220,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -252,13 +252,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -284,13 +284,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -316,13 +316,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -362,13 +362,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -389,13 +389,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |
@@ -419,13 +419,13 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: /home/runner/work/eggcellent-adventure/eggcellent-adventure/vlang/
-          key: vlang-0.3.3-weekly.2023.11
+          key: vlang-0.3.3-weekly.2023.13
           fail-on-cache-miss: true
 
       - name: Install V
         uses: vlang/setup-v@v1.3
         with:
-          version: 'weekly.2023.11'
+          version: 'weekly.2023.13'
 
       - name: Install graphic libs dependencies
         run: |

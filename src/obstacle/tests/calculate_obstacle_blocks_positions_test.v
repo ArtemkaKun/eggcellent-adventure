@@ -5,7 +5,7 @@ import transform
 
 fn test_block_width_0_returns_an_error() {
 	obstacle.calculate_obstacle_blocks_positions(0, 0) or {
-		assert err.msg() == 'block_width must be greater than 0!'
+		assert err.msg() == obstacle.block_width_smaller_than_zero_error
 		return
 	}
 
@@ -14,7 +14,7 @@ fn test_block_width_0_returns_an_error() {
 
 fn test_block_width_minus_one_returns_an_error() {
 	obstacle.calculate_obstacle_blocks_positions(-1, 0) or {
-		assert err.msg() == 'block_width must be greater than 0!'
+		assert err.msg() == obstacle.block_width_smaller_than_zero_error
 		return
 	}
 
@@ -23,7 +23,7 @@ fn test_block_width_minus_one_returns_an_error() {
 
 fn test_blocks_count_0_returns_an_error() {
 	obstacle.calculate_obstacle_blocks_positions(1, 0) or {
-		assert err.msg() == 'blocks_count must be greater than 0!'
+		assert err.msg() == obstacle.blocks_count_smaller_than_zero_error
 		return
 	}
 
@@ -32,7 +32,7 @@ fn test_blocks_count_0_returns_an_error() {
 
 fn test_blocks_count_minus_one_returns_an_error() {
 	obstacle.calculate_obstacle_blocks_positions(1, -1) or {
-		assert err.msg() == 'blocks_count must be greater than 0!'
+		assert err.msg() == obstacle.blocks_count_smaller_than_zero_error
 		return
 	}
 

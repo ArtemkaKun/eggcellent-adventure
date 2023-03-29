@@ -8,12 +8,12 @@ import os
 import world
 import transform
 
-// Window sie on Android works a bit like changing DPI, since app in the full screen mode all the time.
+// Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
 // For now I just set it to half of the my phone's screen size (Xiaomi Mi 10T).
 const (
 	window_width_pixels  = 540
 	window_height_pixels = 1200
-	obstacle_block_scale = 5
+	obstacle_block_scale = 5 // NOTE: scale set to 5 for now, since it's the only one that looks good. It should be measured in the future to make sure all elements look harmonious.
 )
 
 // Store as low as possible data here, ideally only things that are needed for rendering (like images).
@@ -69,8 +69,10 @@ fn load_assets(mut app GraphicalApp) {
 fn draw_frame(app &GraphicalApp) {
 	app.graphical_context.begin()
 
-	for obstacle_position in app.world_model.obstacle_positions {
-		draw_obstacle(app, obstacle_position)
+	for obstacle in app.world_model.obstacles {
+		for section_position in obstacle {
+			draw_obstacle(app, section_position)
+		}
 	}
 
 	app.graphical_context.end()

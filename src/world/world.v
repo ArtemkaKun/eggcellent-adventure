@@ -7,5 +7,5 @@ import transform
 // WorldModel This is a structure that holds the current state of the world.
 pub struct WorldModel {
 pub:
-	obstacle_positions []transform.Position
+	obstacles [][]transform.Position
 }

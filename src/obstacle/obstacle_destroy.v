@@ -8,40 +8,41 @@ import transform
 //
 // Example:
 // ```v
-//  current_model := world.WorldModel(
+//  current_model := world.WorldModel{
 // 		obstacle_positions: [
-// 			transform.Position(X: 0, Y: 0),
-// 			transform.Position(X: 0, Y: 1),
-// 			transform.Position(X: 0, Y: 2),
-// 			transform.Position(X: 0, Y: 3),
-// 			transform.Position(X: 0, Y: 4),
-// 			transform.Position(X: 0, Y: 5)
+// 			transform.Position{ x: 0, y: 0 },
+// 			transform.Position{ x: 0, y: 1 },
+// 			transform.Position{ x: 0, y: 2 },
+// 			transform.Position{ x: 0, y: 3 },
+// 			transform.Position{ x: 0, y: 4 },
+// 			transform.Position{ x: 0, y: 5 }
 // 		]
-// 	)
+// 	}
 //
-// 	destroy_obstacle_below_screen(current_model, 3) == world.WorldModel(
+// 	destroy_obstacle_below_screen(current_model, 3) == world.WorldModel{
 // 		obstacle_positions: [
-// 			transform.Position(X: 0, Y: 0),
-// 			transform.Position(X: 0, Y: 1),
-// 			transform.Position(X: 0, Y: 2)
+// 			transform.Position{ x: 0, y: 0 },
+// 			transform.Position{ x: 0, y: 1 },
+// 			transform.Position{ x: 0, y: 2 }
 // 		]
-// 	)
+// 	}
 // ```
 pub fn destroy_obstacle_below_screen(current_model world.WorldModel, screen_height int) !world.WorldModel {
-	if current_model.obstacle_positions.len == 0 {
+	if should_skip_operation(current_model) {
 		return current_model
 	}
 
-	mut valid_obstacle_positions := []transform.Position{}
+	mut valid_obstacles := [][]transform.Position{}
 
-	for obstacle_position in current_model.obstacle_positions {
-		if is_obstacle_block_below_screen(obstacle_position, screen_height)! == false {
-			valid_obstacle_positions << obstacle_position
+	for obstacle in current_model.obstacles {
+		// NOTE: We can only check the first block of the obstacle, because all blocks have the same y position.
+		if is_obstacle_block_below_screen(obstacle[0], screen_height)! == false {
+			valid_obstacles << obstacle
 		}
 	}
 
 	return world.WorldModel{
 		...current_model
-		obstacle_positions: valid_obstacle_positions
+		obstacles: valid_obstacles
 	}
 }
