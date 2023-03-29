@@ -4,7 +4,7 @@ import obstacle
 
 fn test_screen_width_0_returns_an_error() {
 	obstacle.calculate_max_count_of_obstacle_blocks(0, 0) or {
-		assert err.msg() == obstacle.screen_width_must_be_greater_than_zero_error
+		assert err.msg() == obstacle.screen_width_smaller_than_zero_error
 		return
 	}
 
@@ -13,7 +13,7 @@ fn test_screen_width_0_returns_an_error() {
 
 fn test_screen_width_minus_one_returns_an_error() {
 	obstacle.calculate_max_count_of_obstacle_blocks(-1, 0) or {
-		assert err.msg() == obstacle.screen_width_must_be_greater_than_zero_error
+		assert err.msg() == obstacle.screen_width_smaller_than_zero_error
 		return
 	}
 
@@ -22,7 +22,7 @@ fn test_screen_width_minus_one_returns_an_error() {
 
 fn test_block_width_0_returns_an_error() {
 	obstacle.calculate_max_count_of_obstacle_blocks(1, 0) or {
-		assert err.msg() == obstacle.block_width_must_be_greater_than_zero_error
+		assert err.msg() == obstacle.block_width_smaller_than_zero_error
 		return
 	}
 
@@ -31,7 +31,7 @@ fn test_block_width_0_returns_an_error() {
 
 fn test_block_width_minus_one_returns_an_error() {
 	obstacle.calculate_max_count_of_obstacle_blocks(1, -1) or {
-		assert err.msg() == obstacle.block_width_must_be_greater_than_zero_error
+		assert err.msg() == obstacle.block_width_smaller_than_zero_error
 		return
 	}
 
@@ -40,7 +40,7 @@ fn test_block_width_minus_one_returns_an_error() {
 
 fn test_screen_width_smaller_than_block_width_returns_an_error() {
 	obstacle.calculate_max_count_of_obstacle_blocks(1, 2) or {
-		assert err.msg() == obstacle.screen_width_must_be_greater_or_equal_than_block_width_error
+		assert err.msg() == obstacle.screen_width_smaller_than_block_width_error
 		return
 	}
 
