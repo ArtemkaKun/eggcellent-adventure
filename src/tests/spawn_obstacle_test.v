@@ -55,7 +55,7 @@ fn test_spawn_obstacle_returns_error_when_screen_width_not_3_time_bigger_than_ob
 	empty_model := world.WorldModel{}
 
 	obstacle.spawn_obstacle(empty_model, 2, 1, 1, 2) or {
-		assert err.msg() == 'screen_width must be at least 3 times bigger than obstacle_section_width!'
+		assert err.msg() == obstacle.screen_width_too_small_error
 		return
 	}
 
@@ -66,7 +66,7 @@ fn test_spawn_obstacle_returns_error_when_min_blocks_count_is_lower_then_2() {
 	empty_model := world.WorldModel{}
 
 	obstacle.spawn_obstacle(empty_model, 3, 1, 1, 1) or {
-		assert err.msg() == 'min_blocks_count must be at least 2!'
+		assert err.msg() == obstacle.min_blocks_count_too_small_error
 		return
 	}
 
@@ -77,7 +77,7 @@ fn test_spawn_obstacle_returns_error_when_min_blocks_count_is_the_same_as_max_bl
 	empty_model := world.WorldModel{}
 
 	obstacle.spawn_obstacle(empty_model, 3, 1, 1, 3) or {
-		assert err.msg() == 'min_blocks_count must be less than max possible count of obstacle blocks!'
+		assert err.msg() == obstacle.min_blocks_count_too_big_error
 		return
 	}
 
@@ -88,7 +88,7 @@ fn test_spawn_obstacle_returns_error_when_min_blocks_count_is_bigger_than_max_bl
 	empty_model := world.WorldModel{}
 
 	obstacle.spawn_obstacle(empty_model, 3, 1, 1, 4) or {
-		assert err.msg() == 'min_blocks_count must be less than max possible count of obstacle blocks!'
+		assert err.msg() == obstacle.min_blocks_count_too_big_error
 		return
 	}
 
