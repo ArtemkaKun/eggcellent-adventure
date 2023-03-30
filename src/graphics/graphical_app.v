@@ -11,19 +11,27 @@ import transform
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
 // For now I just set it to half of the my phone's screen size (Xiaomi Mi 10T).
 const (
-	window_width_pixels  = 540
-	window_height_pixels = 1200
-	obstacle_block_scale = 5 // NOTE: scale set to 5 for now, since it's the only one that looks good. It should be measured in the future to make sure all elements look harmonious.
+	window_width_pixels                              = 540
+	window_height_pixels                             = 1200
+	obstacle_block_scale                             = 5 // NOTE: scale set to 5 for now, since it's the only one that looks good. It should be measured in the future to make sure all elements look harmonious.
+
+	obstacle_section_right_image_path                = '/obstacle_section_right.png'
+	obstacle_ending_simple_right_image_path          = '/obstacle_ending_simple_right.png'
+	obstacle_ending_closed_bud_up_right_image_path   = '/obstacle_ending_closed_bud_up_right.png'
+	obstacle_ending_closed_bud_down_right_image_path = '/obstacle_ending_closed_bud_down_right.png'
+	obstacle_ending_bud_right_image_path             = '/obstacle_ending_bud_right.png'
+	obstacle_ending_bud_eye_right_image_path         = '/obstacle_ending_bud_eye_right.png'
 )
 
 // Store as low as possible data here, ideally only things that are needed for rendering (like images).
 pub struct GraphicalApp {
 mut:
-	graphical_context &gg.Context
-	obstacle_image    gg.Image
-	world_model       world.WorldModel
-	is_initialized    bool
-	is_quited         bool
+	graphical_context             &gg.Context
+	obstacle_section_right_image  gg.Image
+	obstacle_endings_right_images []gg.Image
+	world_model                   world.WorldModel
+	is_initialized                bool
+	is_quited                     bool
 }
 
 // create_app Creates and sets up graphical app.
@@ -56,13 +64,44 @@ fn initialize(mut app GraphicalApp) {
 fn load_assets(mut app GraphicalApp) {
 	// The game will only be used on Android, but be able to run it on PC will speed up development.
 	$if android {
-		obstacle_image := os.read_apk_asset('obstacle/left/obstacle_section_left.png') or {
-			panic(err)
-		}
-
-		app.obstacle_image = app.graphical_context.create_image_from_byte_array(obstacle_image)
+		root_right_obstacle_path := 'obstacle/right'
+		load_images(mut app, root_right_obstacle_path, load_android_image_from_path)
 	} $else {
-		app.obstacle_image = app.graphical_context.create_image(os.resource_abs_path('/assets/obstacle/left/obstacle_section_left.png'))
+		root_right_obstacle_path := '/assets/obstacle/right'
+		load_images(mut app, root_right_obstacle_path, load_pc_image_from_path)
+	}
+}
+
+fn load_images(mut app GraphicalApp, root_path string, load_image_function fn (mut GraphicalApp, string) gg.Image) {
+	app.obstacle_section_right_image = load_image_function(mut app, root_path +
+		graphics.obstacle_section_right_image_path)
+
+	app.obstacle_endings_right_images = [
+		load_image_function(mut app, root_path + graphics.obstacle_ending_simple_right_image_path),
+		load_image_function(mut app, root_path +
+			graphics.obstacle_ending_closed_bud_up_right_image_path),
+		load_image_function(mut app, root_path +
+			graphics.obstacle_ending_closed_bud_down_right_image_path),
+		load_image_function(mut app, root_path + graphics.obstacle_ending_bud_right_image_path),
+		load_image_function(mut app, root_path + graphics.obstacle_ending_bud_eye_right_image_path),
+	]
+}
+
+fn load_android_image_from_path(mut app GraphicalApp, path string) gg.Image {
+	$if android {
+		image := os.read_apk_asset(path) or { panic(err) }
+
+		return app.graphical_context.create_image_from_byte_array(image)
+	} $else {
+		return gg.Image{}
+	}
+}
+
+fn load_pc_image_from_path(mut app GraphicalApp, path string) gg.Image {
+	$if !android {
+		return app.graphical_context.create_image(os.resource_abs_path(path))
+	} $else {
+		return gg.Image{}
 	}
 }
 
@@ -80,17 +119,17 @@ fn draw_frame(app &GraphicalApp) {
 
 fn draw_obstacle(app GraphicalApp, position transform.Position) {
 	app.graphical_context.draw_image(f32(position.x), f32(position.y), get_obstacle_section_width(app),
-		get_obstacle_section_height(app), app.obstacle_image)
+		get_obstacle_section_height(app), app.obstacle_section_right_image)
 }
 
 // get_obstacle_section_width Returns obstacle section width with scale applied.
 pub fn get_obstacle_section_width(app GraphicalApp) int {
-	return app.obstacle_image.width * graphics.obstacle_block_scale
+	return app.obstacle_section_right_image.width * graphics.obstacle_block_scale
 }
 
 // get_obstacle_section_height Returns obstacle section height with scale applied.
 pub fn get_obstacle_section_height(app GraphicalApp) int {
-	return app.obstacle_image.height * graphics.obstacle_block_scale
+	return app.obstacle_section_right_image.height * graphics.obstacle_block_scale
 }
 
 fn quit(_ &gg.Event, mut app GraphicalApp) {
