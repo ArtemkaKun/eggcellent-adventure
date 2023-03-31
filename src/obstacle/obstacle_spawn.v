@@ -1,7 +1,6 @@
 module obstacle
 
 import transform
-import world
 import rand
 
 pub const (
@@ -10,25 +9,7 @@ pub const (
 	min_blocks_count_too_big_error   = 'min_blocks_count must be less than max possible count of obstacle blocks!'
 )
 
-// spawn_obstacle Spawns a new random width obstacle above the screen.
-//
-// ATTENTION!⚠ Produced obstacle will have minimum 2 blocks and maximum max_count_of_obstacle_blocks - 1 blocks.
-//
-// Example:
-// ```v
-// current_model := world.WorldModel{}
-//
-// new_model := spawn_obstacle(current_model, 5, 1, 1)
-//
-// // Possible output (result is random):
-// assert new_model.obstacle_positions == [
-// 	transform.Position{ x: 0, y: -1 },
-// 	transform.Position{ x: 1, y: -1 },
-// 	transform.Position{ x: 2, y: -1 },
-// 	transform.Position{ x: 3, y: -1 }
-// ]
-// ```
-pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !world.WorldModel {
+pub fn spawn_random_width_obstacle(screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) ![]transform.Position {
 	if screen_width < obstacle_section_width * 3 {
 		return error(obstacle.screen_width_too_small_error)
 	}
@@ -44,13 +25,7 @@ pub fn spawn_obstacle(current_model world.WorldModel, screen_width int, obstacle
 		return error(obstacle.min_blocks_count_too_big_error)
 	}
 
-	mut new_obstacles := current_model.obstacles.clone()
-	new_obstacles << randomize_obstacle_blocks_count(min_blocks_count, screen_width_obstacle)!
-
-	return world.WorldModel{
-		...current_model
-		obstacles: new_obstacles
-	}
+	return randomize_obstacle_blocks_count(min_blocks_count, screen_width_obstacle)!
 }
 
 fn spawn_screen_width_obstacle(screen_width int, obstacle_section_width int, obstacle_section_height int) ![]transform.Position {

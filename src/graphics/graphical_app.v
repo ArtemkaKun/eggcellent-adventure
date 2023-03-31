@@ -6,7 +6,7 @@ import gg
 import gx
 import os
 import world
-import transform
+import obstacle
 
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
 // For now I just set it to half of the my phone's screen size (Xiaomi Mi 10T).
@@ -109,17 +109,25 @@ fn draw_frame(app &GraphicalApp) {
 	app.graphical_context.begin()
 
 	for obstacle in app.world_model.obstacles {
-		for section_position in obstacle {
-			draw_obstacle(app, section_position)
+		for section in obstacle {
+			draw_obstacle_section(app, section)
 		}
 	}
 
 	app.graphical_context.end()
 }
 
-fn draw_obstacle(app GraphicalApp, position transform.Position) {
-	app.graphical_context.draw_image(f32(position.x), f32(position.y), get_obstacle_section_width(app),
-		get_obstacle_section_height(app), app.obstacle_section_right_image)
+fn draw_obstacle_section(app GraphicalApp, obstacle_section obstacle.ObstacleSection) {
+	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
+		img_rect: gg.Rect{
+			x: f32(obstacle_section.position.x)
+			y: f32(obstacle_section.position.y)
+			width: get_obstacle_section_width(app)
+			height: get_obstacle_section_height(app)
+		}
+		flip_x: obstacle_section.orientation == obstacle.Orientation.left
+		img_id: obstacle_section.image_id
+	})
 }
 
 // get_obstacle_section_width Returns obstacle section width with scale applied.
@@ -171,4 +179,8 @@ pub fn get_world_model(app GraphicalApp) world.WorldModel {
 // invoke_frame_draw Invokes frame draw (only should be used if `ui_mode` is set to `true`).
 pub fn invoke_frame_draw(mut app GraphicalApp) {
 	app.graphical_context.refresh_ui()
+}
+
+pub fn get_obstacle_section_right_image_id(app GraphicalApp) int {
+	return app.obstacle_section_right_image.id
 }
