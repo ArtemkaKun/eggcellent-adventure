@@ -4,6 +4,7 @@ module world
 
 import obstacle
 import transform
+import rand
 
 // WorldModel This is a structure that holds the current state of the world.
 pub struct WorldModel {
@@ -29,7 +30,7 @@ pub:
 // 	transform.Position{ x: 3, y: -1 }
 // ]
 // ```
-pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !WorldModel {
+pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, obstacle_endings_image_ids []int, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !WorldModel {
 	mut new_obstacles := current_model.obstacles.clone()
 
 	random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
@@ -37,11 +38,17 @@ pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, s
 
 	mut new_obstacle := []obstacle.ObstacleSection{}
 
-	for section_position in random_width_obstacle {
+	for position_index, section_position in random_width_obstacle {
+		mut image_id := obstacle_section_image_id
+
+		if position_index == random_width_obstacle.len - 1 {
+			image_id = rand.element[int](obstacle_endings_image_ids)!
+		}
+
 		new_obstacle << obstacle.ObstacleSection{
 			position: section_position
 			orientation: obstacle.Orientation.left
-			image_id: obstacle_section_image_id
+			image_id: image_id
 		}
 	}
 
