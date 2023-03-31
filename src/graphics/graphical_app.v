@@ -184,3 +184,7 @@ pub fn invoke_frame_draw(mut app GraphicalApp) {
 pub fn get_obstacle_section_right_image_id(app GraphicalApp) int {
 	return app.obstacle_section_right_image.id
 }
+
+pub fn get_obstacle_endings_right_image_ids(app GraphicalApp) []int {
+	return app.obstacle_endings_right_images.map(it.id)
+}
