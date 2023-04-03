@@ -6,7 +6,7 @@ import obstacle
 
 fn test_spawn_obstacle_works_with_empty_model() {
 	empty_model := world.WorldModel{}
-	new_model := world.spawn_obstacle(empty_model, 0, 3, 1, 1, 2)!
+	new_model := world.spawn_obstacle(empty_model, 0, [0], 3, 1, 1, 2)!
 
 	assert new_model.obstacles.len == 1
 	assert new_model.obstacles[0].len == 2
@@ -28,7 +28,7 @@ fn test_spawn_obstacle_works_with_non_empty_model() {
 		]
 	}
 
-	new_model := world.spawn_obstacle(non_empty_model, 0, 3, 1, 1, 2)!
+	new_model := world.spawn_obstacle(non_empty_model, 0, [0], 3, 1, 1, 2)!
 
 	assert new_model.obstacles.len == 2
 	assert new_model.obstacles[0].len == 1
@@ -45,7 +45,7 @@ fn test_spawn_obstacle_blocks_count_in_expected_range() {
 	empty_model := world.WorldModel{}
 
 	for _ in 0 .. 1000 {
-		new_model := world.spawn_obstacle(empty_model, 0, 5, 1, 1, 2)!
+		new_model := world.spawn_obstacle(empty_model, 0, [0], 5, 1, 1, 2)!
 
 		assert new_model.obstacles[0].len >= min_expected_blocks
 		assert new_model.obstacles[0].len <= max_expected_blocks

@@ -30,8 +30,8 @@ fn start_main_game_loop(mut app graphics.GraphicalApp) {
 
 	screen_size := graphics.get_screen_size(app)
 	screen_width := screen_size.width
-	obstacle_section_width := graphics.get_obstacle_section_width(app)
-	obstacle_section_height := graphics.get_obstacle_section_height(app)
+	obstacle_section_width := graphics.get_obstacle_section_width(mut app)
+	obstacle_section_height := graphics.get_obstacle_section_height(mut app)
 	obstacle_section_image_id := graphics.get_obstacle_section_right_image_id(app)
 	obstacle_endings_image_ids := graphics.get_obstacle_endings_right_image_ids(app)
 

@@ -105,25 +105,25 @@ fn load_pc_image_from_path(mut app GraphicalApp, path string) gg.Image {
 	}
 }
 
-fn draw_frame(app &GraphicalApp) {
+fn draw_frame(mut app GraphicalApp) {
 	app.graphical_context.begin()
 
 	for obstacle in app.world_model.obstacles {
 		for section in obstacle {
-			draw_obstacle_section(app, section)
+			draw_obstacle_section(mut app, section)
 		}
 	}
 
 	app.graphical_context.end()
 }
 
-fn draw_obstacle_section(app GraphicalApp, obstacle_section obstacle.ObstacleSection) {
+fn draw_obstacle_section(mut app GraphicalApp, obstacle_section obstacle.ObstacleSection) {
 	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
 		img_rect: gg.Rect{
 			x: f32(obstacle_section.position.x)
 			y: f32(obstacle_section.position.y)
-			width: get_obstacle_section_width(app)
-			height: get_obstacle_section_height(app)
+			width: get_image_width_by_id(mut app, obstacle_section.image_id)
+			height: get_image_height_by_id(mut app, obstacle_section.image_id)
 		}
 		flip_x: obstacle_section.orientation == obstacle.Orientation.left
 		img_id: obstacle_section.image_id
@@ -131,13 +131,21 @@ fn draw_obstacle_section(app GraphicalApp, obstacle_section obstacle.ObstacleSec
 }
 
 // get_obstacle_section_width Returns obstacle section width with scale applied.
-pub fn get_obstacle_section_width(app GraphicalApp) int {
-	return app.obstacle_section_right_image.width * graphics.obstacle_block_scale
+pub fn get_obstacle_section_width(mut app GraphicalApp) int {
+	return get_image_width_by_id(mut app, app.obstacle_section_right_image.id)
 }
 
 // get_obstacle_section_height Returns obstacle section height with scale applied.
-pub fn get_obstacle_section_height(app GraphicalApp) int {
-	return app.obstacle_section_right_image.height * graphics.obstacle_block_scale
+pub fn get_obstacle_section_height(mut app GraphicalApp) int {
+	return get_image_height_by_id(mut app, app.obstacle_section_right_image.id)
+}
+
+fn get_image_width_by_id(mut app GraphicalApp, image_id int) int {
+	return app.graphical_context.get_cached_image_by_idx(image_id).width * graphics.obstacle_block_scale
+}
+
+fn get_image_height_by_id(mut app GraphicalApp, image_id int) int {
+	return app.graphical_context.get_cached_image_by_idx(image_id).height * graphics.obstacle_block_scale
 }
 
 fn quit(_ &gg.Event, mut app GraphicalApp) {
