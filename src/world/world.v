@@ -12,6 +12,11 @@ pub:
 	obstacles [][]obstacle.ObstacleSection
 }
 
+pub struct ObstacleEnding {
+	image_id int
+	y_offset int
+}
+
 // spawn_obstacle Spawns a new random width obstacle above the screen.
 //
 // ATTENTION!⚠ Produced obstacle will have minimum 2 blocks and maximum max_count_of_obstacle_blocks - 1 blocks.
@@ -30,7 +35,7 @@ pub:
 // 	transform.Position{ x: 3, y: -1 }
 // ]
 // ```
-pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, obstacle_endings_image_ids []int, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !WorldModel {
+pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, obstacle_endings []ObstacleEnding, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !WorldModel {
 	mut new_obstacles := current_model.obstacles.clone()
 
 	random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
@@ -40,13 +45,19 @@ pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, o
 
 	for position_index, section_position in random_width_obstacle {
 		mut image_id := obstacle_section_image_id
+		mut y_offset := 0
 
 		if position_index == random_width_obstacle.len - 1 {
-			image_id = rand.element[int](obstacle_endings_image_ids)!
+			random_obstacle_ending := rand.element[ObstacleEnding](obstacle_endings)!
+			image_id = random_obstacle_ending.image_id
+			y_offset = random_obstacle_ending.y_offset
 		}
 
 		new_obstacle << obstacle.ObstacleSection{
-			position: section_position
+			position: transform.Position{
+				x: section_position.x
+				y: section_position.y + y_offset
+			}
 			orientation: obstacle.Orientation.left
 			image_id: image_id
 		}

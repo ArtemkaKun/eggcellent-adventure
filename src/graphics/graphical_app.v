@@ -21,6 +21,14 @@ const (
 	obstacle_ending_closed_bud_down_right_image_path = '/obstacle_ending_closed_bud_down_right.png'
 	obstacle_ending_bud_right_image_path             = '/obstacle_ending_bud_right.png'
 	obstacle_ending_bud_eye_right_image_path         = '/obstacle_ending_bud_eye_right.png'
+
+	obstacle_ending_image_name_to_y_offset_map       = {
+		obstacle_ending_simple_right_image_path:          2
+		obstacle_ending_closed_bud_up_right_image_path:   -1
+		obstacle_ending_closed_bud_down_right_image_path: 1
+		obstacle_ending_bud_right_image_path:             -2
+		obstacle_ending_bud_eye_right_image_path:         -2
+	}
 )
 
 // Store as low as possible data here, ideally only things that are needed for rendering (like images).
@@ -29,6 +37,7 @@ mut:
 	graphical_context             &gg.Context
 	obstacle_section_right_image  gg.Image
 	obstacle_endings_right_images []gg.Image
+	obstacle_image_id_to_y_offset map[int]int
 	world_model                   world.WorldModel
 	is_initialized                bool
 	is_quited                     bool
@@ -76,14 +85,32 @@ fn load_images(mut app GraphicalApp, root_path string, load_image_function fn (m
 	app.obstacle_section_right_image = load_image_function(mut app, root_path +
 		graphics.obstacle_section_right_image_path)
 
+	obstacle_ending_simple_right_image := load_image_function(mut app, root_path +
+		graphics.obstacle_ending_simple_right_image_path)
+	app.obstacle_image_id_to_y_offset[obstacle_ending_simple_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_simple_right_image_path] * graphics.obstacle_block_scale
+
+	obstacle_ending_closed_bud_up_right_image := load_image_function(mut app, root_path +
+		graphics.obstacle_ending_closed_bud_up_right_image_path)
+	app.obstacle_image_id_to_y_offset[obstacle_ending_closed_bud_up_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_closed_bud_up_right_image_path] * graphics.obstacle_block_scale
+
+	obstacle_ending_closed_bud_down_right_image := load_image_function(mut app, root_path +
+		graphics.obstacle_ending_closed_bud_down_right_image_path)
+	app.obstacle_image_id_to_y_offset[obstacle_ending_closed_bud_down_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_closed_bud_down_right_image_path] * graphics.obstacle_block_scale
+
+	obstacle_ending_bud_right_image := load_image_function(mut app, root_path +
+		graphics.obstacle_ending_bud_right_image_path)
+	app.obstacle_image_id_to_y_offset[obstacle_ending_bud_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_bud_right_image_path] * graphics.obstacle_block_scale
+
+	obstacle_ending_bud_eye_right_image := load_image_function(mut app, root_path +
+		graphics.obstacle_ending_bud_eye_right_image_path)
+	app.obstacle_image_id_to_y_offset[obstacle_ending_bud_eye_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_bud_eye_right_image_path] * graphics.obstacle_block_scale
+
 	app.obstacle_endings_right_images = [
-		load_image_function(mut app, root_path + graphics.obstacle_ending_simple_right_image_path),
-		load_image_function(mut app, root_path +
-			graphics.obstacle_ending_closed_bud_up_right_image_path),
-		load_image_function(mut app, root_path +
-			graphics.obstacle_ending_closed_bud_down_right_image_path),
-		load_image_function(mut app, root_path + graphics.obstacle_ending_bud_right_image_path),
-		load_image_function(mut app, root_path + graphics.obstacle_ending_bud_eye_right_image_path),
+		obstacle_ending_simple_right_image,
+		obstacle_ending_closed_bud_up_right_image,
+		obstacle_ending_closed_bud_down_right_image,
+		obstacle_ending_bud_right_image,
+		obstacle_ending_bud_eye_right_image,
 	]
 }
 
@@ -193,6 +220,15 @@ pub fn get_obstacle_section_right_image_id(app GraphicalApp) int {
 	return app.obstacle_section_right_image.id
 }
 
-pub fn get_obstacle_endings_right_image_ids(app GraphicalApp) []int {
-	return app.obstacle_endings_right_images.map(it.id)
+pub fn get_obstacle_endings(app GraphicalApp) []world.ObstacleEnding {
+	mut obstacle_endings := []world.ObstacleEnding{}
+
+	for image in app.obstacle_endings_right_images {
+		obstacle_endings << world.ObstacleEnding{
+			image_id: image.id
+			y_offset: app.obstacle_image_id_to_y_offset[image.id]
+		}
+	}
+
+	return obstacle_endings
 }
