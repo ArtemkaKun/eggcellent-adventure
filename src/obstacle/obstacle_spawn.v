@@ -9,7 +9,7 @@ pub const (
 	min_blocks_count_too_big_error   = 'min_blocks_count must be less than max possible count of obstacle blocks!'
 )
 
-pub fn spawn_random_width_obstacle(screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) ![]transform.Position {
+pub fn spawn_random_width_obstacle(screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int, obstacle_side Orientation) ![]transform.Position {
 	if screen_width < obstacle_section_width * 3 {
 		return error(obstacle.screen_width_too_small_error)
 	}
@@ -19,7 +19,7 @@ pub fn spawn_random_width_obstacle(screen_width int, obstacle_section_width int,
 	}
 
 	screen_width_obstacle := spawn_screen_width_obstacle(screen_width, obstacle_section_width,
-		obstacle_section_height)!
+		obstacle_section_height, obstacle_side)!
 
 	if min_blocks_count >= screen_width_obstacle.len {
 		return error(obstacle.min_blocks_count_too_big_error)
@@ -28,18 +28,19 @@ pub fn spawn_random_width_obstacle(screen_width int, obstacle_section_width int,
 	return randomize_obstacle_blocks_count(min_blocks_count, screen_width_obstacle)!
 }
 
-fn spawn_screen_width_obstacle(screen_width int, obstacle_section_width int, obstacle_section_height int) ![]transform.Position {
+fn spawn_screen_width_obstacle(screen_width int, obstacle_section_width int, obstacle_section_height int, obstacle_side Orientation) ![]transform.Position {
 	obstacle_blocks_positions := calculate_new_obstacle_blocks_positions(screen_width,
-		obstacle_section_width)!
+		obstacle_section_width, obstacle_side)!
 
 	return place_obstacle_above_screen(obstacle_section_height, obstacle_blocks_positions)
 }
 
-fn calculate_new_obstacle_blocks_positions(screen_width int, obstacle_section_width int) ![]transform.Position {
+fn calculate_new_obstacle_blocks_positions(screen_width int, obstacle_section_width int, obstacle_side Orientation) ![]transform.Position {
 	max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width,
 		obstacle_section_width)!
 
-	return calculate_obstacle_blocks_positions(obstacle_section_width, max_count_of_obstacle_blocks)!
+	return calculate_obstacle_blocks_positions(obstacle_section_width, max_count_of_obstacle_blocks,
+		obstacle_side, screen_width)!
 }
 
 fn place_obstacle_above_screen(obstacle_section_height int, obstacle_blocks_positions []transform.Position) []transform.Position {

@@ -145,9 +145,22 @@ fn draw_frame(mut app GraphicalApp) {
 }
 
 fn draw_obstacle_section(mut app GraphicalApp, obstacle_section obstacle.ObstacleSection) {
+	mut x_offset := 0
+
+	// Because for calculations we use obstacle section width image, but width of endings is different, and while for left orientation position of ending is right next to the edge of previous section block - we don't need to do anything, but for right orientation we need to offset ending image by difference between ending image width and obstacle section width.
+	// Left orientation (dot is a position of block
+	// . ----- . ----- .
+	// Right orientation
+	// . ----- . ----- .
+	// So for left orientation we draw images from screen edge to center, and for right orientation we draw images from center to screen edge.
+	if obstacle_section.orientation == obstacle.Orientation.right {
+		x_offset = get_obstacle_section_width(mut app) - get_image_width_by_id(mut app,
+			obstacle_section.image_id)
+	}
+
 	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
 		img_rect: gg.Rect{
-			x: f32(obstacle_section.position.x)
+			x: f32(obstacle_section.position.x) + x_offset
 			y: f32(obstacle_section.position.y)
 			width: get_image_width_by_id(mut app, obstacle_section.image_id)
 			height: get_image_height_by_id(mut app, obstacle_section.image_id)

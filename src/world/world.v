@@ -38,8 +38,10 @@ pub struct ObstacleEnding {
 pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, obstacle_endings []ObstacleEnding, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !WorldModel {
 	mut new_obstacles := current_model.obstacles.clone()
 
+	random_orientation := unsafe { obstacle.Orientation(rand.int_in_range(0, 2)!) }
+
 	random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
-		obstacle_section_height, min_blocks_count)!
+		obstacle_section_height, min_blocks_count, random_orientation)!
 
 	mut new_obstacle := []obstacle.ObstacleSection{}
 
@@ -58,7 +60,7 @@ pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, o
 				x: section_position.x
 				y: section_position.y + y_offset
 			}
-			orientation: obstacle.Orientation.left
+			orientation: random_orientation
 			image_id: image_id
 		}
 	}

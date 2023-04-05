@@ -72,14 +72,14 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 //
 // positions := calculate_obstacle_blocks_positions(block_width, blocks_count)
 // println(positions) -> [Position{0, 0}, Position{100, 0}, Position{200, 0}, Position{300, 0}, Position{400, 0}]
-pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int) ![]transform.Position {
+pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int, obstacle_side Orientation, screen_width int) ![]transform.Position {
 	validate_block_width(block_width)!
 
 	if blocks_count <= 0 {
 		return error(obstacle.blocks_count_smaller_than_zero_error)
 	}
 
-	return calculate_positions(block_width, blocks_count)
+	return calculate_positions(block_width, blocks_count, obstacle_side, screen_width)
 }
 
 fn validate_block_width(block_width int) ! {
@@ -88,12 +88,18 @@ fn validate_block_width(block_width int) ! {
 	}
 }
 
-fn calculate_positions(block_width int, blocks_count int) []transform.Position {
+fn calculate_positions(block_width int, blocks_count int, obstacle_side Orientation, screen_width int) []transform.Position {
 	mut positions := []transform.Position{cap: blocks_count}
 
 	for block_index in 0 .. blocks_count {
-		positions << transform.Position{
-			x: block_index * block_width
+		if obstacle_side == .left {
+			positions << transform.Position{
+				x: block_index * block_width
+			}
+		} else {
+			positions << transform.Position{
+				x: (screen_width - block_width) - (block_index * block_width)
+			}
 		}
 	}
 
