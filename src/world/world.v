@@ -38,18 +38,56 @@ pub struct ObstacleEnding {
 pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, obstacle_endings []ObstacleEnding, screen_width int, obstacle_section_width int, obstacle_section_height int, min_blocks_count int) !WorldModel {
 	mut new_obstacles := current_model.obstacles.clone()
 
-	random_orientation := unsafe { obstacle.Orientation(rand.int_in_range(0, 2)!) }
+	if rand.int_in_range(0, 2)! == 0 {
+		random_orientation := unsafe { obstacle.Orientation(rand.int_in_range(0, 2)!) }
 
-	random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
-		obstacle_section_height, min_blocks_count, random_orientation)!
+		random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
+			obstacle_section_height, min_blocks_count, random_orientation)!
 
+		new_obstacles << setup_obstacle(random_width_obstacle, obstacle_section_image_id,
+			obstacle_endings, random_orientation)!
+	} else {
+		mut left_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
+			obstacle_section_height, min_blocks_count, obstacle.Orientation.left)!
+
+		mut right_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
+			obstacle_section_height, min_blocks_count, obstacle.Orientation.right)!
+
+		mut should_remove_left := false
+
+		for right_obstacle.last().x - left_obstacle.last().x < obstacle_section_width * 2 {
+			if left_obstacle.len > min_blocks_count && should_remove_left {
+				left_obstacle.delete_last()
+			}
+
+			if right_obstacle.len > min_blocks_count && should_remove_left == false {
+				right_obstacle.delete_last()
+			}
+
+			should_remove_left = !should_remove_left
+		}
+
+		new_obstacles << setup_obstacle(left_obstacle, obstacle_section_image_id, obstacle_endings,
+			obstacle.Orientation.left)!
+
+		new_obstacles << setup_obstacle(right_obstacle, obstacle_section_image_id, obstacle_endings,
+			obstacle.Orientation.right)!
+	}
+
+	return WorldModel{
+		...current_model
+		obstacles: new_obstacles
+	}
+}
+
+fn setup_obstacle(obstacle_positions []transform.Position, obstacle_section_image_id int, obstacle_endings []ObstacleEnding, obstacle_side obstacle.Orientation) ![]obstacle.ObstacleSection {
 	mut new_obstacle := []obstacle.ObstacleSection{}
 
-	for position_index, section_position in random_width_obstacle {
+	for position_index, section_position in obstacle_positions {
 		mut image_id := obstacle_section_image_id
 		mut y_offset := 0
 
-		if position_index == random_width_obstacle.len - 1 {
+		if position_index == obstacle_positions.len - 1 {
 			random_obstacle_ending := rand.element[ObstacleEnding](obstacle_endings)!
 			image_id = random_obstacle_ending.image_id
 			y_offset = random_obstacle_ending.y_offset
@@ -60,17 +98,12 @@ pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, o
 				x: section_position.x
 				y: section_position.y + y_offset
 			}
-			orientation: random_orientation
+			orientation: obstacle_side
 			image_id: image_id
 		}
 	}
 
-	new_obstacles << new_obstacle
-
-	return WorldModel{
-		...current_model
-		obstacles: new_obstacles
-	}
+	return new_obstacle
 }
 
 // move_obstacles Moves all obstacles in the world model.
