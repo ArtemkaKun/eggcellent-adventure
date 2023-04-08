@@ -11,6 +11,10 @@ pub:
 	y f64
 }
 
+fn (first_vector Vector) == (second_vector Vector) bool {
+	return first_vector.x.eq_epsilon(second_vector.x) && first_vector.y.eq_epsilon(second_vector.y)
+}
+
 // normalize_vector Normalizes the input vector.
 //
 // Example:
@@ -33,7 +37,18 @@ pub fn normalize_vector(vector_to_normalize Vector) Vector {
 		return Vector{x / math.abs(x), y}
 	}
 
-	magnitude := math.sqrt(x * x + y * y)
+	magnitude := calculate_vector_magnitude(vector_to_normalize)
 
 	return Vector{x / magnitude, y / magnitude}
+}
+
+fn is_vector_normalized(vector_to_check Vector) bool {
+	return calculate_vector_magnitude(vector_to_check).eq_epsilon(1)
+}
+
+fn calculate_vector_magnitude(vector Vector) f64 {
+	x := vector.x
+	y := vector.y
+
+	return math.sqrt(x * x + y * y)
 }
