@@ -139,6 +139,7 @@ pub fn move_obstacles(current_model WorldModel, direction transform.Vector, spee
 	}
 
 	mut new_obstacles := [][]obstacle.ObstacleSection{cap: current_model.obstacles.len}
+	move_vector := transform.calculate_move_vector(direction, speed, delta_time_seconds)!
 
 	for obstacle_sections in current_model.obstacles {
 		mut new_obstacle := []obstacle.ObstacleSection{cap: obstacle_sections.len}
@@ -146,8 +147,7 @@ pub fn move_obstacles(current_model WorldModel, direction transform.Vector, spee
 		for obstacle_section in obstacle_sections {
 			new_obstacle << obstacle.ObstacleSection{
 				...obstacle_section
-				position: transform.move_position(direction, obstacle_section.position,
-					speed, delta_time_seconds)!
+				position: transform.move_position(obstacle_section.position, move_vector)
 			}
 		}
 

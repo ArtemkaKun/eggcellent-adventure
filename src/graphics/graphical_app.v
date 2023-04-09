@@ -66,43 +66,43 @@ pub fn create_app() &GraphicalApp {
 }
 
 fn initialize(mut app GraphicalApp) {
-	load_assets(mut app)
+	load_assets(mut app) or { panic(err) }
 	app.is_initialized = true
 }
 
-fn load_assets(mut app GraphicalApp) {
+fn load_assets(mut app GraphicalApp) ! {
 	// The game will only be used on Android, but be able to run it on PC will speed up development.
 	$if android {
 		root_right_obstacle_path := 'obstacle/right'
-		load_images(mut app, root_right_obstacle_path, load_android_image_from_path)
+		load_images(mut app, root_right_obstacle_path, load_android_image_from_path)!
 	} $else {
 		root_right_obstacle_path := '/assets/obstacle/right'
-		load_images(mut app, root_right_obstacle_path, load_pc_image_from_path)
+		load_images(mut app, root_right_obstacle_path, load_pc_image_from_path)!
 	}
 }
 
-fn load_images(mut app GraphicalApp, root_path string, load_image_function fn (mut GraphicalApp, string) gg.Image) {
+fn load_images(mut app GraphicalApp, root_path string, load_image_function fn (mut GraphicalApp, string) !gg.Image) ! {
 	app.obstacle_section_right_image = load_image_function(mut app, root_path +
-		graphics.obstacle_section_right_image_path)
+		graphics.obstacle_section_right_image_path)!
 
 	obstacle_ending_simple_right_image := load_image_function(mut app, root_path +
-		graphics.obstacle_ending_simple_right_image_path)
+		graphics.obstacle_ending_simple_right_image_path)!
 	app.obstacle_image_id_to_y_offset[obstacle_ending_simple_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_simple_right_image_path] * graphics.obstacle_block_scale
 
 	obstacle_ending_closed_bud_up_right_image := load_image_function(mut app, root_path +
-		graphics.obstacle_ending_closed_bud_up_right_image_path)
+		graphics.obstacle_ending_closed_bud_up_right_image_path)!
 	app.obstacle_image_id_to_y_offset[obstacle_ending_closed_bud_up_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_closed_bud_up_right_image_path] * graphics.obstacle_block_scale
 
 	obstacle_ending_closed_bud_down_right_image := load_image_function(mut app, root_path +
-		graphics.obstacle_ending_closed_bud_down_right_image_path)
+		graphics.obstacle_ending_closed_bud_down_right_image_path)!
 	app.obstacle_image_id_to_y_offset[obstacle_ending_closed_bud_down_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_closed_bud_down_right_image_path] * graphics.obstacle_block_scale
 
 	obstacle_ending_bud_right_image := load_image_function(mut app, root_path +
-		graphics.obstacle_ending_bud_right_image_path)
+		graphics.obstacle_ending_bud_right_image_path)!
 	app.obstacle_image_id_to_y_offset[obstacle_ending_bud_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_bud_right_image_path] * graphics.obstacle_block_scale
 
 	obstacle_ending_bud_eye_right_image := load_image_function(mut app, root_path +
-		graphics.obstacle_ending_bud_eye_right_image_path)
+		graphics.obstacle_ending_bud_eye_right_image_path)!
 	app.obstacle_image_id_to_y_offset[obstacle_ending_bud_eye_right_image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[graphics.obstacle_ending_bud_eye_right_image_path] * graphics.obstacle_block_scale
 
 	app.obstacle_endings_right_images = [
@@ -114,21 +114,21 @@ fn load_images(mut app GraphicalApp, root_path string, load_image_function fn (m
 	]
 }
 
-fn load_android_image_from_path(mut app GraphicalApp, path string) gg.Image {
+fn load_android_image_from_path(mut app GraphicalApp, path string) !gg.Image {
 	$if android {
 		image := os.read_apk_asset(path) or { panic(err) }
 
 		return app.graphical_context.create_image_from_byte_array(image)
 	} $else {
-		return gg.Image{}
+		return error('Unsupported platform!')
 	}
 }
 
-fn load_pc_image_from_path(mut app GraphicalApp, path string) gg.Image {
+fn load_pc_image_from_path(mut app GraphicalApp, path string) !gg.Image {
 	$if !android {
 		return app.graphical_context.create_image(os.resource_abs_path(path))
 	} $else {
-		return gg.Image{}
+		return error('Unsupported platform!')
 	}
 }
 
