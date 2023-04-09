@@ -17,13 +17,18 @@ pub struct Position {
 	Vector
 }
 
-// move Moves a position with move vector.
+fn (first_position Position) == (second_position Position) bool {
+	return first_position.x.eq_epsilon(second_position.x)
+		&& first_position.y.eq_epsilon(second_position.y)
+}
+
+// move_position Moves a position with move vector.
 //
 // Example:
 // ```v
 // move(Position{ x: 0, y: 0 }, Vector{ x: 1, y: 0 }) == Position{ x: 1, y: 0 }
 // ```
-pub fn move(position Position, move_vector Vector) !Position {
+pub fn move_position(position Position, move_vector Vector) Position {
 	return Position{
 		x: position.x + move_vector.x
 		y: position.y + move_vector.y

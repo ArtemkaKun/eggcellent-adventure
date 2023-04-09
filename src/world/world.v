@@ -146,8 +146,8 @@ pub fn move_obstacles(current_model WorldModel, direction transform.Vector, spee
 		for obstacle_section in obstacle_sections {
 			new_obstacle << obstacle.ObstacleSection{
 				...obstacle_section
-				position: transform.move(direction, obstacle_section.position, speed,
-					delta_time_seconds)!
+				position: transform.move_position(direction, obstacle_section.position,
+					speed, delta_time_seconds)!
 			}
 		}
 
