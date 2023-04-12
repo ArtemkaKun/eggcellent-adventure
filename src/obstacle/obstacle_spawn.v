@@ -35,12 +35,14 @@ fn spawn_screen_width_obstacle(screen_width int, obstacle_section_width int, obs
 	return place_obstacle_above_screen(obstacle_section_height, obstacle_blocks_positions)
 }
 
-fn calculate_new_obstacle_blocks_positions(screen_width int, obstacle_section_width int, obstacle_side Orientation) ![]transform.Position {
+fn calculate_new_obstacle_blocks_positions(screen_width int, obstacle_block_width int, obstacle_side Orientation) ![]transform.Position {
 	max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width,
-		obstacle_section_width)!
+		obstacle_block_width)!
 
-	return calculate_obstacle_blocks_positions(obstacle_section_width, max_count_of_obstacle_blocks,
-		obstacle_side, screen_width)!
+	calculate_x_position_function := get_x_position_calculation_function(obstacle_side,
+		obstacle_block_width, screen_width)!
+
+	return calculate_obstacle_blocks_positions(max_count_of_obstacle_blocks, calculate_x_position_function)!
 }
 
 fn place_obstacle_above_screen(obstacle_section_height int, obstacle_blocks_positions []transform.Position) []transform.Position {
