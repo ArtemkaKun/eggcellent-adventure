@@ -2,23 +2,16 @@ module main
 
 import obstacle
 import transform
+import tests_helpers
 
 fn test_check_is_obstacle_block_below_screen_with_0_screen_height_returns_an_error() {
-	obstacle.is_obstacle_block_below_screen(transform.Position{}, 0) or {
-		assert err.msg() == obstacle.screen_height_smaller_than_zero_error
-		return
-	}
-
-	assert false
+	test_function := get_test_function(transform.Position{}, 0)
+	tests_helpers.expect_error_from_test_function(test_function, obstacle.screen_height_smaller_than_zero_error)
 }
 
 fn test_check_is_obstacle_block_below_screen_with_negative_screen_height_returns_an_error() {
-	obstacle.is_obstacle_block_below_screen(transform.Position{}, -1) or {
-		assert err.msg() == obstacle.screen_height_smaller_than_zero_error
-		return
-	}
-
-	assert false
+	test_function := get_test_function(transform.Position{}, -1)
+	tests_helpers.expect_error_from_test_function(test_function, obstacle.screen_height_smaller_than_zero_error)
 }
 
 fn test_check_is_obstacle_block_below_screen_returns_expected_value_for_block_that_below_screen() {
@@ -31,4 +24,10 @@ fn test_check_is_obstacle_block_below_screen_returns_expected_value_for_block_th
 
 fn test_check_is_obstacle_block_below_screen_returns_expected_value_for_block_that_is_not_below_screen() {
 	assert obstacle.is_obstacle_block_below_screen(transform.Position{ y: 9 }, 10)! == false
+}
+
+fn get_test_function(position transform.Position, screen_height int) fn () !bool {
+	return fn [position, screen_height] () !bool {
+		return obstacle.is_obstacle_block_below_screen(position, screen_height)
+	}
 }
