@@ -28,14 +28,26 @@ fn test_calculate_move_vector_with_unnormalized_direction_returns_an_error() {
 	tests_helpers.expect_error_from_test_function(test_function, transform.direction_not_normalized)
 }
 
+fn test_calculate_move_vector_returns_expected_vector_when_speed_set() {
+	assert transform.Vector{0, 2} == main.get_test_function_with_normalized_direction(2, 1)()!
+}
+
+fn test_calculate_move_vector_returns_expected_vector_when_delta_time_set() {
+	assert transform.Vector{0, 2} == main.get_test_function_with_normalized_direction(1, 2)()!
+}
+
 fn get_test_function_with_normalized_direction(speed f64, delta_time f64) fn () !transform.Vector {
 	return get_test_function(get_normalized_vector(), speed, delta_time)
 }
 
 fn get_test_function(direction transform.Vector, speed f64, delta_time f64) fn () !transform.Vector {
 	return fn [direction, speed, delta_time] () !transform.Vector {
-		return transform.calculate_move_vector(direction, speed, delta_time)
+		return calculate_move_vector(direction, speed, delta_time)
 	}
+}
+
+fn calculate_move_vector(direction transform.Vector, speed f64, delta_time f64) !transform.Vector {
+	return transform.calculate_move_vector(direction, speed, delta_time)
 }
 
 fn get_normalized_vector() transform.Vector {
