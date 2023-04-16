@@ -43,10 +43,7 @@ const (
 // max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width, block_width)
 // println(max_count_of_obstacle_blocks) -> 10
 pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int) !int {
-	if screen_width <= 0 {
-		return error(obstacle.screen_width_smaller_than_zero_error)
-	}
-
+	validate_screen_width(screen_width)!
 	validate_block_width(block_width)!
 
 	if screen_width < block_width {
@@ -58,6 +55,7 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 
 pub fn get_x_position_calculation_function(obstacle_side Orientation, block_width int, screen_width int) !fn (int) int {
 	validate_block_width(block_width)!
+	validate_screen_width(screen_width)!
 
 	return fn [obstacle_side, block_width, screen_width] (block_index int) int {
 		if obstacle_side == Orientation.left {
@@ -65,6 +63,18 @@ pub fn get_x_position_calculation_function(obstacle_side Orientation, block_widt
 		}
 
 		return calculate_right_x_position(block_index, block_width, screen_width)
+	}
+}
+
+fn validate_screen_width(screen_width int) ! {
+	if screen_width <= 0 {
+		return error(obstacle.screen_width_smaller_than_zero_error)
+	}
+}
+
+fn validate_block_width(block_width int) ! {
+	if block_width <= 0 {
+		return error(obstacle.block_width_smaller_than_zero_error)
 	}
 }
 
@@ -92,18 +102,12 @@ pub fn calculate_obstacle_blocks_positions(blocks_count int, calculate_x_positio
 	return calculate_positions(blocks_count, calculate_x_position_function)
 }
 
-fn validate_block_width(block_width int) ! {
-	if block_width <= 0 {
-		return error(obstacle.block_width_smaller_than_zero_error)
-	}
+fn calculate_right_x_position(block_index int, block_width int, screen_width int) int {
+	return (screen_width - block_width) - calculate_left_x_position(block_index, block_width)
 }
 
 fn calculate_left_x_position(block_index int, block_width int) int {
 	return block_index * block_width
-}
-
-fn calculate_right_x_position(block_index int, block_width int, screen_width int) int {
-	return (screen_width - block_width) - calculate_left_x_position(block_index, block_width)
 }
 
 fn calculate_positions(blocks_count int, calculate_x_position_function fn (int) int) []transform.Position {
