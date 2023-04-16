@@ -37,11 +37,13 @@ const (
 // ATTENTION!⚠ screen_width must be greater than zero and greater or equal than block_width.
 //
 // Example:
-// 	screen_width = 1000
-// 	block_width = 100
+// ```v
+// screen_width = 1000
+// block_width = 100
 //
 // max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width, block_width)
 // println(max_count_of_obstacle_blocks) -> 10
+// ```
 pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int) !int {
 	validate_screen_width(screen_width)!
 	validate_block_width(block_width)!
@@ -53,6 +55,26 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 	return screen_width / block_width
 }
 
+// get_x_position_calculation_function This method returns a function that calculates the x position of the obstacle block, depending on block index.
+// The function will be different depending on the obstacle side.
+//
+// ATTENTION!⚠ block_width must has scale applied to it.
+// ATTENTION!⚠ block_width must be greater than zero.
+// ATTENTION!⚠ screen_width must be greater than zero.
+//
+// Example:
+// 	block_width = 100
+// 	screen_width = 1000
+//
+// ```v
+// calculate_x_position_function := get_x_position_calculation_function(Orientation.left, block_width, screen_width)
+// println(calculate_x_position_function(0)) // 0
+// println(calculate_x_position_function(1)) // 100
+//
+// calculate_x_position_function := get_x_position_calculation_function(Orientation.right, block_width, screen_width)
+// println(calculate_x_position_function(0)) // 900
+// println(calculate_x_position_function(1)) // 800
+// ```
 pub fn get_x_position_calculation_function(obstacle_side Orientation, block_width int, screen_width int) !fn (int) int {
 	validate_block_width(block_width)!
 	validate_screen_width(screen_width)!
@@ -89,11 +111,13 @@ fn validate_block_width(block_width int) ! {
 // ATTENTION!⚠ blocks_count must be greater than zero.
 //
 // Example:
-// 	block_width = 100
-// 	blocks_count = 5
+// ```v
+// block_width = 100
+// blocks_count = 5
 //
 // positions := calculate_obstacle_blocks_positions(block_width, blocks_count)
 // println(positions) -> [Position{0, 0}, Position{100, 0}, Position{200, 0}, Position{300, 0}, Position{400, 0}]
+// ```
 pub fn calculate_obstacle_blocks_positions(blocks_count int, calculate_x_position_function fn (int) int) ![]transform.Position {
 	if blocks_count <= 0 {
 		return error(obstacle.blocks_count_smaller_than_zero_error)
