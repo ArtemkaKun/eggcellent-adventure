@@ -42,16 +42,19 @@ pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, o
 		random_orientation := unsafe { obstacle.Orientation(rand.int_in_range(0, 2)!) }
 
 		random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
-			obstacle_section_height, min_blocks_count, random_orientation)!
+			min_blocks_count, random_orientation)!
 
-		new_obstacles << setup_obstacle(random_width_obstacle, obstacle_section_image_id,
+		above_screen_obstacle := place_obstacle_above_screen(obstacle_section_height,
+			random_width_obstacle)
+
+		new_obstacles << setup_obstacle(above_screen_obstacle, obstacle_section_image_id,
 			obstacle_endings, random_orientation)!
 	} else {
 		mut left_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
-			obstacle_section_height, min_blocks_count, obstacle.Orientation.left)!
+			min_blocks_count, obstacle.Orientation.left)!
 
 		mut right_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_section_width,
-			obstacle_section_height, min_blocks_count, obstacle.Orientation.right)!
+			min_blocks_count, obstacle.Orientation.right)!
 
 		mut should_remove_left := false
 
@@ -67,17 +70,38 @@ pub fn spawn_obstacle(current_model WorldModel, obstacle_section_image_id int, o
 			should_remove_left = !should_remove_left
 		}
 
-		new_obstacles << setup_obstacle(left_obstacle, obstacle_section_image_id, obstacle_endings,
-			obstacle.Orientation.left)!
+		above_screen_obstacle_left := place_obstacle_above_screen(obstacle_section_height,
+			left_obstacle)
 
-		new_obstacles << setup_obstacle(right_obstacle, obstacle_section_image_id, obstacle_endings,
-			obstacle.Orientation.right)!
+		new_obstacles << setup_obstacle(above_screen_obstacle_left, obstacle_section_image_id,
+			obstacle_endings, obstacle.Orientation.left)!
+
+		above_screen_obstacle_right := place_obstacle_above_screen(obstacle_section_height,
+			right_obstacle)
+
+		new_obstacles << setup_obstacle(above_screen_obstacle_right, obstacle_section_image_id,
+			obstacle_endings, obstacle.Orientation.right)!
 	}
 
 	return WorldModel{
 		...current_model
 		obstacles: new_obstacles
 	}
+}
+
+fn place_obstacle_above_screen(obstacle_section_height int, obstacle_blocks_positions []transform.Position) []transform.Position {
+	y_position_above_screen := 0 - obstacle_section_height
+
+	mut obstacle_blocks_positions_above_screen := []transform.Position{cap: obstacle_blocks_positions.len}
+
+	for obstacle_block_position in obstacle_blocks_positions {
+		obstacle_blocks_positions_above_screen << transform.Position{
+			x: obstacle_block_position.x
+			y: y_position_above_screen
+		}
+	}
+
+	return obstacle_blocks_positions_above_screen
 }
 
 fn setup_obstacle(obstacle_positions []transform.Position, obstacle_section_image_id int, obstacle_endings []ObstacleEnding, obstacle_side obstacle.Orientation) ![]obstacle.ObstacleSection {

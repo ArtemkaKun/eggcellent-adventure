@@ -63,10 +63,10 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 // ATTENTION!⚠ screen_width must be greater than zero.
 //
 // Example:
-// 	block_width = 100
-// 	screen_width = 1000
-//
 // ```v
+// block_width = 100
+// screen_width = 1000
+//
 // calculate_x_position_function := get_x_position_calculation_function(Orientation.left, block_width, screen_width)
 // println(calculate_x_position_function(0)) // 0
 // println(calculate_x_position_function(1)) // 100
