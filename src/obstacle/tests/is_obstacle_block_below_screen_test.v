@@ -33,5 +33,5 @@ fn get_test_function(position transform.Position, screen_height int) fn () !bool
 }
 
 fn is_obstacle_block_below_screen(position transform.Position, screen_height int) !bool {
-	return obstacle.is_obstacle_block_below_screen(position, screen_height)
+	return obstacle.is_obstacle_section_below_screen(position, screen_height)
 }

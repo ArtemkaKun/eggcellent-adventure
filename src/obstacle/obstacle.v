@@ -146,7 +146,7 @@ fn calculate_positions(blocks_count int, calculate_x_position_function fn (int) 
 	return positions
 }
 
-// is_obstacle_block_below_screen Checks if the obstacle block is below the screen.
+// is_obstacle_section_below_screen Checks if the obstacle block is below the screen.
 // If the obstacle is on the edge of the screen, this method will return true.
 //
 // ATTENTION!⚠ screen_height must be greater than zero.
@@ -157,7 +157,7 @@ fn calculate_positions(blocks_count int, calculate_x_position_function fn (int) 
 // 	screen_height := 10
 // 	is_obstacle_block_below_screen(position, screen_height) // true
 // ```
-pub fn is_obstacle_block_below_screen(position transform.Position, screen_height int) !bool {
+pub fn is_obstacle_section_below_screen(position transform.Position, screen_height int) !bool {
 	if screen_height <= 0 {
 		return error(obstacle.screen_height_smaller_than_zero_error)
 	}

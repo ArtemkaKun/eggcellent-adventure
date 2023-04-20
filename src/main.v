@@ -30,13 +30,18 @@ fn start_main_game_loop(mut app graphics.GraphicalApp) {
 
 	screen_size := graphics.get_screen_size(app)
 	screen_width := screen_size.width
-	obstacle_section_width := graphics.get_obstacle_section_width(mut app)
-	obstacle_section_height := graphics.get_obstacle_section_height(mut app)
-	obstacle_section_image_id := graphics.get_obstacle_section_right_image_id(app)
-	obstacle_endings := graphics.get_obstacle_endings(app)
 
-	spawn_first_obstacle(mut app, screen_width, obstacle_section_image_id, obstacle_endings,
-		obstacle_section_width, obstacle_section_height)
+	obstacle_graphical_assets_metadata := world.ObstacleGraphicalAssetsMetadata{
+		obstacle_section_image_id: graphics.get_obstacle_section_right_image_id(app)
+		obstacle_section_image_width: graphics.get_obstacle_section_width(mut app)
+		obstacle_section_image_height: graphics.get_obstacle_section_height(mut app)
+		obstacle_endings: graphics.get_obstacle_endings(app)
+	}
+
+	spawn_first_obstacle(mut app, obstacle_graphical_assets_metadata, screen_width)
+
+	move_vector := transform.calculate_move_vector(obstacle_moving_direction, obstacle_moving_speed,
+		time_step_seconds) or { panic(err) }
 
 	mut obstacle_spawner_stopwatch := time.new_stopwatch()
 	obstacle_spawner_stopwatch.start()
@@ -48,16 +53,15 @@ fn start_main_game_loop(mut app graphics.GraphicalApp) {
 			...current_model
 		}
 
-		new_model = world.move_obstacles(new_model, obstacle_moving_direction, obstacle_moving_speed,
-			time_step_seconds) or { panic(err) }
+		new_model = world.move_obstacles(new_model, move_vector) or { panic(err) }
 
 		new_model = world.destroy_obstacle_below_screen(new_model, screen_size.height) or {
 			panic(err)
 		}
 
 		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
-			new_model = spawn_obstacle(new_model, obstacle_section_image_id, obstacle_endings,
-				screen_width, obstacle_section_width, obstacle_section_height) or { panic(err) }
+			new_model = spawn_obstacle(new_model, obstacle_graphical_assets_metadata,
+				screen_width) or { panic(err) }
 
 			obstacle_spawner_stopwatch.restart()
 		}
@@ -78,15 +82,14 @@ fn wait_for_graphic_app_initialization(app &graphics.GraphicalApp) {
 	}
 }
 
-fn spawn_first_obstacle(mut app graphics.GraphicalApp, screen_width int, obstacle_section_image_id int, obstacle_endings []world.ObstacleEnding, obstacle_section_width int, obstacle_section_height int) {
+fn spawn_first_obstacle(mut app graphics.GraphicalApp, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) {
 	model_with_first_spawned_obstacle := spawn_obstacle(graphics.get_world_model(app),
-		obstacle_section_image_id, obstacle_endings, screen_width, obstacle_section_width,
-		obstacle_section_height) or { panic(err) }
+		obstacle_graphical_assets_metadata, screen_width) or { panic(err) }
 
 	graphics.update_world_model(mut app, model_with_first_spawned_obstacle)
 }
 
-fn spawn_obstacle(current_model world.WorldModel, obstacle_section_image_id int, obstacle_endings []world.ObstacleEnding, screen_width int, obstacle_section_width int, obstacle_section_height int) !world.WorldModel {
-	return world.spawn_obstacle(current_model, obstacle_section_image_id, obstacle_endings,
-		screen_width, obstacle_section_width, obstacle_section_height, obstacle_min_blocks_count)!
+fn spawn_obstacle(current_model world.WorldModel, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) !world.WorldModel {
+	return world.spawn_obstacle(current_model, obstacle_graphical_assets_metadata, screen_width,
+		obstacle_min_blocks_count)!
 }

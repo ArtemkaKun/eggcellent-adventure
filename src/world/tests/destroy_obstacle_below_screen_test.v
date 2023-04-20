@@ -16,21 +16,30 @@ fn test_destroy_obstacle_below_screen_destroys_correct_obstacles() {
 		obstacles: [
 			[
 				obstacle.ObstacleSection{
-					position: transform.Position{0, 0}
+					position: transform.Position{
+						x: 0
+						y: 0
+					}
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
 			],
 			[
 				obstacle.ObstacleSection{
-					position: transform.Position{0, 1}
+					position: transform.Position{
+						x: 0
+						y: 1
+					}
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
 			],
 			[
 				obstacle.ObstacleSection{
-					position: transform.Position{0, 2}
+					position: transform.Position{
+						x: 0
+						y: 2
+					}
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
@@ -43,7 +52,10 @@ fn test_destroy_obstacle_below_screen_destroys_correct_obstacles() {
 	assert new_model.obstacles == [
 		[
 			obstacle.ObstacleSection{
-				position: transform.Position{0, 0}
+				position: transform.Position{
+					x: 0
+					y: 0
+				}
 				orientation: obstacle.Orientation.left
 				image_id: 0
 			},
@@ -56,17 +68,26 @@ fn test_destroy_obstacle_below_screen_destroys_no_obstacles() {
 		obstacles: [
 			[
 				obstacle.ObstacleSection{
-					position: transform.Position{0, 0}
+					position: transform.Position{
+						x: 0
+						y: 0
+					}
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
 				obstacle.ObstacleSection{
-					position: transform.Position{0, 1}
+					position: transform.Position{
+						x: 0
+						y: 1
+					}
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
 				obstacle.ObstacleSection{
-					position: transform.Position{0, 2}
+					position: transform.Position{
+						x: 0
+						y: 2
+					}
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
