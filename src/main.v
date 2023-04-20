@@ -25,7 +25,7 @@ fn main() {
 	graphics.start_app(mut app)
 }
 
-fn start_main_game_loop(mut app graphics.GraphicalApp) {
+fn start_main_game_loop(mut app graphics.App) {
 	wait_for_graphic_app_initialization(app)
 
 	screen_size := graphics.get_screen_size(app)
@@ -76,13 +76,13 @@ fn start_main_game_loop(mut app graphics.GraphicalApp) {
 }
 
 // wait_for_graphic_app_initialization NOTE: Pass app by reference to be able to check if it is initialized (copy will be always false).
-fn wait_for_graphic_app_initialization(app &graphics.GraphicalApp) {
+fn wait_for_graphic_app_initialization(app &graphics.App) {
 	for graphics.is_initialized(app) == false {
 		time.sleep(1 * time.nanosecond)
 	}
 }
 
-fn spawn_first_obstacle(mut app graphics.GraphicalApp, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) {
+fn spawn_first_obstacle(mut app graphics.App, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) {
 	model_with_first_spawned_obstacle := spawn_obstacle(graphics.get_world_model(app),
 		obstacle_graphical_assets_metadata, screen_width) or { panic(err) }
 
