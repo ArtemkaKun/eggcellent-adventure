@@ -6,48 +6,14 @@ import obstacle
 
 fn test_destroy_obstacle_below_screen_works_with_empty_model() {
 	empty_model := world.WorldModel{}
-	new_model := world.destroy_obstacle_below_screen(empty_model, 1)!
+	new_model := destroy_obstacle_below_screen(empty_model, 1)!
 
-	assert empty_model == new_model
+	assert new_model == empty_model
 }
 
 fn test_destroy_obstacle_below_screen_destroys_correct_obstacles() {
-	test_model := world.WorldModel{
-		obstacles: [
-			[
-				obstacle.ObstacleSection{
-					position: transform.Position{
-						x: 0
-						y: 0
-					}
-					orientation: obstacle.Orientation.left
-					image_id: 0
-				},
-			],
-			[
-				obstacle.ObstacleSection{
-					position: transform.Position{
-						x: 0
-						y: 1
-					}
-					orientation: obstacle.Orientation.left
-					image_id: 0
-				},
-			],
-			[
-				obstacle.ObstacleSection{
-					position: transform.Position{
-						x: 0
-						y: 2
-					}
-					orientation: obstacle.Orientation.left
-					image_id: 0
-				},
-			],
-		]
-	}
-
-	new_model := world.destroy_obstacle_below_screen(test_model, 1)!
+	test_model := get_test_world_model()
+	new_model := destroy_obstacle_below_screen(test_model, 1)!
 
 	assert new_model.obstacles == [
 		[
@@ -64,7 +30,18 @@ fn test_destroy_obstacle_below_screen_destroys_correct_obstacles() {
 }
 
 fn test_destroy_obstacle_below_screen_destroys_no_obstacles() {
-	test_model := world.WorldModel{
+	test_model := get_test_world_model()
+	new_model := destroy_obstacle_below_screen(test_model, 3)!
+
+	assert new_model.obstacles == test_model.obstacles
+}
+
+fn destroy_obstacle_below_screen(model world.WorldModel, screen_height int) !world.WorldModel {
+	return world.destroy_obstacle_below_screen(model, screen_height)!
+}
+
+fn get_test_world_model() world.WorldModel {
+	return world.WorldModel{
 		obstacles: [
 			[
 				obstacle.ObstacleSection{
@@ -75,6 +52,8 @@ fn test_destroy_obstacle_below_screen_destroys_no_obstacles() {
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
+			],
+			[
 				obstacle.ObstacleSection{
 					position: transform.Position{
 						x: 0
@@ -83,6 +62,8 @@ fn test_destroy_obstacle_below_screen_destroys_no_obstacles() {
 					orientation: obstacle.Orientation.left
 					image_id: 0
 				},
+			],
+			[
 				obstacle.ObstacleSection{
 					position: transform.Position{
 						x: 0
@@ -94,8 +75,4 @@ fn test_destroy_obstacle_below_screen_destroys_no_obstacles() {
 			],
 		]
 	}
-
-	new_model := world.destroy_obstacle_below_screen(test_model, 3)!
-
-	assert new_model.obstacles == test_model.obstacles
 }

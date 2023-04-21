@@ -8,15 +8,16 @@ import transform
 import world
 
 const (
-	target_fps                   = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
-	time_step_seconds            = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
-	time_step_nanoseconds        = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
+	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
+	time_step_seconds     = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
+	time_step_nanoseconds = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
+)
 
+const (
 	obstacle_moving_direction    = transform.Vector{0, 1} // Down
 	obstacle_moving_speed        = 50.0 // NOTE: 50.0 was set only for testing. It may change in the future.
-
 	obstacles_spawn_rate_seconds = 5 // NOTE: 5 was set only for testing. It may change in the future.
-	obstacle_min_blocks_count    = 2 // NOTE: there is no sense to spawn obstacles only with 1 block, but need to be discussed with Igor.
+	obstacle_min_blocks_count    = 2 // NOTE: these value was discussed with Igor and should not be changed without his approval.
 )
 
 fn main() {
@@ -40,8 +41,8 @@ fn start_main_game_loop(mut app graphics.App) {
 
 	spawn_first_obstacle(mut app, obstacle_graphical_assets_metadata, screen_width)
 
-	move_vector := transform.calculate_move_vector(obstacle_moving_direction, obstacle_moving_speed,
-		time_step_seconds) or { panic(err) }
+	obstacles_move_vector := transform.calculate_move_vector(obstacle_moving_direction,
+		obstacle_moving_speed, time_step_seconds) or { panic(err) }
 
 	mut obstacle_spawner_stopwatch := time.new_stopwatch()
 	obstacle_spawner_stopwatch.start()
@@ -53,7 +54,7 @@ fn start_main_game_loop(mut app graphics.App) {
 			...current_model
 		}
 
-		new_model = world.move_obstacles(new_model, move_vector) or { panic(err) }
+		new_model = world.move_obstacles(new_model, obstacles_move_vector) or { panic(err) }
 
 		new_model = world.destroy_obstacle_below_screen(new_model, screen_size.height) or {
 			panic(err)
