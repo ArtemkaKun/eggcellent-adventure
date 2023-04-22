@@ -3,7 +3,18 @@
 module obstacle
 
 import transform
-import world
+
+pub struct ObstacleSection {
+pub:
+	position    transform.Position
+	orientation Orientation
+	image_id    int
+}
+
+pub enum Orientation {
+	left
+	right
+}
 
 pub const (
 	screen_width_smaller_than_zero_error        = 'screen_width' + must_be_greater_than_zero_error
@@ -26,16 +37,15 @@ const (
 // ATTENTION!⚠ screen_width must be greater than zero and greater or equal than block_width.
 //
 // Example:
-// 	screen_width = 1000
-// 	block_width = 100
+// ```v
+// screen_width = 1000
+// block_width = 100
 //
 // max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width, block_width)
 // println(max_count_of_obstacle_blocks) -> 10
+// ```
 pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int) !int {
-	if screen_width <= 0 {
-		return error(obstacle.screen_width_smaller_than_zero_error)
-	}
-
+	validate_screen_width(screen_width)!
 	validate_block_width(block_width)!
 
 	if screen_width < block_width {
@@ -56,19 +66,58 @@ pub fn calculate_max_count_of_obstacle_blocks(screen_width int, block_width int)
 // ATTENTION!⚠ blocks_count must be greater than zero.
 //
 // Example:
-// 	block_width = 100
-// 	blocks_count = 5
+// ```v
+// block_width = 100
+// blocks_count = 5
+// screen_width = 1000
+// obstacle_side = Orientation.left
 //
-// positions := calculate_obstacle_blocks_positions(block_width, blocks_count)
-// println(positions) -> [Position{0, 0}, Position{100, 0}, Position{200, 0}, Position{300, 0}, Position{400, 0}]
-pub fn calculate_obstacle_blocks_positions(block_width int, blocks_count int) ![]transform.Position {
-	validate_block_width(block_width)!
-
+// positions := calculate_obstacle_blocks_positions(blocks_count, obstacle_side, block_width, screen_width)
+// println(positions) -> [transform.Position{ x: 0, y: 0 }, transform.Position{ x: 100, y: 0 }, transform.Position{ x: 200, y: 0 }, transform.Position{ x: 300, y: 0 }, transform.Position{ x: 400, y: 0 }]
+// ```
+pub fn calculate_obstacle_blocks_positions(blocks_count int, obstacle_side Orientation, block_width int, screen_width int) ![]transform.Position {
 	if blocks_count <= 0 {
 		return error(obstacle.blocks_count_smaller_than_zero_error)
 	}
 
-	return calculate_positions(block_width, blocks_count)
+	return calculate_positions(blocks_count, obstacle_side, block_width, screen_width)!
+}
+
+fn calculate_right_x_position(block_index int, block_width int, screen_width int) int {
+	return (screen_width - block_width) - calculate_left_x_position(block_index, block_width)
+}
+
+fn calculate_left_x_position(block_index int, block_width int) int {
+	return block_index * block_width
+}
+
+fn calculate_positions(blocks_count int, obstacle_side Orientation, block_width int, screen_width int) ![]transform.Position {
+	mut positions := []transform.Position{cap: blocks_count}
+
+	for block_index in 0 .. blocks_count {
+		positions << transform.Position{
+			x: calculate_x_position(block_index, obstacle_side, block_width, screen_width)!
+		}
+	}
+
+	return positions
+}
+
+fn calculate_x_position(block_index int, obstacle_side Orientation, block_width int, screen_width int) !int {
+	validate_block_width(block_width)!
+	validate_screen_width(screen_width)!
+
+	if obstacle_side == Orientation.left {
+		return calculate_left_x_position(block_index, block_width)
+	}
+
+	return calculate_right_x_position(block_index, block_width, screen_width)
+}
+
+fn validate_screen_width(screen_width int) ! {
+	if screen_width <= 0 {
+		return error(obstacle.screen_width_smaller_than_zero_error)
+	}
 }
 
 fn validate_block_width(block_width int) ! {
@@ -77,19 +126,7 @@ fn validate_block_width(block_width int) ! {
 	}
 }
 
-fn calculate_positions(block_width int, blocks_count int) []transform.Position {
-	mut positions := []transform.Position{cap: blocks_count}
-
-	for block_index in 0 .. blocks_count {
-		positions << transform.Position{
-			x: block_index * block_width
-		}
-	}
-
-	return positions
-}
-
-// is_obstacle_block_below_screen Checks if the obstacle block is below the screen.
+// is_obstacle_section_below_screen Checks if the obstacle block is below the screen.
 // If the obstacle is on the edge of the screen, this method will return true.
 //
 // ATTENTION!⚠ screen_height must be greater than zero.
@@ -100,16 +137,10 @@ fn calculate_positions(block_width int, blocks_count int) []transform.Position {
 // 	screen_height := 10
 // 	is_obstacle_block_below_screen(position, screen_height) // true
 // ```
-pub fn is_obstacle_block_below_screen(position transform.Position, screen_height int) !bool {
+pub fn is_obstacle_section_below_screen(position transform.Position, screen_height int) !bool {
 	if screen_height <= 0 {
 		return error(obstacle.screen_height_smaller_than_zero_error)
 	}
 
 	return position.y >= screen_height
-}
-
-// should_skip_operation This method checks if there is a sense to perform operation on obstacles.
-// If there is no obstacles, there is no sense to perform operation on them.
-pub fn should_skip_operation(current_model world.WorldModel) bool {
-	return current_model.obstacles.len == 0
 }
