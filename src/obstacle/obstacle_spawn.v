@@ -37,10 +37,8 @@ fn calculate_new_obstacle_blocks_positions(screen_width int, obstacle_block_widt
 	max_count_of_obstacle_blocks := calculate_max_count_of_obstacle_blocks(screen_width,
 		obstacle_block_width)!
 
-	calculate_x_position_function := get_x_position_calculation_function(obstacle_side,
+	return calculate_obstacle_blocks_positions(max_count_of_obstacle_blocks, obstacle_side,
 		obstacle_block_width, screen_width)!
-
-	return calculate_obstacle_blocks_positions(max_count_of_obstacle_blocks, calculate_x_position_function)!
 }
 
 fn randomize_obstacle_blocks_count(min_blocks_count int, screen_width_obstacle []transform.Position) ![]transform.Position {
