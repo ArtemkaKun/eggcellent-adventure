@@ -1,3 +1,5 @@
+// This code implements integer scale factor calculations, that can be used to scale pixel art images.
+
 module scale_factor
 
 import math
@@ -9,7 +11,7 @@ pub const (
 	target_resolution_width_smaller_than_zero_error     = 'target_resolution_width must be greater than zero'
 )
 
-pub fn calculate_scale_factor(reference_resolution_height int, reference_resolution_width int, target_resolution_height int, target_resolution_width int) !f64 {
+pub fn calculate_integer_scale_factor(reference_resolution_height int, reference_resolution_width int, target_resolution_height int, target_resolution_width int) !int {
 	if reference_resolution_height <= 0 {
 		return error(scale_factor.reference_resolution_height_smaller_than_zero_error)
 	}
@@ -29,14 +31,22 @@ pub fn calculate_scale_factor(reference_resolution_height int, reference_resolut
 	reference_aspect_ratio := f64(reference_resolution_width) / reference_resolution_height
 	target_aspect_ratio := f64(target_resolution_width) / target_resolution_height
 
+	mut scale_factor := 1.0
+
 	if reference_aspect_ratio.eq_epsilon(target_aspect_ratio) {
-		return math.min[f64](f64(target_resolution_width) / reference_resolution_width,
+		scale_factor = math.min[f64](f64(target_resolution_width) / reference_resolution_width,
 			f64(target_resolution_height) / reference_resolution_height)
 	}
 
 	if reference_aspect_ratio > target_aspect_ratio {
-		return f64(target_resolution_width) / reference_resolution_width
+		scale_factor = f64(target_resolution_width) / reference_resolution_width
 	}
 
-	return f64(target_resolution_height) / reference_resolution_height
+	if target_aspect_ratio > reference_aspect_ratio {
+		scale_factor = f64(target_resolution_height) / reference_resolution_height
+	}
+
+	integer_scale_factor := int(math.round(scale_factor))
+
+	return math.max[int](integer_scale_factor, 1)
 }
