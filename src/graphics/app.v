@@ -48,6 +48,13 @@ const (
 	reference_resolution_height = int(math.round(179 * reference_scale_modifier))
 )
 
+// Green color defined by Igor. Should not be changed without his approval.
+const background_color = gx.Color{
+	r: 64
+	g: 164
+	b: 124
+}
+
 // App stores the minimal data required for rendering the app, focusing on images and related data.
 // Also, it stores the world model, which contains all game data.
 pub struct App {
@@ -69,7 +76,7 @@ pub fn create_app() &App {
 	}
 
 	app.graphical_context = gg.new_context(
-		bg_color: gx.white
+		bg_color: graphics.background_color
 		width: graphics.window_width_pixels
 		height: graphics.window_height_pixels
 		create_window: true
