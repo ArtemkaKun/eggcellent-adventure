@@ -6,6 +6,8 @@ import gg
 import gx
 import world
 import obstacle
+import scale_factor
+import math
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -27,8 +29,6 @@ const (
 
 // ATTENTION!⚠ These values were carefully selected by hand to make the game look good. Don't change them without a good reason.
 const (
-	obstacle_block_scale                       = 5 // NOTE: scale set to 5 for now, but it will be dynamically calculated later.
-
 	obstacle_ending_image_name_to_y_offset_map = {
 		obstacle_ending_simple_right_image_name:          2
 		obstacle_ending_closed_bud_up_right_image_name:   -1
@@ -38,6 +38,16 @@ const (
 	}
 )
 
+const (
+	// NOTE: This value is needed to influence scale calculation to make game playable, since reference assets in double obstacles are too big.
+	// This value is fine tuned manually and should not be changed without a good reason.
+	reference_scale_modifier    = 1.1325
+
+	// NOTE: Reference screen resolution was provided by Igor and should not be changed without a good reason.
+	reference_resolution_width  = int(math.round(87 * reference_scale_modifier))
+	reference_resolution_height = int(math.round(179 * reference_scale_modifier))
+)
+
 // App stores the minimal data required for rendering the app, focusing on images and related data.
 // Also, it stores the world model, which contains all game data.
 pub struct App {
@@ -45,6 +55,7 @@ mut:
 	graphical_context             &gg.Context
 	is_initialized                bool
 	is_quited                     bool
+	images_scale                  int
 	obstacle_section_right_image  gg.Image
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
@@ -74,8 +85,16 @@ pub fn create_app() &App {
 }
 
 fn initialize(mut app App) {
+	calculate_images_scale(mut app) or { panic(err) }
 	load_assets(mut app) or { panic(err) }
 	app.is_initialized = true
+}
+
+fn calculate_images_scale(mut app App) ! {
+	screen_size := get_screen_size(app)
+
+	app.images_scale = scale_factor.calculate_integer_scale_factor(graphics.reference_resolution_height,
+		graphics.reference_resolution_width, screen_size.height, screen_size.width)!
 }
 
 fn draw_frame(mut app App) {
@@ -129,11 +148,11 @@ pub fn get_obstacle_section_height(mut app App) int {
 }
 
 fn get_image_width_by_id(mut app App, image_id int) int {
-	return get_image_by_id(mut app, image_id).width * graphics.obstacle_block_scale
+	return get_image_by_id(mut app, image_id).width * app.images_scale
 }
 
 fn get_image_height_by_id(mut app App, image_id int) int {
-	return get_image_by_id(mut app, image_id).height * graphics.obstacle_block_scale
+	return get_image_by_id(mut app, image_id).height * app.images_scale
 }
 
 fn get_image_by_id(mut app App, image_id int) &gg.Image {

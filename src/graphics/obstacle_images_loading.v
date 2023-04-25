@@ -32,7 +32,7 @@ fn load_images_right_obstacle_images(mut app App, load_image_function fn (mut Ap
 
 fn load_image_and_bind_offset(mut app App, load_image_function fn (mut App, string) !gg.Image, root_path string, image_name string) !gg.Image {
 	image := load_image_function(mut app, os.join_path_single(root_path, image_name))!
-	app.obstacle_image_id_to_y_offset[image.id] = obstacle_ending_image_name_to_y_offset_map[image_name] * obstacle_block_scale
+	app.obstacle_image_id_to_y_offset[image.id] = obstacle_ending_image_name_to_y_offset_map[image_name] * app.images_scale
 
 	return image
 }
