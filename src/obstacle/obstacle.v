@@ -4,6 +4,7 @@ module obstacle
 
 import transform
 
+// TODO: refactor with Entity struct
 pub struct ObstacleSection {
 pub:
 	position    transform.Position

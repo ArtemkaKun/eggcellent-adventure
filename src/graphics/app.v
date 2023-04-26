@@ -55,18 +55,26 @@ const background_color = gx.Color{
 	b: 124
 }
 
+const (
+	background_vine_1_image_name = 'background_vine_1.png'
+)
+
 // App stores the minimal data required for rendering the app, focusing on images and related data.
 // Also, it stores the world model, which contains all game data.
 pub struct App {
 mut:
-	graphical_context             &gg.Context
-	is_initialized                bool
-	is_quited                     bool
-	images_scale                  int
+	graphical_context &gg.Context
+	is_initialized    bool
+	is_quited         bool
+	images_scale      int
+
 	obstacle_section_right_image  gg.Image
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
-	world_model                   world.WorldModel
+
+	background_vine_1_image gg.Image
+
+	world_model world.WorldModel
 }
 
 // create_app Creates and sets up graphical app.
@@ -106,6 +114,15 @@ fn calculate_images_scale(mut app App) ! {
 
 fn draw_frame(mut app App) {
 	app.graphical_context.begin()
+
+	// First draw vines to control Z because normal Z is bugged
+	for background_vine in app.world_model.background_vines {
+		for vine in background_vine {
+			app.graphical_context.draw_image_by_id(f32(vine.position.x), f32(vine.position.y),
+				get_image_width_by_id(mut app, vine.image_id), get_image_height_by_id(mut app,
+				vine.image_id), vine.image_id)
+		}
+	}
 
 	for obstacle in app.world_model.obstacles {
 		for section in obstacle {
@@ -221,4 +238,12 @@ fn create_obstacle_ending(app App, image_id int) world.ObstacleEnding {
 		image_id: image_id
 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
 	}
+}
+
+pub fn get_background_vine_1_image_id(app App) int {
+	return app.background_vine_1_image.id
+}
+
+pub fn get_background_vine_1_height(mut app App) int {
+	return get_image_height_by_id(mut app, app.background_vine_1_image.id)
 }

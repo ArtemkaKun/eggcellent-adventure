@@ -8,9 +8,19 @@ fn load_assets(mut app App) ! {
 	$if android {
 		right_obstacle_assets_root_path := 'obstacle/right'
 		load_images_right_obstacle_images(mut app, load_image_on_android, right_obstacle_assets_root_path)!
+
+		background_vines_assets_root_path := 'background/vines'
+
+		app.background_vine_1_image = load_image_on_android(mut app, os.join_path_single(background_vines_assets_root_path,
+			background_vine_1_image_name))!
 	} $else {
 		right_obstacle_assets_root_path := '/assets/obstacle/right'
 		load_images_right_obstacle_images(mut app, load_image_on_pc, right_obstacle_assets_root_path)!
+
+		background_vines_assets_root_path := 'assets/background/vines'
+
+		app.background_vine_1_image = load_image_on_pc(mut app, os.join_path_single(background_vines_assets_root_path,
+			background_vine_1_image_name))!
 	}
 }
 

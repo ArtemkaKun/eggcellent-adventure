@@ -5,11 +5,13 @@ module world
 import obstacle
 import transform
 import rand
+import common
 
 // WorldModel This is a structure that holds the current state of the world.
 pub struct WorldModel {
 pub:
-	obstacles [][]obstacle.ObstacleSection
+	obstacles        [][]obstacle.ObstacleSection
+	background_vines [][]common.Entity
 }
 
 // ObstacleGraphicalAssetsMetadata This structure is needed couple graphical assets info, that will be used by obstacles.
@@ -149,6 +151,7 @@ fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions [
 }
 
 fn place_obstacle_above_screen(obstacle_section_height int, obstacle_sections_positions []transform.Position) []transform.Position {
+	// TODO: same in background vines
 	y_position_above_screen := 0 - obstacle_section_height
 
 	return obstacle_sections_positions.map(update_obstacle_section_position_y(it, y_position_above_screen))
