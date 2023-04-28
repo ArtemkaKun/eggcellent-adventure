@@ -49,9 +49,16 @@ fn start_main_game_loop(mut app graphics.App) {
 
 	background_vine_1_height := graphics.get_background_vine_1_height(mut app)
 
+	background_vines_config := world.get_background_vines_config() or { panic(err) }
+
 	model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
-		graphics.get_background_vine_1_image_id(app), background_vine_1_height, screen_width / 2) or {
+		graphics.get_background_vine_1_image_id(app), background_vine_1_height, background_vines_config[0].shift_from_left_side_pixels) or {
 		panic(err)
+	}
+
+	background_vine_1_moving_vector := transform.Vector{
+		x: obstacles_move_vector.x
+		y: obstacles_move_vector.y * background_vines_config[0].moving_speed_modifier
 	}
 
 	graphics.update_world_model(mut app, model_with_first_background_vine)
@@ -76,7 +83,9 @@ fn start_main_game_loop(mut app graphics.App) {
 			obstacle_spawner_stopwatch.restart()
 		}
 
-		new_model = world.move_background_vines(new_model, obstacles_move_vector) or { panic(err) }
+		new_model = world.move_background_vines(new_model, background_vine_1_moving_vector) or {
+			panic(err)
+		}
 		new_model = world.continue_vines(new_model, background_vine_1_height)
 
 		if new_model != current_model {
