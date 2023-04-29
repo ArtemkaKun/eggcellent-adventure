@@ -5,13 +5,13 @@ module world
 import obstacle
 import transform
 import rand
-import common
+import background_vines
 
 // WorldModel This is a structure that holds the current state of the world.
 pub struct WorldModel {
 pub:
 	obstacles        [][]obstacle.ObstacleSection
-	background_vines [][]common.Entity
+	background_vines [][]background_vines.BackgroundVineEntity
 }
 
 // ObstacleGraphicalAssetsMetadata This structure is needed couple graphical assets info, that will be used by obstacles.

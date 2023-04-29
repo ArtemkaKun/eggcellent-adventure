@@ -2,12 +2,13 @@ module world
 
 import common
 import transform
+import background_vines
 
 pub const (
 	image_height_smaller_than_zero_error = 'image_height must be greater than 0'
 )
 
-pub fn spawn_background_vine(current_model WorldModel, image_id int, image_height int, x_position f64) !WorldModel {
+pub fn spawn_background_vine(current_model WorldModel, image_id int, image_height int, x_position f64, move_vector transform.Vector) !WorldModel {
 	if image_height <= 0 {
 		return error(world.image_height_smaller_than_zero_error)
 	}
@@ -17,12 +18,14 @@ pub fn spawn_background_vine(current_model WorldModel, image_id int, image_heigh
 	mut new_background_vines := current_model.background_vines.clone()
 
 	new_background_vines << [
-		common.Entity{
+		background_vines.BackgroundVineEntity{
 			position: transform.Position{
 				x: x_position
 				y: y_position_above_screen
 			}
 			image_id: image_id
+			image_height: image_height
+			move_vector: move_vector
 		},
 	]
 
@@ -32,7 +35,7 @@ pub fn spawn_background_vine(current_model WorldModel, image_id int, image_heigh
 	}
 }
 
-pub fn move_background_vines(current_model WorldModel, move_vector transform.Vector) !WorldModel {
+pub fn move_background_vines(current_model WorldModel) !WorldModel {
 	// TODO: Should not skip at all, since obstacles and vines are always here
 	if should_skip_operation(current_model) {
 		return current_model
@@ -40,29 +43,29 @@ pub fn move_background_vines(current_model WorldModel, move_vector transform.Vec
 
 	return WorldModel{
 		...current_model
-		background_vines: current_model.background_vines.map(move_vine(it, move_vector))
+		background_vines: current_model.background_vines.map(move_vine(it))
 	}
 }
 
-fn move_vine(current_vine []common.Entity, move_vector transform.Vector) []common.Entity {
-	return current_vine.map(move_vine_part(it, move_vector))
+fn move_vine(current_vine []background_vines.BackgroundVineEntity) []background_vines.BackgroundVineEntity {
+	return current_vine.map(move_vine_part(it))
 }
 
-fn move_vine_part(vine_part common.Entity, move_vector transform.Vector) common.Entity {
-	return common.Entity{
+fn move_vine_part(vine_part background_vines.BackgroundVineEntity) background_vines.BackgroundVineEntity {
+	return background_vines.BackgroundVineEntity{
 		...vine_part
-		position: transform.move_position(vine_part.position, move_vector)
+		position: transform.move_position(vine_part.position, vine_part.move_vector)
 	}
 }
 
-pub fn continue_vines(current_model WorldModel, image_height int) WorldModel {
-	mut new_background_vines := [][]common.Entity{}
+pub fn continue_vines(current_model WorldModel) WorldModel {
+	mut new_background_vines := [][]background_vines.BackgroundVineEntity{}
 
 	for vine in current_model.background_vines {
 		if vine.last().position.y >= 0 {
 			mut new_vine := vine.clone()
 
-			new_vine[new_vine.len - 1] = common.Entity{
+			new_vine[new_vine.len - 1] = background_vines.BackgroundVineEntity{
 				...vine.last()
 				position: transform.Position{
 					x: vine.last().position.x
@@ -70,11 +73,11 @@ pub fn continue_vines(current_model WorldModel, image_height int) WorldModel {
 				}
 			}
 
-			new_vine << common.Entity{
+			new_vine << background_vines.BackgroundVineEntity{
 				...vine.last()
 				position: transform.Position{
 					x: vine.last().position.x
-					y: 0 - image_height
+					y: 0 - vine.last().image_height
 				}
 			}
 

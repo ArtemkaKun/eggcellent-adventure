@@ -2,25 +2,30 @@ module graphics
 
 import gg
 import os
+import background_vines
 
 fn load_assets(mut app App) ! {
+	assets_folder_path := 'assets/'
+	right_obstacle_assets_root_path := 'obstacle/right'
+	background_vines_assets_root_path := 'background/vines'
+
 	// The game will only be used on Android, but be able to run it on PC will speed up development.
 	$if android {
-		right_obstacle_assets_root_path := 'obstacle/right'
 		load_images_right_obstacle_images(mut app, load_image_on_android, right_obstacle_assets_root_path)!
 
-		background_vines_assets_root_path := 'background/vines'
-
-		app.background_vine_1_image = load_image_on_android(mut app, os.join_path_single(background_vines_assets_root_path,
-			background_vine_1_image_name))!
+		for background_vine_id in 1 .. background_vines.count_of_background_vines + 1 {
+			app.background_vine_images << load_image_on_android(mut app, os.join_path_single(background_vines_assets_root_path,
+				background_vine_image_name_template.replace('{0}', background_vine_id.str())))!
+		}
 	} $else {
-		right_obstacle_assets_root_path := '/assets/obstacle/right'
-		load_images_right_obstacle_images(mut app, load_image_on_pc, right_obstacle_assets_root_path)!
+		load_images_right_obstacle_images(mut app, load_image_on_pc, assets_folder_path +
+			right_obstacle_assets_root_path)!
 
-		background_vines_assets_root_path := 'assets/background/vines'
-
-		app.background_vine_1_image = load_image_on_pc(mut app, os.join_path_single(background_vines_assets_root_path,
-			background_vine_1_image_name))!
+		for background_vine_id in 1 .. background_vines.count_of_background_vines + 1 {
+			app.background_vine_images << load_image_on_pc(mut app, os.join_path_single(
+				assets_folder_path + background_vines_assets_root_path, background_vine_image_name_template.replace('{0}',
+				background_vine_id.str())))!
+		}
 	}
 }
 

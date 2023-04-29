@@ -56,7 +56,7 @@ const background_color = gx.Color{
 }
 
 const (
-	background_vine_1_image_name = 'background_vine_1.png'
+	background_vine_image_name_template = 'background_vine_{0}.png'
 )
 
 // App stores the minimal data required for rendering the app, focusing on images and related data.
@@ -72,7 +72,7 @@ mut:
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
 
-	background_vine_1_image gg.Image
+	background_vine_images []gg.Image
 
 	world_model world.WorldModel
 }
@@ -240,10 +240,18 @@ fn create_obstacle_ending(app App, image_id int) world.ObstacleEnding {
 	}
 }
 
-pub fn get_background_vine_1_image_id(app App) int {
-	return app.background_vine_1_image.id
+pub fn get_background_vine_image_id(app App, background_vine_id int) int {
+	return get_background_vine_image_by_id(app, background_vine_id).id
 }
 
-pub fn get_background_vine_1_height(mut app App) int {
-	return get_image_height_by_id(mut app, app.background_vine_1_image.id)
+pub fn get_background_vine_height(mut app App, background_vine_id int) int {
+	return get_image_height_by_id(mut app, get_background_vine_image_id(app, background_vine_id))
+}
+
+fn get_background_vine_image_by_id(app App, background_vine_id int) gg.Image {
+	return app.background_vine_images[background_vine_id - 1]
+}
+
+pub fn get_images_scale(app App) int {
+	return app.images_scale
 }

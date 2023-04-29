@@ -6,6 +6,7 @@ import graphics
 import time
 import transform
 import world
+import background_vines
 
 const (
 	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
@@ -47,21 +48,23 @@ fn start_main_game_loop(mut app graphics.App) {
 	mut obstacle_spawner_stopwatch := time.new_stopwatch()
 	obstacle_spawner_stopwatch.start()
 
-	background_vine_1_height := graphics.get_background_vine_1_height(mut app)
-
 	background_vines_config := world.get_background_vines_config() or { panic(err) }
 
-	model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
-		graphics.get_background_vine_1_image_id(app), background_vine_1_height, background_vines_config[0].shift_from_left_side_pixels) or {
-		panic(err)
-	}
+	for background_vine_id in 1 .. background_vines.count_of_background_vines + 1 {
+		background_vine_height := graphics.get_background_vine_height(mut app, background_vine_id)
 
-	background_vine_1_moving_vector := transform.Vector{
-		x: obstacles_move_vector.x
-		y: obstacles_move_vector.y * background_vines_config[0].moving_speed_modifier
-	}
+		background_vine_1_moving_vector := transform.Vector{
+			x: obstacles_move_vector.x
+			y: obstacles_move_vector.y * background_vines_config[background_vine_id - 1].moving_speed_modifier
+		}
 
-	graphics.update_world_model(mut app, model_with_first_background_vine)
+		model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
+			graphics.get_background_vine_image_id(app, background_vine_id), background_vine_height,
+			background_vines_config[background_vine_id - 1].shift_from_left_side_pixels * graphics.get_images_scale(app),
+			background_vine_1_moving_vector) or { panic(err) }
+
+		graphics.update_world_model(mut app, model_with_first_background_vine)
+	}
 
 	for graphics.is_quited(app) == false {
 		current_model := graphics.get_world_model(app)
@@ -83,10 +86,9 @@ fn start_main_game_loop(mut app graphics.App) {
 			obstacle_spawner_stopwatch.restart()
 		}
 
-		new_model = world.move_background_vines(new_model, background_vine_1_moving_vector) or {
-			panic(err)
-		}
-		new_model = world.continue_vines(new_model, background_vine_1_height)
+		new_model = world.move_background_vines(new_model) or { panic(err) }
+
+		new_model = world.continue_vines(new_model)
 
 		if new_model != current_model {
 			graphics.update_world_model(mut app, new_model)
