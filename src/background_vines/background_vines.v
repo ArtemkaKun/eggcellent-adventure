@@ -16,6 +16,9 @@ pub const (
 	max_background_vines_id = background_vines_count + 1
 )
 
+// BackgroundVinePart This struct represents one part of background vine.
+// Extension of Entity structure with `image_height` and `move_vector` is needed to be able to
+// spawn next part of background vine and use the last background vine part as reference.
 pub struct BackgroundVinePart {
 	common.Entity
 pub:
