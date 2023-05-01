@@ -50,7 +50,7 @@ fn start_main_game_loop(mut app graphics.App) {
 
 	background_vines_config := world.get_background_vines_config() or { panic(err) }
 
-	for background_vine_id in 1 .. background_vines.count_of_background_vines + 1 {
+	for background_vine_id in 1 .. background_vines.max_background_vines_id {
 		background_vine_height := graphics.get_background_vine_height(mut app, background_vine_id)
 
 		background_vine_1_moving_vector := transform.Vector{

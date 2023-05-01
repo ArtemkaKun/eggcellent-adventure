@@ -13,7 +13,7 @@ fn load_assets(mut app App) ! {
 	$if android {
 		load_images_right_obstacle_images(mut app, load_image_on_android, right_obstacle_assets_root_path)!
 
-		for background_vine_id in 1 .. background_vines.count_of_background_vines + 1 {
+		for background_vine_id in 1 .. background_vines.max_background_vines_id {
 			app.background_vine_images << load_image_on_android(mut app, os.join_path_single(background_vines_assets_root_path,
 				background_vine_image_name_template.replace('{0}', background_vine_id.str())))!
 		}
@@ -21,7 +21,7 @@ fn load_assets(mut app App) ! {
 		load_images_right_obstacle_images(mut app, load_image_on_pc, assets_folder_path +
 			right_obstacle_assets_root_path)!
 
-		for background_vine_id in 1 .. background_vines.count_of_background_vines + 1 {
+		for background_vine_id in 1 .. background_vines.max_background_vines_id {
 			app.background_vine_images << load_image_on_pc(mut app, os.join_path_single(
 				assets_folder_path + background_vines_assets_root_path, background_vine_image_name_template.replace('{0}',
 				background_vine_id.str())))!
