@@ -48,7 +48,7 @@ fn start_main_game_loop(mut app graphics.App) {
 	mut obstacle_spawner_stopwatch := time.new_stopwatch()
 	obstacle_spawner_stopwatch.start()
 
-	background_vines_config := world.get_background_vines_config() or { panic(err) }
+	background_vines_config := background_vines.get_background_vines_config() or { panic(err) }
 
 	for background_vine_id in 1 .. background_vines.max_background_vines_id {
 		background_vine_height := graphics.get_background_vine_height(mut app, background_vine_id)
@@ -60,7 +60,7 @@ fn start_main_game_loop(mut app graphics.App) {
 
 		model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
 			graphics.get_background_vine_image_id(app, background_vine_id), background_vine_height,
-			background_vines_config[background_vine_id - 1].shift_from_left_side_pixels * graphics.get_images_scale(app),
+			background_vines_config[background_vine_id - 1].x_offset_reference_pixels * graphics.get_images_scale(app),
 			background_vine_1_moving_vector) or { panic(err) }
 
 		graphics.update_world_model(mut app, model_with_first_background_vine)
