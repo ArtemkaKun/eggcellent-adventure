@@ -1,3 +1,5 @@
+// This file contains implementation of structs, that are related to background vines.
+
 module background_vines
 
 import common
