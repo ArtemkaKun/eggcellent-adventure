@@ -18,7 +18,7 @@ pub fn spawn_background_vine(current_model WorldModel, image_id int, image_heigh
 	mut new_background_vines := current_model.background_vines.clone()
 
 	new_background_vines << [
-		background_vines.BackgroundVineEntity{
+		background_vines.BackgroundVinePart{
 			position: transform.Position{
 				x: x_position
 				y: y_position_above_screen
@@ -47,25 +47,25 @@ pub fn move_background_vines(current_model WorldModel) !WorldModel {
 	}
 }
 
-fn move_vine(current_vine []background_vines.BackgroundVineEntity) []background_vines.BackgroundVineEntity {
+fn move_vine(current_vine []background_vines.BackgroundVinePart) []background_vines.BackgroundVinePart {
 	return current_vine.map(move_vine_part(it))
 }
 
-fn move_vine_part(vine_part background_vines.BackgroundVineEntity) background_vines.BackgroundVineEntity {
-	return background_vines.BackgroundVineEntity{
+fn move_vine_part(vine_part background_vines.BackgroundVinePart) background_vines.BackgroundVinePart {
+	return background_vines.BackgroundVinePart{
 		...vine_part
 		position: transform.move_position(vine_part.position, vine_part.move_vector)
 	}
 }
 
 pub fn continue_vines(current_model WorldModel) WorldModel {
-	mut new_background_vines := [][]background_vines.BackgroundVineEntity{}
+	mut new_background_vines := [][]background_vines.BackgroundVinePart{}
 
 	for vine in current_model.background_vines {
 		if vine.last().position.y >= 0 {
 			mut new_vine := vine.clone()
 
-			new_vine[new_vine.len - 1] = background_vines.BackgroundVineEntity{
+			new_vine[new_vine.len - 1] = background_vines.BackgroundVinePart{
 				...vine.last()
 				position: transform.Position{
 					x: vine.last().position.x
@@ -73,7 +73,7 @@ pub fn continue_vines(current_model WorldModel) WorldModel {
 				}
 			}
 
-			new_vine << background_vines.BackgroundVineEntity{
+			new_vine << background_vines.BackgroundVinePart{
 				...vine.last()
 				position: transform.Position{
 					x: vine.last().position.x

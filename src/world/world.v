@@ -11,7 +11,7 @@ import background_vines
 pub struct WorldModel {
 pub:
 	obstacles        [][]obstacle.ObstacleSection
-	background_vines [][]background_vines.BackgroundVineEntity
+	background_vines [][]background_vines.BackgroundVinePart
 }
 
 // ObstacleGraphicalAssetsMetadata This structure is needed couple graphical assets info, that will be used by obstacles.

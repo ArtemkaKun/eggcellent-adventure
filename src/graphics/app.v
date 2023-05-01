@@ -116,7 +116,11 @@ fn draw_frame(mut app App) {
 	app.graphical_context.begin()
 
 	// First draw vines to control Z because normal Z is bugged
-	for background_vine in app.world_model.background_vines {
+	// Reverse background vines array to draw in reversed way because Z bugged and background vines spawned from closes to farthest
+
+	reversed_background_vines := app.world_model.background_vines.reverse()
+
+	for background_vine in reversed_background_vines {
 		for vine in background_vine {
 			app.graphical_context.draw_image_by_id(f32(vine.position.x), f32(vine.position.y),
 				get_image_width_by_id(mut app, vine.image_id), get_image_height_by_id(mut app,
