@@ -67,11 +67,7 @@ fn start_main_game_loop(mut app graphics.App) {
 	}
 
 	for graphics.is_quited(app) == false {
-		current_model := graphics.get_world_model(app)
-
-		mut new_model := world.WorldModel{
-			...current_model
-		}
+		mut new_model := graphics.get_world_model(app)
 
 		new_model = world.move_obstacles(new_model, obstacles_move_vector) or { panic(err) }
 
@@ -87,13 +83,10 @@ fn start_main_game_loop(mut app graphics.App) {
 		}
 
 		new_model = world.move_background_vines(new_model) or { panic(err) }
-
 		new_model = world.continue_vines(new_model)
 
-		if new_model != current_model {
-			graphics.update_world_model(mut app, new_model)
-			graphics.invoke_frame_draw(mut app)
-		}
+		graphics.update_world_model(mut app, new_model)
+		graphics.invoke_frame_draw(mut app)
 
 		time.sleep(time_step_nanoseconds * time.nanosecond)
 	}

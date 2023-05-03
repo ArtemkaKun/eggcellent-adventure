@@ -1,6 +1,5 @@
 module world
 
-import common
 import transform
 import background_vines
 
@@ -36,11 +35,6 @@ pub fn spawn_background_vine(current_model WorldModel, image_id int, image_heigh
 }
 
 pub fn move_background_vines(current_model WorldModel) !WorldModel {
-	// TODO: Should not skip at all, since obstacles and vines are always here
-	if should_skip_operation(current_model) {
-		return current_model
-	}
-
 	return WorldModel{
 		...current_model
 		background_vines: current_model.background_vines.map(move_vine(it))
