@@ -53,36 +53,26 @@ fn validate_background_vines_config(config []BackgroundVineConfigParameters) ! {
 
 	for background_vine_config in config {
 		current_background_vine_id := background_vine_config.id
+		for_background_vine_error_message_part := 'for background vine with ID ${current_background_vine_id}'
 
 		if config.filter(it.id == current_background_vine_id).len > 1 {
-			return error('Config object is duplicated for background vine with ID ${current_background_vine_id}')
-		}
-
-		if background_vine_config.x_offset_reference_pixels < 0 {
-			return error('x_offset_reference_pixels value for background vine with ID ${current_background_vine_id} is lower than 0! 
-			This has no sense because this can make a background vine invisible. Use 0 or higher value for this parameter.')
+			return error('Config object is duplicated ${for_background_vine_error_message_part}')
 		}
 
 		if background_vine_config.moving_speed_modifier < 0 {
-			return error('moving_speed_modifier value for background vine with ID ${current_background_vine_id} is lower than 0!
-			This has no sense because this will make background vines move up, while they must move down.')
+			return error('moving_speed_modifier value ${for_background_vine_error_message_part} is lower than 0! This has no sense because this will make background vines move up, while they must move down.')
 		}
 
 		if background_vine_config.moving_speed_modifier.eq_epsilon(0) {
-			return error('moving_speed_modifier value for background vine with ID ${current_background_vine_id} equals 0!
-			This has no sense because this will make background vines static (they will no move).')
+			return error('moving_speed_modifier value ${for_background_vine_error_message_part} equals 0! This has no sense because this will make background vines static (they will no move).')
 		}
 
 		if background_vine_config.moving_speed_modifier.eq_epsilon(1) {
-			return error('moving_speed_modifier value for background vine with ID ${current_background_vine_id} equals 1!
-			Since background movement speed depends on obstacles movement speed, setting moving_speed_modifier parameter
-			to 1 will make background obstacle to move with the same speed as obstacles, and this will break parallax effect.')
+			return error('moving_speed_modifier value ${for_background_vine_error_message_part} equals 1! Since background movement speed depends on obstacles movement speed, setting moving_speed_modifier parameter to 1 will make background obstacle to move with the same speed as obstacles, and this will break parallax effect.')
 		}
 
 		if background_vine_config.moving_speed_modifier > 1 {
-			return error('moving_speed_modifier value for background vine with ID ${current_background_vine_id} is bigger than 1!
-			Since background movement speed depends on obstacles movement speed, setting moving_speed_modifier parameter
-			to be bigger than 1 will make background obstacle to move faster than obstacles obstacles, and this will break parallax effect.')
+			return error('moving_speed_modifier value ${for_background_vine_error_message_part} is bigger than 1! Since background movement speed depends on obstacles movement speed, setting moving_speed_modifier parameter to be bigger than 1 will make background obstacle to move faster than obstacles obstacles, and this will break parallax effect.')
 		}
 	}
 }
