@@ -52,37 +52,43 @@ fn move_vine_part(vine_part background_vines.BackgroundVinePart) background_vine
 	}
 }
 
+// continue_vines This function spawns a new vine part if the last vine part position is greater than 0 (lower than top screen edge) to continue the vine.
 pub fn continue_vines(current_model WorldModel) WorldModel {
-	mut new_background_vines := [][]background_vines.BackgroundVinePart{}
+	return WorldModel{
+		...current_model
+		background_vines: current_model.background_vines.map(try_continue_vine(it))
+	}
+}
 
-	for vine in current_model.background_vines {
-		if vine.last().position.y >= 0 {
-			mut new_vine := vine.clone()
+fn try_continue_vine(vine []background_vines.BackgroundVinePart) []background_vines.BackgroundVinePart {
+	if vine.last().position.y >= 0 {
+		return continue_vine(vine)
+	} else {
+		return vine
+	}
+}
 
-			new_vine[new_vine.len - 1] = background_vines.BackgroundVinePart{
-				...vine.last()
-				position: transform.Position{
-					x: vine.last().position.x
-					y: 0
-				}
-			}
+fn continue_vine(vine []background_vines.BackgroundVinePart) []background_vines.BackgroundVinePart {
+	mut new_vine := vine.clone()
 
-			new_vine << background_vines.BackgroundVinePart{
-				...vine.last()
-				position: transform.Position{
-					x: vine.last().position.x
-					y: 0 - vine.last().image_height
-				}
-			}
+	last_vine_part := vine.last()
+	last_vine_part_position := last_vine_part.position
 
-			new_background_vines << new_vine
-		} else {
-			new_background_vines << vine
+	new_vine[new_vine.len - 1] = background_vines.BackgroundVinePart{
+		...last_vine_part
+		position: transform.Position{
+			x: last_vine_part_position.x
+			y: 0
 		}
 	}
 
-	return WorldModel{
-		...current_model
-		background_vines: new_background_vines
+	new_vine << background_vines.BackgroundVinePart{
+		...last_vine_part
+		position: transform.Position{
+			x: last_vine_part_position.x
+			y: 0 - last_vine_part.image_height
+		}
 	}
+
+	return new_vine
 }
