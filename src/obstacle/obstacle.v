@@ -3,12 +3,13 @@
 module obstacle
 
 import transform
+import common
 
+// TODO: refactor with Entity struct
 pub struct ObstacleSection {
+	common.Entity
 pub:
-	position    transform.Position
 	orientation Orientation
-	image_id    int
 }
 
 pub enum Orientation {

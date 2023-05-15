@@ -48,18 +48,33 @@ const (
 	reference_resolution_height = int(math.round(179 * reference_scale_modifier))
 )
 
+// Green color defined by Igor. Should not be changed without his approval.
+const background_color = gx.Color{
+	r: 64
+	g: 164
+	b: 124
+}
+
+const (
+	background_vine_image_name_template = 'background_vine_{0}.png'
+)
+
 // App stores the minimal data required for rendering the app, focusing on images and related data.
 // Also, it stores the world model, which contains all game data.
 pub struct App {
 mut:
-	graphical_context             &gg.Context
-	is_initialized                bool
-	is_quited                     bool
-	images_scale                  int
+	graphical_context &gg.Context
+	is_initialized    bool
+	is_quited         bool
+	images_scale      int
+
 	obstacle_section_right_image  gg.Image
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
-	world_model                   world.WorldModel
+
+	background_vine_images []gg.Image
+
+	world_model world.WorldModel
 }
 
 // create_app Creates and sets up graphical app.
@@ -69,7 +84,7 @@ pub fn create_app() &App {
 	}
 
 	app.graphical_context = gg.new_context(
-		bg_color: gx.white
+		bg_color: graphics.background_color
 		width: graphics.window_width_pixels
 		height: graphics.window_height_pixels
 		create_window: true
@@ -99,6 +114,19 @@ fn calculate_images_scale(mut app App) ! {
 
 fn draw_frame(mut app App) {
 	app.graphical_context.begin()
+
+	// First draw vines to control Z because normal Z is bugged
+	// Reverse background vines array to draw in reversed way because Z bugged and background vines spawned from closes to farthest
+
+	reversed_background_vines := app.world_model.background_vines.reverse()
+
+	for background_vine in reversed_background_vines {
+		for vine in background_vine {
+			app.graphical_context.draw_image_by_id(f32(vine.position.x), f32(vine.position.y),
+				get_image_width_by_id(mut app, vine.image_id), get_image_height_by_id(mut app,
+				vine.image_id), vine.image_id)
+		}
+	}
 
 	for obstacle in app.world_model.obstacles {
 		for section in obstacle {
@@ -214,4 +242,20 @@ fn create_obstacle_ending(app App, image_id int) world.ObstacleEnding {
 		image_id: image_id
 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
 	}
+}
+
+pub fn get_background_vine_image_id(app App, background_vine_id int) int {
+	return get_background_vine_image_by_id(app, background_vine_id).id
+}
+
+pub fn get_background_vine_height(mut app App, background_vine_id int) int {
+	return get_image_height_by_id(mut app, get_background_vine_image_id(app, background_vine_id))
+}
+
+fn get_background_vine_image_by_id(app App, background_vine_id int) gg.Image {
+	return app.background_vine_images[background_vine_id - 1]
+}
+
+pub fn get_images_scale(app App) int {
+	return app.images_scale
 }

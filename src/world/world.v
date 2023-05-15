@@ -5,11 +5,13 @@ module world
 import obstacle
 import transform
 import rand
+import background_vines
 
 // WorldModel This is a structure that holds the current state of the world.
 pub struct WorldModel {
 pub:
-	obstacles [][]obstacle.ObstacleSection
+	obstacles        [][]obstacle.ObstacleSection
+	background_vines [][]background_vines.BackgroundVinePart
 }
 
 // ObstacleGraphicalAssetsMetadata This structure is needed couple graphical assets info, that will be used by obstacles.
@@ -149,6 +151,7 @@ fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions [
 }
 
 fn place_obstacle_above_screen(obstacle_section_height int, obstacle_sections_positions []transform.Position) []transform.Position {
+	// TODO: same in background vines
 	y_position_above_screen := 0 - obstacle_section_height
 
 	return obstacle_sections_positions.map(update_obstacle_section_position_y(it, y_position_above_screen))
@@ -285,10 +288,6 @@ fn try_remove_last_obstacle_section_position(mut obstacle_sections_positions []t
 // ]
 // ```
 pub fn move_obstacles(current_model WorldModel, move_vector transform.Vector) !WorldModel {
-	if should_skip_operation(current_model) {
-		return current_model
-	}
-
 	return WorldModel{
 		...current_model
 		obstacles: current_model.obstacles.map(move_obstacle(it, move_vector))
@@ -339,18 +338,10 @@ fn move_obstacle_section(obstacle_section obstacle.ObstacleSection, move_vector 
 // }
 // ```
 pub fn destroy_obstacle_below_screen(current_model WorldModel, screen_height int) !WorldModel {
-	if should_skip_operation(current_model) {
-		return current_model
-	}
-
 	return WorldModel{
 		...current_model
 		obstacles: get_visible_obstacles(current_model.obstacles, screen_height)!
 	}
-}
-
-fn should_skip_operation(current_model WorldModel) bool {
-	return current_model.obstacles.len == 0
 }
 
 fn get_visible_obstacles(obstacles [][]obstacle.ObstacleSection, screen_height int) ![][]obstacle.ObstacleSection {
