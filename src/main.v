@@ -6,7 +6,9 @@ import graphics
 import time
 import transform
 import world
-import background_vines
+import ecs
+import common
+import chicken
 
 const (
 	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
@@ -30,62 +32,87 @@ fn main() {
 fn start_main_game_loop(mut app graphics.App) {
 	wait_for_graphic_app_initialization(app)
 
-	screen_size := graphics.get_screen_size(app)
-	screen_width := screen_size.width
+	// screen_size := graphics.get_screen_size(app)
+	// screen_width := screen_size.width
+	//
+	// obstacle_graphical_assets_metadata := world.ObstacleGraphicalAssetsMetadata{
+	// 	obstacle_section_image_id: graphics.get_obstacle_section_right_image_id(app)
+	// 	obstacle_section_image_width: graphics.get_obstacle_section_width(mut app)
+	// 	obstacle_section_image_height: graphics.get_obstacle_section_height(mut app)
+	// 	obstacle_endings: graphics.get_obstacle_endings(app)
+	// }
+	//
+	// spawn_first_obstacle(mut app, obstacle_graphical_assets_metadata, screen_width)
+	//
+	// obstacles_move_vector := transform.calculate_move_vector(obstacle_moving_direction,
+	// 	obstacle_moving_speed, time_step_seconds) or { panic(err) }
+	//
+	// mut obstacle_spawner_stopwatch := time.new_stopwatch()
+	// obstacle_spawner_stopwatch.start()
+	//
+	// background_vines_config := background_vines.get_background_vines_config() or { panic(err) }
+	//
+	// for background_vine_id in 1 .. background_vines.max_background_vines_id {
+	// 	background_vine_height := graphics.get_background_vine_height(mut app, background_vine_id)
+	//
+	// 	background_vine_1_moving_vector := transform.Vector{
+	// 		x: obstacles_move_vector.x
+	// 		y: obstacles_move_vector.y * background_vines_config[background_vine_id - 1].moving_speed_modifier
+	// 	}
+	//
+	// 	model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
+	// 		graphics.get_background_vine_image_id(app, background_vine_id), background_vine_height,
+	// 		background_vines_config[background_vine_id - 1].x_offset_reference_pixels * graphics.get_images_scale(app),
+	// 		background_vine_1_moving_vector) or { panic(err) }
+	//
+	// 	graphics.update_world_model(mut app, model_with_first_background_vine)
+	// }
 
-	obstacle_graphical_assets_metadata := world.ObstacleGraphicalAssetsMetadata{
-		obstacle_section_image_id: graphics.get_obstacle_section_right_image_id(app)
-		obstacle_section_image_width: graphics.get_obstacle_section_width(mut app)
-		obstacle_section_image_height: graphics.get_obstacle_section_height(mut app)
-		obstacle_endings: graphics.get_obstacle_endings(app)
-	}
+	mut ecs_world := graphics.get_ecs_world(app)
 
-	spawn_first_obstacle(mut app, obstacle_graphical_assets_metadata, screen_width)
-
-	obstacles_move_vector := transform.calculate_move_vector(obstacle_moving_direction,
-		obstacle_moving_speed, time_step_seconds) or { panic(err) }
-
-	mut obstacle_spawner_stopwatch := time.new_stopwatch()
-	obstacle_spawner_stopwatch.start()
-
-	background_vines_config := background_vines.get_background_vines_config() or { panic(err) }
-
-	for background_vine_id in 1 .. background_vines.max_background_vines_id {
-		background_vine_height := graphics.get_background_vine_height(mut app, background_vine_id)
-
-		background_vine_1_moving_vector := transform.Vector{
-			x: obstacles_move_vector.x
-			y: obstacles_move_vector.y * background_vines_config[background_vine_id - 1].moving_speed_modifier
-		}
-
-		model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
-			graphics.get_background_vine_image_id(app, background_vine_id), background_vine_height,
-			background_vines_config[background_vine_id - 1].x_offset_reference_pixels * graphics.get_images_scale(app),
-			background_vine_1_moving_vector) or { panic(err) }
-
-		graphics.update_world_model(mut app, model_with_first_background_vine)
-	}
+	ecs.register_entity(mut ecs_world, [
+		common.Position{
+			x: 100
+			y: 100
+		},
+		common.RenderingMetadata{
+			image_id: graphics.get_chicken_idle_image_id(app)
+			orientation: common.Orientation.right
+		},
+		chicken.GravityAffection{
+			gravity_force: 2 * time_step_seconds
+		},
+		common.Velocity{},
+		chicken.IsControlledByPlayerTag{},
+	])
 
 	for graphics.is_quited(app) == false {
-		mut new_model := graphics.get_world_model(app)
+		// mut new_model := graphics.get_world_model(app)
+		//
+		// new_model = world.move_obstacles(new_model, obstacles_move_vector) or { panic(err) }
+		//
+		// new_model = world.destroy_obstacle_below_screen(new_model, screen_size.height) or {
+		// 	panic(err)
+		// }
+		//
+		// if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
+		// 	new_model = spawn_obstacle(new_model, obstacle_graphical_assets_metadata,
+		// 		screen_width) or { panic(err) }
+		//
+		// 	obstacle_spawner_stopwatch.restart()
+		// }
+		//
+		// new_model = world.move_background_vines(new_model) or { panic(err) }
+		// new_model = world.continue_vines(new_model)
+		//
+		// graphics.update_world_model(mut app, new_model)
 
-		new_model = world.move_obstacles(new_model, obstacles_move_vector) or { panic(err) }
+		ecs.execute_system_with_two_components[common.Velocity, chicken.GravityAffection](ecs_world,
+			chicken.gravity_system) or { continue }
 
-		new_model = world.destroy_obstacle_below_screen(new_model, screen_size.height) or {
-			panic(err)
-		}
+		ecs.execute_system_with_two_components[common.Velocity, common.Position](ecs_world,
+			common.movement_system) or { continue }
 
-		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
-			new_model = spawn_obstacle(new_model, obstacle_graphical_assets_metadata,
-				screen_width) or { panic(err) }
-
-			obstacle_spawner_stopwatch.restart()
-		}
-
-		new_model = world.move_background_vines(new_model) or { panic(err) }
-		new_model = world.continue_vines(new_model)
-
-		graphics.update_world_model(mut app, new_model)
 		graphics.invoke_frame_draw(mut app)
 
 		time.sleep(time_step_nanoseconds * time.nanosecond)
@@ -99,14 +126,14 @@ fn wait_for_graphic_app_initialization(app &graphics.App) {
 	}
 }
 
-fn spawn_first_obstacle(mut app graphics.App, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) {
-	model_with_first_spawned_obstacle := spawn_obstacle(graphics.get_world_model(app),
-		obstacle_graphical_assets_metadata, screen_width) or { panic(err) }
-
-	graphics.update_world_model(mut app, model_with_first_spawned_obstacle)
-}
-
-fn spawn_obstacle(current_model world.WorldModel, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) !world.WorldModel {
-	return world.spawn_obstacle(current_model, obstacle_graphical_assets_metadata, screen_width,
-		obstacle_min_blocks_count)!
-}
+// fn spawn_first_obstacle(mut app graphics.App, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) {
+// 	model_with_first_spawned_obstacle := spawn_obstacle(graphics.get_world_model(app),
+// 		obstacle_graphical_assets_metadata, screen_width) or { panic(err) }
+//
+// 	graphics.update_world_model(mut app, model_with_first_spawned_obstacle)
+// }
+//
+// fn spawn_obstacle(current_model world.WorldModel, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) !world.WorldModel {
+// 	return world.spawn_obstacle(current_model, obstacle_graphical_assets_metadata, screen_width,
+// 		obstacle_min_blocks_count)!
+// }

@@ -24,6 +24,8 @@ fn load_assets(mut app App) ! {
 			app.background_vine_images << load_image_on_pc(mut app, os.join_path_single(background_vines_assets_path,
 				background_vine_image_name_template.replace('{0}', background_vine_id.str())))!
 		}
+
+		app.chicken_idle_image = load_image_on_pc(mut app, common.get_platform_dependent_asset_part('chicken/chicken_idle.png'))!
 	}
 }
 

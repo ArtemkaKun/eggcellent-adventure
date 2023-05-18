@@ -4,10 +4,11 @@ module graphics
 
 import gg
 import gx
-import world
-import obstacle
 import scale_factor
 import math
+import ecs
+import common
+import chicken
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -68,19 +69,22 @@ mut:
 	is_quited         bool
 	images_scale      int
 
+	chicken_idle_image gg.Image
+
 	obstacle_section_right_image  gg.Image
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
 
 	background_vine_images []gg.Image
 
-	world_model world.WorldModel
+	ecs_world &ecs.World
 }
 
 // create_app Creates and sets up graphical app.
 pub fn create_app() &App {
 	mut app := &App{
 		graphical_context: unsafe { nil }
+		ecs_world: &ecs.World{}
 	}
 
 	app.graphical_context = gg.new_context(
@@ -93,6 +97,7 @@ pub fn create_app() &App {
 		init_fn: initialize
 		frame_fn: draw_frame
 		quit_fn: quit
+		event_fn: on_event
 		user_data: app
 	)
 
@@ -115,55 +120,78 @@ fn calculate_images_scale(mut app App) ! {
 fn draw_frame(mut app App) {
 	app.graphical_context.begin()
 
+	renderable_entities := ecs.get_entities_with_two_components[common.RenderingMetadata, common.Position](app.ecs_world) or {
+		return
+	}
+
+	for entity in renderable_entities {
+		position_component := ecs.get_component[common.Position](entity) or { continue }
+
+		rendering_metadata_component := ecs.get_component[common.RenderingMetadata](entity) or {
+			continue
+		}
+
+		app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
+			img_rect: gg.Rect{
+				x: f32(position_component.x)
+				y: f32(position_component.y)
+				width: get_image_width_by_id(mut app, rendering_metadata_component.image_id)
+				height: get_image_height_by_id(mut app, rendering_metadata_component.image_id)
+			}
+			flip_x: rendering_metadata_component.orientation == common.Orientation.left
+			img_id: rendering_metadata_component.image_id
+		})
+	}
+
 	// First draw vines to control Z because normal Z is bugged
 	// Reverse background vines array to draw in reversed way because Z bugged and background vines spawned from closes to farthest
 
-	reversed_background_vines := app.world_model.background_vines.reverse()
-
-	for background_vine in reversed_background_vines {
-		for vine in background_vine {
-			app.graphical_context.draw_image_by_id(f32(vine.position.x), f32(vine.position.y),
-				get_image_width_by_id(mut app, vine.image_id), get_image_height_by_id(mut app,
-				vine.image_id), vine.image_id)
-		}
-	}
-
-	for obstacle in app.world_model.obstacles {
-		for section in obstacle {
-			draw_obstacle_section(mut app, section)
-		}
-	}
+	// reversed_background_vines := app.world_model.background_vines.reverse()
+	//
+	// for background_vine in reversed_background_vines {
+	// 	for vine in background_vine {
+	// 		app.graphical_context.draw_image_by_id(f32(vine.position.x), f32(vine.position.y),
+	// 			get_image_width_by_id(mut app, vine.image_id), get_image_height_by_id(mut app,
+	// 			vine.image_id), vine.image_id)
+	// 	}
+	// }
+	//
+	// for obstacle in app.world_model.obstacles {
+	// 	for section in obstacle {
+	// 		draw_obstacle_section(mut app, section)
+	// 	}
+	// }
 
 	app.graphical_context.end()
 }
 
-fn draw_obstacle_section(mut app App, obstacle_section obstacle.ObstacleSection) {
-	mut x_offset := 0
-	image_width := get_image_width_by_id(mut app, obstacle_section.image_id)
-
-	// NOTE:
-	// When performing calculations, the obstacle section width image is used, but the width of the endings differs.
-	// For the left orientation, the ending's position is right next to the edge of the previous section block,
-	// so no adjustment is needed.
-	// However, for the right orientation, we must offset the ending image by the difference
-	// between the ending image width and the obstacle section width.
-	// Consequently, for left orientation, images are drawn from the screen edge to the center, while for right orientation,
-	// images are drawn from the center to the screen edge.
-	if obstacle_section.orientation == obstacle.Orientation.right {
-		x_offset = get_obstacle_section_width(mut app) - image_width
-	}
-
-	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
-		img_rect: gg.Rect{
-			x: f32(obstacle_section.position.x) + x_offset
-			y: f32(obstacle_section.position.y)
-			width: image_width
-			height: get_image_height_by_id(mut app, obstacle_section.image_id)
-		}
-		flip_x: obstacle_section.orientation == obstacle.Orientation.left
-		img_id: obstacle_section.image_id
-	})
-}
+// fn draw_obstacle_section(mut app App, obstacle_section obstacle.ObstacleSection) {
+// 	mut x_offset := 0
+// 	image_width := get_image_width_by_id(mut app, obstacle_section.image_id)
+//
+// 	// NOTE:
+// 	// When performing calculations, the obstacle section width image is used, but the width of the endings differs.
+// 	// For the left orientation, the ending's position is right next to the edge of the previous section block,
+// 	// so no adjustment is needed.
+// 	// However, for the right orientation, we must offset the ending image by the difference
+// 	// between the ending image width and the obstacle section width.
+// 	// Consequently, for left orientation, images are drawn from the screen edge to the center, while for right orientation,
+// 	// images are drawn from the center to the screen edge.
+// 	if obstacle_section.orientation == obstacle.Orientation.right {
+// 		x_offset = get_obstacle_section_width(mut app) - image_width
+// 	}
+//
+// 	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
+// 		img_rect: gg.Rect{
+// 			x: f32(obstacle_section.position.x) + x_offset
+// 			y: f32(obstacle_section.position.y)
+// 			width: image_width
+// 			height: get_image_height_by_id(mut app, obstacle_section.image_id)
+// 		}
+// 		flip_x: obstacle_section.orientation == obstacle.Orientation.left
+// 		img_id: obstacle_section.image_id
+// 	})
+// }
 
 // get_obstacle_section_width Returns obstacle section width with scale applied.
 pub fn get_obstacle_section_width(mut app App) int {
@@ -191,6 +219,26 @@ fn quit(_ &gg.Event, mut app App) {
 	app.is_quited = true
 }
 
+fn on_event(event &gg.Event, mut app App) {
+	if event.typ == .key_down {
+		app.key_down(event.key_code)
+	}
+}
+
+fn (mut app App) key_down(key gg.KeyCode) {
+	match key {
+		.right {
+			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
+				chicken.player_control_system_left_touch) or { return }
+		}
+		.left {
+			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
+				chicken.player_control_system_right_touch) or { return }
+		}
+		else {}
+	}
+}
+
 // start_app Starts graphical app.
 pub fn start_app(mut app App) {
 	app.graphical_context.run()
@@ -202,11 +250,6 @@ pub fn get_screen_size(app App) gg.Size {
 	return app.graphical_context.window_size()
 }
 
-// update_world_model Updates world model structure in the GraphicalApp structure.
-pub fn update_world_model(mut app App, new_model world.WorldModel) {
-	app.world_model = new_model
-}
-
 // is_initialized Checks if graphical app is initialized (`initialize()` function was called).
 pub fn is_initialized(app App) bool {
 	return app.is_initialized
@@ -215,11 +258,6 @@ pub fn is_initialized(app App) bool {
 // is_quited Checks if graphical app is quited (`quit()` function was called).
 pub fn is_quited(app App) bool {
 	return app.is_quited
-}
-
-// get_world_model Returns world model structure from the GraphicalApp structure.
-pub fn get_world_model(app App) world.WorldModel {
-	return app.world_model
 }
 
 // invoke_frame_draw Invokes frame draw (only should be used if `ui_mode` is set to `true`).
@@ -233,16 +271,16 @@ pub fn get_obstacle_section_right_image_id(app App) int {
 }
 
 // get_obstacle_endings Returns obstacle endings.
-pub fn get_obstacle_endings(app App) []world.ObstacleEnding {
-	return app.obstacle_endings_right_images.map(create_obstacle_ending(app, it.id))
-}
-
-fn create_obstacle_ending(app App, image_id int) world.ObstacleEnding {
-	return world.ObstacleEnding{
-		image_id: image_id
-		y_offset: app.obstacle_image_id_to_y_offset[image_id]
-	}
-}
+// pub fn get_obstacle_endings(app App) []world.ObstacleEnding {
+// 	return app.obstacle_endings_right_images.map(create_obstacle_ending(app, it.id))
+// }
+//
+// fn create_obstacle_ending(app App, image_id int) world.ObstacleEnding {
+// 	return world.ObstacleEnding{
+// 		image_id: image_id
+// 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
+// 	}
+// }
 
 pub fn get_background_vine_image_id(app App, background_vine_id int) int {
 	return get_background_vine_image_by_id(app, background_vine_id).id
@@ -258,4 +296,12 @@ fn get_background_vine_image_by_id(app App, background_vine_id int) gg.Image {
 
 pub fn get_images_scale(app App) int {
 	return app.images_scale
+}
+
+pub fn get_ecs_world(app App) &ecs.World {
+	return app.ecs_world
+}
+
+pub fn get_chicken_idle_image_id(app App) int {
+	return app.chicken_idle_image.id
 }
