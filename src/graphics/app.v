@@ -9,6 +9,7 @@ import math
 import ecs
 import common
 import chicken
+import world
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -271,16 +272,17 @@ pub fn get_obstacle_section_right_image_id(app App) int {
 }
 
 // get_obstacle_endings Returns obstacle endings.
-// pub fn get_obstacle_endings(app App) []world.ObstacleEnding {
-// 	return app.obstacle_endings_right_images.map(create_obstacle_ending(app, it.id))
-// }
-//
-// fn create_obstacle_ending(app App, image_id int) world.ObstacleEnding {
-// 	return world.ObstacleEnding{
-// 		image_id: image_id
-// 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
-// 	}
-// }
+pub fn get_obstacle_endings(mut app App) []world.ObstacleEnding {
+	return app.obstacle_endings_right_images.map(create_obstacle_ending(mut app, it.id))
+}
+
+fn create_obstacle_ending(mut app App, image_id int) world.ObstacleEnding {
+	return world.ObstacleEnding{
+		image_id: image_id
+		y_offset: app.obstacle_image_id_to_y_offset[image_id]
+		width: get_image_width_by_id(mut app, image_id)
+	}
+}
 
 pub fn get_background_vine_image_id(app App, background_vine_id int) int {
 	return get_background_vine_image_by_id(app, background_vine_id).id

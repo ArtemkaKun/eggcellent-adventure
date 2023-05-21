@@ -3,13 +3,6 @@ module common
 import transform
 import ecs
 
-// TODO: old implementation, remove when new implementation will be stable
-pub struct Entity {
-pub:
-	position transform.Position
-	image_id int
-}
-
 pub struct Position {
 	ecs.ComponentBase
 	transform.Position
@@ -20,7 +13,9 @@ pub:
 	scale_factor int
 }
 
-pub struct DestroyIfBelowScreenTag {}
+pub struct DestroyIfBelowScreenTag {
+	ecs.ComponentBase
+}
 
 pub struct RenderingMetadata {
 	ecs.ComponentBase
