@@ -166,34 +166,6 @@ fn draw_frame(mut app App) {
 	app.graphical_context.end()
 }
 
-// fn draw_obstacle_section(mut app App, obstacle_section obstacle.ObstacleSection) {
-// 	mut x_offset := 0
-// 	image_width := get_image_width_by_id(mut app, obstacle_section.image_id)
-//
-// 	// NOTE:
-// 	// When performing calculations, the obstacle section width image is used, but the width of the endings differs.
-// 	// For the left orientation, the ending's position is right next to the edge of the previous section block,
-// 	// so no adjustment is needed.
-// 	// However, for the right orientation, we must offset the ending image by the difference
-// 	// between the ending image width and the obstacle section width.
-// 	// Consequently, for left orientation, images are drawn from the screen edge to the center, while for right orientation,
-// 	// images are drawn from the center to the screen edge.
-// 	if obstacle_section.orientation == obstacle.Orientation.right {
-// 		x_offset = get_obstacle_section_width(mut app) - image_width
-// 	}
-//
-// 	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
-// 		img_rect: gg.Rect{
-// 			x: f32(obstacle_section.position.x) + x_offset
-// 			y: f32(obstacle_section.position.y)
-// 			width: image_width
-// 			height: get_image_height_by_id(mut app, obstacle_section.image_id)
-// 		}
-// 		flip_x: obstacle_section.orientation == obstacle.Orientation.left
-// 		img_id: obstacle_section.image_id
-// 	})
-// }
-
 // get_obstacle_section_width Returns obstacle section width with scale applied.
 pub fn get_obstacle_section_width(mut app App) int {
 	return get_image_width_by_id(mut app, app.obstacle_section_right_image.id)
@@ -204,11 +176,11 @@ pub fn get_obstacle_section_height(mut app App) int {
 	return get_image_height_by_id(mut app, app.obstacle_section_right_image.id)
 }
 
-fn get_image_width_by_id(mut app App, image_id int) int {
+pub fn get_image_width_by_id(mut app App, image_id int) int {
 	return get_image_by_id(mut app, image_id).width * app.images_scale
 }
 
-fn get_image_height_by_id(mut app App, image_id int) int {
+pub fn get_image_height_by_id(mut app App, image_id int) int {
 	return get_image_by_id(mut app, image_id).height * app.images_scale
 }
 
@@ -281,6 +253,7 @@ fn create_obstacle_ending(mut app App, image_id int) world.ObstacleEnding {
 		image_id: image_id
 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
 		width: get_image_width_by_id(mut app, image_id)
+		height: get_image_height_by_id(mut app, image_id)
 	}
 }
 

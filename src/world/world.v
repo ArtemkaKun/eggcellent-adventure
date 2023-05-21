@@ -21,14 +21,16 @@ pub struct ObstacleEnding {
 	image_id int
 	y_offset int
 	width    int
+	height   int
 }
 
 struct ObstacleSetupParameters {
-	obstacle_side                common.Orientation
-	obstacle_section_image_id    int
-	obstacle_endings             []ObstacleEnding
-	move_vector                  transform.Vector
-	obstacle_section_image_width int
+	obstacle_side                 common.Orientation
+	obstacle_section_image_id     int
+	obstacle_endings              []ObstacleEnding
+	move_vector                   transform.Vector
+	obstacle_section_image_width  int
+	obstacle_section_image_height int
 }
 
 // NOTE: This set a chance of spawning a single obstacle to 70%.
@@ -148,6 +150,7 @@ fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions [
 		obstacle_endings: obstacle_graphical_assets_metadata.obstacle_endings
 		move_vector: move_vector
 		obstacle_section_image_width: obstacle_graphical_assets_metadata.obstacle_section_image_width
+		obstacle_section_image_height: obstacle_graphical_assets_metadata.obstacle_section_image_height
 	}
 
 	return setup_obstacle(above_screen_obstacle, setup_parameters)!
@@ -173,7 +176,8 @@ fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parame
 	for index, obstacle_sections_position in obstacle_sections_positions {
 		if index != obstacle_sections_positions.len - 1 {
 			obstacle_sections << create_obstacle_section(obstacle_sections_position, setup_parameters.obstacle_side,
-				setup_parameters.obstacle_section_image_id, setup_parameters.move_vector)
+				setup_parameters.obstacle_section_image_id, setup_parameters.move_vector,
+				setup_parameters.obstacle_section_image_width, setup_parameters.obstacle_section_image_height)
 		} else {
 			random_obstacle_ending := rand.element[ObstacleEnding](setup_parameters.obstacle_endings)!
 
@@ -197,14 +201,15 @@ fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parame
 			}
 
 			obstacle_sections << create_obstacle_section(position_with_offset, setup_parameters.obstacle_side,
-				random_obstacle_ending.image_id, setup_parameters.move_vector)
+				random_obstacle_ending.image_id, setup_parameters.move_vector, random_obstacle_ending.width,
+				random_obstacle_ending.height)
 		}
 	}
 
 	return obstacle_sections
 }
 
-fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector) []ecs.IComponent {
+fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector, obstacle_section_image_width int, obstacle_section_image_height int) []ecs.IComponent {
 	return [
 		common.Position{
 			x: section_position.x
@@ -219,6 +224,12 @@ fn create_obstacle_section(section_position transform.Position, obstacle_side co
 			y: move_vector.y
 		},
 		common.DestroyIfBelowScreenTag{},
+		common.Collider{
+			width: obstacle_section_image_width
+			height: obstacle_section_image_height
+			collision_mask: common.CollisionMask.chicken
+			collision_tag: common.CollisionMask.obstacle
+		},
 	]
 }
 

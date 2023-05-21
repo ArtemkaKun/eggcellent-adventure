@@ -1,8 +1,8 @@
 module ecs
 
 pub struct Entity {
-pub:
-	id         u64
+	id u64
+mut:
 	components []IComponent
 }
 
@@ -35,7 +35,7 @@ pub fn get_entities_with_two_components[A, B](world World) ![]Entity {
 	return entities_that_has_a.filter(check_if_entity_has_component[B](it))
 }
 
-fn check_if_entity_has_component[T](entity Entity) bool {
+pub fn check_if_entity_has_component[T](entity Entity) bool {
 	for component in entity.components {
 		if component is T {
 			return true
@@ -84,7 +84,7 @@ pub fn remove_entity(mut world World, entity_to_remove Entity) {
 	for index, entity in world.entities {
 		if entity.id == entity_to_remove.id {
 			index_to_remove = index
-			return
+			break
 		}
 	}
 
@@ -93,4 +93,25 @@ pub fn remove_entity(mut world World, entity_to_remove Entity) {
 	}
 
 	world.entities.delete(index_to_remove)
+}
+
+pub fn remove_component[T](mut entity Entity) ! {
+	if check_if_entity_has_component[T](entity) {
+		component_to_remove := get_component[T](entity)!
+
+		mut index_to_remove := -1
+
+		for index, component in entity.components {
+			if component is T && component == *component_to_remove {
+				index_to_remove = index
+				break
+			}
+		}
+
+		if index_to_remove == -1 {
+			return
+		}
+
+		entity.components.delete(index_to_remove)
+	}
 }

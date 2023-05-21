@@ -9,6 +9,7 @@ import world
 import ecs
 import common
 import chicken
+import egg
 
 const (
 	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
@@ -69,13 +70,15 @@ fn start_main_game_loop(mut app graphics.App) {
 		panic(err)
 	}
 
+	chicken_idle_image_id := graphics.get_chicken_idle_image_id(app)
+
 	ecs.register_entity(mut ecs_world, [
 		common.Position{
 			x: 100
 			y: 100
 		},
 		common.RenderingMetadata{
-			image_id: graphics.get_chicken_idle_image_id(app)
+			image_id: chicken_idle_image_id
 			orientation: common.Orientation.right
 		},
 		chicken.GravityAffection{
@@ -83,6 +86,12 @@ fn start_main_game_loop(mut app graphics.App) {
 		},
 		common.Velocity{},
 		chicken.IsControlledByPlayerTag{},
+		common.Collider{
+			width: graphics.get_image_width_by_id(mut app, chicken_idle_image_id)
+			height: graphics.get_image_height_by_id(mut app, chicken_idle_image_id)
+			collision_mask: common.CollisionMask.obstacle | common.CollisionMask.egg
+			collision_tag: common.CollisionMask.chicken
+		},
 	])
 
 	for graphics.is_quited(app) == false {
@@ -104,6 +113,7 @@ fn start_main_game_loop(mut app graphics.App) {
 			common.movement_system) or {}
 
 		destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
+		handle_collision(mut ecs_world) or {}
 
 		graphics.invoke_frame_draw(mut app)
 
@@ -132,4 +142,54 @@ fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
 			ecs.remove_entity(mut ecs_world, entity)
 		}
 	}
+}
+
+fn handle_collision(mut ecs_world ecs.World) ! {
+	entities_to_check := ecs.get_entities_with_two_components[common.Position, common.Collider](ecs_world)!
+
+	for first_index, entity_first in entities_to_check {
+		for second_index in first_index + 1 .. entities_to_check.len {
+			if check_collision(entity_first, entities_to_check[second_index])! {
+				mut chicken_entity := entity_first
+				mut second_collided_entity := entities_to_check[second_index]
+
+				if ecs.check_if_entity_has_component[chicken.IsControlledByPlayerTag](entity_first) == false {
+					if ecs.check_if_entity_has_component[chicken.IsControlledByPlayerTag](entities_to_check[second_index]) == false {
+						panic('Two entities collided that are not suppose to collide.\n
+								First entity is - ${entity_first}\n
+								Second entity is = ${entities_to_check[second_index]}')
+					}
+
+					second_collided_entity = entity_first
+					chicken_entity = entities_to_check[second_index]
+				}
+
+				if ecs.check_if_entity_has_component[egg.IsEggTag](second_collided_entity) == false {
+					ecs.remove_component[chicken.IsControlledByPlayerTag](mut chicken_entity)!
+				}
+			}
+		}
+	}
+}
+
+fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
+	first_position := ecs.get_component[common.Position](first_entity)!
+	first_collider := ecs.get_component[common.Collider](first_entity)!
+
+	second_position := ecs.get_component[common.Position](second_entity)!
+	second_collider := ecs.get_component[common.Collider](second_entity)!
+
+	if first_collider.collision_mask.has(second_collider.collision_tag) == false
+		|| second_collider.collision_mask.has(first_collider.collision_tag) == false {
+		return false
+	}
+
+	if first_position.x < second_position.x + second_collider.width
+		&& first_position.x + first_collider.width > second_position.x
+		&& first_position.y < second_position.y + second_collider.height
+		&& first_position.y + first_collider.height > second_position.y {
+		return true
+	}
+
+	return false
 }

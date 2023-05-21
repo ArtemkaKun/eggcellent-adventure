@@ -25,9 +25,12 @@ pub:
 }
 
 pub struct Collider {
+	ecs.ComponentBase
 pub:
-	width  int
-	height int
+	width          int
+	height         int
+	collision_mask CollisionMask
+	collision_tag  CollisionMask
 }
 
 pub struct Velocity {
@@ -38,6 +41,13 @@ pub struct Velocity {
 pub enum Orientation {
 	left
 	right
+}
+
+[flag]
+pub enum CollisionMask {
+	obstacle
+	chicken
+	egg
 }
 
 pub fn movement_system(velocity_component &Velocity, mut position_component Position) {
