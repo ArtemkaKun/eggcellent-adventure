@@ -165,8 +165,12 @@ fn handle_collision(mut ecs_world ecs.World) ! {
 				}
 
 				if ecs.check_if_entity_has_component[egg.IsEggTag](second_collided_entity) == false {
-					ecs.remove_component[chicken.IsControlledByPlayerTag](mut chicken_entity)!
+					ecs.remove_component[chicken.IsControlledByPlayerTag](mut ecs_world,
+						chicken_entity.id)!
+					ecs.remove_component[common.Collider](mut ecs_world, chicken_entity.id)!
 				}
+
+				break
 			}
 		}
 	}

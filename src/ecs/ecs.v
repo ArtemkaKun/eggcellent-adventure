@@ -1,6 +1,7 @@
 module ecs
 
 pub struct Entity {
+pub:
 	id u64
 mut:
 	components []IComponent
@@ -95,23 +96,10 @@ pub fn remove_entity(mut world World, entity_to_remove Entity) {
 	world.entities.delete(index_to_remove)
 }
 
-pub fn remove_component[T](mut entity Entity) ! {
-	if check_if_entity_has_component[T](entity) {
-		component_to_remove := get_component[T](entity)!
-
-		mut index_to_remove := -1
-
-		for index, component in entity.components {
-			if component is T && component == *component_to_remove {
-				index_to_remove = index
-				break
-			}
+pub fn remove_component[T](mut ecs_world World, entity_id u64) ! {
+	for _, mut entity in ecs_world.entities {
+		if entity.id == entity_id {
+			entity.components.delete(entity.components.index(*get_component[T](entity)!))
 		}
-
-		if index_to_remove == -1 {
-			return
-		}
-
-		entity.components.delete(index_to_remove)
 	}
 }
