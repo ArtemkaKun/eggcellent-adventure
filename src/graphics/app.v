@@ -195,8 +195,26 @@ fn quit(_ &gg.Event, mut app App) {
 }
 
 fn on_event(event &gg.Event, mut app App) {
-	if event.typ == .key_down {
-		app.key_down(event.key_code)
+	$if android {
+		if event.typ == .touches_ended && event.num_touches == 1 {
+			app.touched(event.touches)
+		}
+	} $else {
+		if event.typ == .key_down {
+			app.key_down(event.key_code)
+		}
+	}
+}
+
+fn (mut app App) touched(touches [8]gg.TouchPoint) {
+	screen_width := get_screen_size(app).width
+
+	if touches[0].pos_x > screen_width / 2 {
+		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
+			chicken.player_control_system_right_touch) or { return }
+	} else {
+		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
+			chicken.player_control_system_left_touch) or { return }
 	}
 }
 
@@ -204,11 +222,11 @@ fn (mut app App) key_down(key gg.KeyCode) {
 	match key {
 		.right {
 			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
-				chicken.player_control_system_left_touch) or { return }
+				chicken.player_control_system_right_touch) or { return }
 		}
 		.left {
 			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
-				chicken.player_control_system_right_touch) or { return }
+				chicken.player_control_system_left_touch) or { return }
 		}
 		else {}
 	}
