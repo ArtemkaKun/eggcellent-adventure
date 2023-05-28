@@ -79,11 +79,11 @@ pub fn get_entities_with_three_components[A, B, D](world World) ![]Entity {
 	return entities_that_has_a_and_b.filter(check_if_entity_has_component[D](it))
 }
 
-pub fn remove_entity(mut world World, entity_to_remove Entity) {
+pub fn remove_entity(mut world World, entity_id u64) {
 	mut index_to_remove := -1
 
 	for index, entity in world.entities {
-		if entity.id == entity_to_remove.id {
+		if entity.id == entity_id {
 			index_to_remove = index
 			break
 		}

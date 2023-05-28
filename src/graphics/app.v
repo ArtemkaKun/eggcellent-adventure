@@ -76,6 +76,8 @@ mut:
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
 
+	egg_1_image gg.Image
+
 	background_vine_images []gg.Image
 
 	ecs_world &ecs.World
@@ -279,4 +281,8 @@ pub fn get_ecs_world(app App) &ecs.World {
 
 pub fn get_chicken_idle_image_id(app App) int {
 	return app.chicken_idle_image.id
+}
+
+pub fn get_egg_1_image_id(app App) int {
+	return app.egg_1_image.id
 }

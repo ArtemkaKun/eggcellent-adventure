@@ -26,6 +26,7 @@ fn load_assets(mut app App) ! {
 		}
 
 		app.chicken_idle_image = load_image_on_pc(mut app, common.get_platform_dependent_asset_part('chicken/chicken_idle.png'))!
+		app.egg_1_image = load_image_on_pc(mut app, common.get_platform_dependent_asset_part('egg/egg_1.png'))!
 	}
 }
 

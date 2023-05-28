@@ -10,6 +10,7 @@ import ecs
 import common
 import chicken
 import egg
+import rand
 
 const (
 	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
@@ -23,6 +24,8 @@ const (
 	obstacles_spawn_rate_seconds = 5 // NOTE: 5 was set only for testing. It may change in the future.
 	obstacle_min_blocks_count    = 2 // NOTE: these value was discussed with Igor and should not be changed without his approval.
 )
+
+const egg_spawn_rate_seconds = 10 // NOTE: 60 was set only for testing. It may change in the future.
 
 fn main() {
 	mut app := graphics.create_app()
@@ -43,8 +46,6 @@ fn start_main_game_loop(mut app graphics.App) {
 		obstacle_endings: graphics.get_obstacle_endings(mut app)
 	}
 
-	mut obstacle_spawner_stopwatch := time.new_stopwatch()
-	obstacle_spawner_stopwatch.start()
 	//
 	// background_vines_config := background_vines.get_background_vines_config() or { panic(err) }
 	//
@@ -94,6 +95,12 @@ fn start_main_game_loop(mut app graphics.App) {
 		},
 	])
 
+	mut obstacle_spawner_stopwatch := time.new_stopwatch()
+	obstacle_spawner_stopwatch.start()
+
+	mut egg_spawner_stopwatch := time.new_stopwatch()
+	egg_spawner_stopwatch.start()
+
 	for graphics.is_quited(app) == false {
 		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
 			spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width) or {
@@ -101,6 +108,14 @@ fn start_main_game_loop(mut app graphics.App) {
 			}
 
 			obstacle_spawner_stopwatch.restart()
+		}
+
+		if egg_spawner_stopwatch.elapsed().seconds() >= egg_spawn_rate_seconds {
+			spawn_egg(mut ecs_world, mut app, graphics.get_egg_1_image_id(app), screen_width) or {
+				panic(err)
+			}
+
+			egg_spawner_stopwatch.restart()
 		}
 
 		// new_model = world.move_background_vines(new_model) or { panic(err) }
@@ -139,7 +154,7 @@ fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
 
 	for entity in entities_to_check {
 		if ecs.get_component[common.Position](entity)!.y >= screen_height {
-			ecs.remove_entity(mut ecs_world, entity)
+			ecs.remove_entity(mut ecs_world, entity.id)
 		}
 	}
 }
@@ -168,6 +183,8 @@ fn handle_collision(mut ecs_world ecs.World) ! {
 					ecs.remove_component[chicken.IsControlledByPlayerTag](mut ecs_world,
 						chicken_entity.id)!
 					ecs.remove_component[common.Collider](mut ecs_world, chicken_entity.id)!
+				} else {
+					ecs.remove_entity(mut ecs_world, second_collided_entity.id)
 				}
 
 				break
@@ -196,4 +213,38 @@ fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
 	}
 
 	return false
+}
+
+fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, screen_width int) ! {
+	min_x_position := graphics.get_image_width_by_id(mut app, egg_image_id) * 2
+	max_x_position := screen_width - graphics.get_image_width_by_id(mut app, egg_image_id) * 2
+
+	egg_x_position := rand.int_in_range(min_x_position, max_x_position)!
+	egg_y_position := 0 - graphics.get_image_height_by_id(mut app, egg_image_id)
+
+	move_vector := transform.calculate_move_vector(obstacle_moving_direction, obstacle_moving_speed,
+		time_step_seconds)!
+
+	ecs.register_entity(mut ecs_world, [
+		common.Position{
+			x: egg_x_position
+			y: egg_y_position
+		},
+		common.RenderingMetadata{
+			image_id: egg_image_id
+			orientation: common.Orientation.right
+		},
+		common.Velocity{
+			x: move_vector.x
+			y: move_vector.y
+		},
+		common.DestroyIfBelowScreenTag{},
+		common.Collider{
+			width: graphics.get_image_width_by_id(mut app, egg_image_id)
+			height: graphics.get_image_height_by_id(mut app, egg_image_id)
+			collision_mask: common.CollisionMask.chicken
+			collision_tag: common.CollisionMask.egg
+		},
+		egg.IsEggTag{},
+	])
 }
