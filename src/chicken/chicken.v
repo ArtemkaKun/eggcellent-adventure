@@ -36,7 +36,7 @@ pub fn player_control_system_left_touch(_ &IsControlledByPlayerTag, mut renderin
 	}
 
 	velocity_component = &common.Velocity{
-		x: 0.5
+		x: 0.45
 		y: -1
 	}
 }
@@ -48,7 +48,7 @@ pub fn player_control_system_right_touch(controlled_by_player_tag &IsControlledB
 	}
 
 	velocity_component = &common.Velocity{
-		x: -0.5
+		x: -0.45
 		y: -1
 	}
 }

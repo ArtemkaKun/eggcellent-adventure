@@ -33,6 +33,12 @@ struct ObstacleSetupParameters {
 	obstacle_section_image_height int
 }
 
+pub struct Obstacle {
+	ecs.ComponentBase
+pub:
+	id int
+}
+
 // NOTE: This set a chance of spawning a single obstacle to 70%.
 // We don't want to spawn double obstacles too often, because it is harder to play.
 // This value may be adjusted in the future.
@@ -83,21 +89,21 @@ const single_obstacle_spawn_chance = 0.7
 // 	]
 // }
 // ```
-pub fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, screen_width int, min_blocks_count int, move_vector transform.Vector) ! {
+pub fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, screen_width int, min_blocks_count int, move_vector transform.Vector, obstacle_id int) ! {
 	if rand.f32() < world.single_obstacle_spawn_chance {
 		random_orientation := unsafe {
 			common.Orientation(rand.int_in_range(0, 2)!)
 		}
 
 		spawned_obstacle := spawn_single_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata,
-			min_blocks_count, random_orientation, move_vector)!
+			min_blocks_count, random_orientation, move_vector, obstacle_id)!
 
 		for obstacle_section in spawned_obstacle {
 			ecs.register_entity(mut ecs_world, obstacle_section)
 		}
 	} else {
 		left_obstacle, right_obstacle := spawn_double_random_width_obstacles(screen_width,
-			obstacle_graphical_assets_metadata, min_blocks_count, move_vector)!
+			obstacle_graphical_assets_metadata, min_blocks_count, move_vector, obstacle_id)!
 
 		for obstacle_section in left_obstacle {
 			ecs.register_entity(mut ecs_world, obstacle_section)
@@ -109,16 +115,16 @@ pub fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadat
 	}
 }
 
-fn spawn_single_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, random_orientation common.Orientation, move_vector transform.Vector) ![][]ecs.IComponent {
+fn spawn_single_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, random_orientation common.Orientation, move_vector transform.Vector, obstacle_id int) ![][]ecs.IComponent {
 	random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata.obstacle_section_image_width,
 		min_blocks_count, random_orientation)!
 
 	return setup_new_obstacle(obstacle_graphical_assets_metadata.obstacle_section_image_height,
 		random_width_obstacle, random_orientation, obstacle_graphical_assets_metadata,
-		move_vector)
+		move_vector, obstacle_id)
 }
 
-fn spawn_double_random_width_obstacles(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, move_vector transform.Vector) !([][]ecs.IComponent, [][]ecs.IComponent) {
+fn spawn_double_random_width_obstacles(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, move_vector transform.Vector, obstacle_id int) !([][]ecs.IComponent, [][]ecs.IComponent) {
 	mut left_obstacle_sections_positions := obstacle.spawn_random_width_obstacle(screen_width,
 		obstacle_graphical_assets_metadata.obstacle_section_image_width, min_blocks_count,
 		common.Orientation.left)!
@@ -132,16 +138,16 @@ fn spawn_double_random_width_obstacles(screen_width int, obstacle_graphical_asse
 
 	left_obstacle := setup_new_obstacle(obstacle_graphical_assets_metadata.obstacle_section_image_height,
 		left_obstacle_sections_positions, common.Orientation.left, obstacle_graphical_assets_metadata,
-		move_vector)!
+		move_vector, obstacle_id)!
 
 	right_obstacle := setup_new_obstacle(obstacle_graphical_assets_metadata.obstacle_section_image_height,
 		right_obstacle_sections_positions, common.Orientation.right, obstacle_graphical_assets_metadata,
-		move_vector)!
+		move_vector, obstacle_id)!
 
 	return left_obstacle, right_obstacle
 }
 
-fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions []transform.Position, random_orientation common.Orientation, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, move_vector transform.Vector) ![][]ecs.IComponent {
+fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions []transform.Position, random_orientation common.Orientation, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, move_vector transform.Vector, obstacle_id int) ![][]ecs.IComponent {
 	above_screen_obstacle := place_obstacle_above_screen(obstacle_section_height, obstacle_sections_positions)
 
 	setup_parameters := ObstacleSetupParameters{
@@ -153,7 +159,7 @@ fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions [
 		obstacle_section_image_height: obstacle_graphical_assets_metadata.obstacle_section_image_height
 	}
 
-	return setup_obstacle(above_screen_obstacle, setup_parameters)!
+	return setup_obstacle(above_screen_obstacle, setup_parameters, obstacle_id)!
 }
 
 fn place_obstacle_above_screen(obstacle_section_height int, obstacle_sections_positions []transform.Position) []transform.Position {
@@ -170,14 +176,15 @@ fn update_obstacle_section_position_y(obstacle_section_position transform.Positi
 	}
 }
 
-fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parameters ObstacleSetupParameters) ![][]ecs.IComponent {
+fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parameters ObstacleSetupParameters, obstacle_id int) ![][]ecs.IComponent {
 	mut obstacle_sections := [][]ecs.IComponent{}
 
 	for index, obstacle_sections_position in obstacle_sections_positions {
 		if index != obstacle_sections_positions.len - 1 {
 			obstacle_sections << create_obstacle_section(obstacle_sections_position, setup_parameters.obstacle_side,
 				setup_parameters.obstacle_section_image_id, setup_parameters.move_vector,
-				setup_parameters.obstacle_section_image_width, setup_parameters.obstacle_section_image_height)
+				setup_parameters.obstacle_section_image_width, setup_parameters.obstacle_section_image_height,
+				obstacle_id)
 		} else {
 			random_obstacle_ending := rand.element[ObstacleEnding](setup_parameters.obstacle_endings)!
 
@@ -202,14 +209,14 @@ fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parame
 
 			obstacle_sections << create_obstacle_section(position_with_offset, setup_parameters.obstacle_side,
 				random_obstacle_ending.image_id, setup_parameters.move_vector, random_obstacle_ending.width,
-				random_obstacle_ending.height)
+				random_obstacle_ending.height, obstacle_id)
 		}
 	}
 
 	return obstacle_sections
 }
 
-fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector, obstacle_section_image_width int, obstacle_section_image_height int) []ecs.IComponent {
+fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector, obstacle_section_image_width int, obstacle_section_image_height int, obstacle_id int) []ecs.IComponent {
 	return [
 		common.Position{
 			x: section_position.x
@@ -229,6 +236,9 @@ fn create_obstacle_section(section_position transform.Position, obstacle_side co
 			height: obstacle_section_image_height
 			collision_mask: common.CollisionMask.chicken
 			collision_tag: common.CollisionMask.obstacle
+		},
+		Obstacle{
+			id: obstacle_id
 		},
 	]
 }

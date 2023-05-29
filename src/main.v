@@ -10,7 +10,6 @@ import ecs
 import common
 import chicken
 import egg
-import rand
 
 const (
 	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
@@ -25,7 +24,7 @@ const (
 	obstacle_min_blocks_count    = 2 // NOTE: these value was discussed with Igor and should not be changed without his approval.
 )
 
-const egg_spawn_rate_seconds = 10 // NOTE: 60 was set only for testing. It may change in the future.
+const egg_spawn_rate_seconds = 20 // NOTE: 60 was set only for testing. It may change in the future.
 
 fn main() {
 	mut app := graphics.create_app()
@@ -67,9 +66,13 @@ fn start_main_game_loop(mut app graphics.App) {
 
 	mut ecs_world := graphics.get_ecs_world(app)
 
-	spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width) or {
+	mut obstacle_id := 0
+
+	spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width, obstacle_id) or {
 		panic(err)
 	}
+
+	obstacle_id += 1
 
 	chicken_idle_image_id := graphics.get_chicken_idle_image_id(app)
 
@@ -103,11 +106,11 @@ fn start_main_game_loop(mut app graphics.App) {
 
 	for graphics.is_quited(app) == false {
 		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
-			spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width) or {
-				panic(err)
-			}
+			spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width,
+				obstacle_id) or { panic(err) }
 
 			obstacle_spawner_stopwatch.restart()
+			obstacle_id += 1
 		}
 
 		if egg_spawner_stopwatch.elapsed().seconds() >= egg_spawn_rate_seconds {
@@ -143,10 +146,10 @@ fn wait_for_graphic_app_initialization(app &graphics.App) {
 	}
 }
 
-fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int) ! {
+fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int, obstacle_id int) ! {
 	world.spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width,
 		obstacle_min_blocks_count, transform.calculate_move_vector(obstacle_moving_direction,
-		obstacle_moving_speed, time_step_seconds)!)!
+		obstacle_moving_speed, time_step_seconds)!, obstacle_id)!
 }
 
 fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
@@ -216,10 +219,46 @@ fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
 }
 
 fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, screen_width int) ! {
-	min_x_position := graphics.get_image_width_by_id(mut app, egg_image_id) * 2
-	max_x_position := screen_width - graphics.get_image_width_by_id(mut app, egg_image_id) * 2
+	obstacles := ecs.get_entities_with_three_components[common.Position, common.Collider, world.Obstacle](ecs_world)!
 
-	egg_x_position := rand.int_in_range(min_x_position, max_x_position)!
+	// We need to find a good position to spawn an egg. This position should be not occupied by the closest obstacle.
+	// Implement an algorithm to find limits for egg spawning.
+	mut closest_obstacle_by_y := obstacles[0]
+
+	for entity in obstacles {
+		if ecs.get_component[common.Position](entity)!.y < ecs.get_component[common.Position](closest_obstacle_by_y)!.y {
+			closest_obstacle_by_y = entity
+		}
+	}
+
+	closest_obstacles := obstacles.filter((ecs.get_component[world.Obstacle](it)!).id == (ecs.get_component[world.Obstacle](closest_obstacle_by_y)!).id)
+
+	mut free_pixel_x_positions := []int{}
+
+	for pixel_x in 0 .. screen_width + 1 {
+		free_pixel_x_positions << pixel_x
+	}
+
+	for obstacle in closest_obstacles {
+		obstacle_position := ecs.get_component[common.Position](obstacle)!
+		obstacle_collider := ecs.get_component[common.Collider](obstacle)!
+
+		for pixel_x in int(obstacle_position.x) .. int(obstacle_position.x) +
+			obstacle_collider.width {
+			index_of_element_to_mark_as_remove := free_pixel_x_positions.index(pixel_x)
+			free_pixel_x_positions[index_of_element_to_mark_as_remove] = -1
+		}
+	}
+
+	free_pixel_x_positions[free_pixel_x_positions.len - 1] = -1 // HACK
+
+	free_pixel_x_positions = free_pixel_x_positions.filter(it != -1)
+
+	min_x_position := free_pixel_x_positions[0]
+	max_x_position := free_pixel_x_positions.last()
+
+	egg_x_position := ((max_x_position - min_x_position) / 2 + min_x_position) - graphics.get_image_width_by_id(mut app,
+		egg_image_id) / 2
 	egg_y_position := 0 - graphics.get_image_height_by_id(mut app, egg_image_id)
 
 	move_vector := transform.calculate_move_vector(obstacle_moving_direction, obstacle_moving_speed,
