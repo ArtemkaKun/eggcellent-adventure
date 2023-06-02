@@ -78,8 +78,6 @@ mut:
 
 	egg_1_image gg.Image
 
-	background_vine_images []gg.Image
-
 	ecs_world &ecs.World
 }
 
@@ -145,25 +143,6 @@ fn draw_frame(mut app App) {
 			img_id: rendering_metadata_component.image_id
 		})
 	}
-
-	// First draw vines to control Z because normal Z is bugged
-	// Reverse background vines array to draw in reversed way because Z bugged and background vines spawned from closes to farthest
-
-	// reversed_background_vines := app.world_model.background_vines.reverse()
-	//
-	// for background_vine in reversed_background_vines {
-	// 	for vine in background_vine {
-	// 		app.graphical_context.draw_image_by_id(f32(vine.position.x), f32(vine.position.y),
-	// 			get_image_width_by_id(mut app, vine.image_id), get_image_height_by_id(mut app,
-	// 			vine.image_id), vine.image_id)
-	// 	}
-	// }
-	//
-	// for obstacle in app.world_model.obstacles {
-	// 	for section in obstacle {
-	// 		draw_obstacle_section(mut app, section)
-	// 	}
-	// }
 
 	app.graphical_context.end()
 }
@@ -275,22 +254,6 @@ fn create_obstacle_ending(mut app App, image_id int) world.ObstacleEnding {
 		width: get_image_width_by_id(mut app, image_id)
 		height: get_image_height_by_id(mut app, image_id)
 	}
-}
-
-pub fn get_background_vine_image_id(app App, background_vine_id int) int {
-	return get_background_vine_image_by_id(app, background_vine_id).id
-}
-
-pub fn get_background_vine_height(mut app App, background_vine_id int) int {
-	return get_image_height_by_id(mut app, get_background_vine_image_id(app, background_vine_id))
-}
-
-fn get_background_vine_image_by_id(app App, background_vine_id int) gg.Image {
-	return app.background_vine_images[background_vine_id - 1]
-}
-
-pub fn get_images_scale(app App) int {
-	return app.images_scale
 }
 
 pub fn get_ecs_world(app App) &ecs.World {

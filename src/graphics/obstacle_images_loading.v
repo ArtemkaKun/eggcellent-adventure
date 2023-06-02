@@ -2,31 +2,19 @@ module graphics
 
 import gg
 import os
-import background_vines
 import common
 
 fn load_assets(mut app App) ! {
 	right_obstacle_assets_path := common.get_platform_dependent_asset_part('obstacle/right')
-	background_vines_assets_path := common.get_platform_dependent_asset_part('background/vines')
 
 	// The game will only be used on Android, but be able to run it on PC will speed up development.
 	$if android {
 		load_images_right_obstacle_images(mut app, load_image_on_android, right_obstacle_assets_path)!
 
-		for background_vine_id in 1 .. background_vines.max_background_vines_id {
-			app.background_vine_images << load_image_on_android(mut app, os.join_path_single(background_vines_assets_path,
-				background_vine_image_name_template.replace('{0}', background_vine_id.str())))!
-		}
-
 		app.chicken_idle_image = load_image_on_android(mut app, common.get_platform_dependent_asset_part('chicken/chicken_idle.png'))!
 		app.egg_1_image = load_image_on_android(mut app, common.get_platform_dependent_asset_part('egg/egg_1.png'))!
 	} $else {
 		load_images_right_obstacle_images(mut app, load_image_on_pc, right_obstacle_assets_path)!
-
-		for background_vine_id in 1 .. background_vines.max_background_vines_id {
-			app.background_vine_images << load_image_on_pc(mut app, os.join_path_single(background_vines_assets_path,
-				background_vine_image_name_template.replace('{0}', background_vine_id.str())))!
-		}
 
 		app.chicken_idle_image = load_image_on_pc(mut app, common.get_platform_dependent_asset_part('chicken/chicken_idle.png'))!
 		app.egg_1_image = load_image_on_pc(mut app, common.get_platform_dependent_asset_part('egg/egg_1.png'))!

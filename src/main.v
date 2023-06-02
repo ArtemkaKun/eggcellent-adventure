@@ -45,25 +45,6 @@ fn start_main_game_loop(mut app graphics.App) {
 		obstacle_endings: graphics.get_obstacle_endings(mut app)
 	}
 
-	//
-	// background_vines_config := background_vines.get_background_vines_config() or { panic(err) }
-	//
-	// for background_vine_id in 1 .. background_vines.max_background_vines_id {
-	// 	background_vine_height := graphics.get_background_vine_height(mut app, background_vine_id)
-	//
-	// 	background_vine_1_moving_vector := transform.Vector{
-	// 		x: obstacles_move_vector.x
-	// 		y: obstacles_move_vector.y * background_vines_config[background_vine_id - 1].moving_speed_modifier
-	// 	}
-	//
-	// 	model_with_first_background_vine := world.spawn_background_vine(graphics.get_world_model(app),
-	// 		graphics.get_background_vine_image_id(app, background_vine_id), background_vine_height,
-	// 		background_vines_config[background_vine_id - 1].x_offset_reference_pixels * graphics.get_images_scale(app),
-	// 		background_vine_1_moving_vector) or { panic(err) }
-	//
-	// 	graphics.update_world_model(mut app, model_with_first_background_vine)
-	// }
-
 	mut ecs_world := graphics.get_ecs_world(app)
 
 	mut obstacle_id := 0
@@ -120,9 +101,6 @@ fn start_main_game_loop(mut app graphics.App) {
 
 			egg_spawner_stopwatch.restart()
 		}
-
-		// new_model = world.move_background_vines(new_model) or { panic(err) }
-		// new_model = world.continue_vines(new_model)
 
 		ecs.execute_system_with_two_components[common.Velocity, chicken.GravityAffection](ecs_world,
 			chicken.gravity_system) or {}
