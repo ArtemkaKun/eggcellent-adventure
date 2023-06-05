@@ -7,13 +7,7 @@ mut:
 	components []IComponent
 }
 
-pub interface IComponent {
-	hollow bool
-}
-
-pub struct ComponentBase {
-	hollow bool
-}
+pub interface IComponent {}
 
 pub struct World {
 mut:
