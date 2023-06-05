@@ -10,15 +10,6 @@ pub:
 
 pub struct IsControlledByPlayerTag {}
 
-pub struct Animation {
-pub:
-	frames_ids                 []int
-	is_playing                 bool
-	current_frame_id           int
-	time_to_next_frame_seconds f64
-	next_frame_id              ?int
-}
-
 pub fn gravity_system(mut velocity_component common.Velocity, gravity_affection &GravityAffection) {
 	velocity_component = &common.Velocity{
 		x: velocity_component.x
