@@ -29,7 +29,7 @@ pub fn player_control_system_left_touch(_ &IsControlledByPlayerTag, mut renderin
 	}
 }
 
-pub fn player_control_system_right_touch(controlled_by_player_tag &IsControlledByPlayerTag, mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity) {
+pub fn player_control_system_right_touch(_ &IsControlledByPlayerTag, mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity) {
 	rendering_metadata_component = &common.RenderingMetadata{
 		image_id: rendering_metadata_component.image_id
 		orientation: common.Orientation.right
