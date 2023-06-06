@@ -2,33 +2,52 @@ module chicken
 
 import common
 
-pub fn gravity_system(mut velocity_component common.Velocity, gravity_affection &GravityAffection) {
+// NOTE:
+// These constants are used to define the jump velocity of the chicken.
+// They were adjusted manually to achieve the desired jump behavior.
+// Don't change them unless you know what you are doing.
+const (
+	jump_velocity_x = 0.45
+	jump_velocity_y = -1
+)
+
+// gravity_system applies the force of gravity to an entity's velocity.
+// It adjusts the y component of the entity's velocity based on the gravity force.
+pub fn gravity_system(mut velocity_component common.Velocity, gravity_affection &GravityInfluence) {
 	velocity_component = &common.Velocity{
 		x: velocity_component.x
-		y: velocity_component.y + gravity_affection.gravity_force
+		y: velocity_component.y + gravity_affection.force
 	}
 }
 
-pub fn player_control_system_left_touch(_ &IsControlledByPlayerTag, mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity) {
-	rendering_metadata_component = &common.RenderingMetadata{
-		image_id: rendering_metadata_component.image_id
-		orientation: common.Orientation.left
-	}
-
-	velocity_component = &common.Velocity{
-		x: 0.45
-		y: -1
-	}
+// player_control_system_left_jump is triggered on players pressing the left arrow key or touching the left side of the screen.
+// This system is triggered from the corresponding App's input event.
+// It modifies the rendering_metadata and velocity components of the chicken entity to reflect the jump action to the left.
+pub fn player_control_system_left_jump(_ &IsControlledByPlayerTag, mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity) {
+	do_jump(mut rendering_metadata_component, mut velocity_component, common.Orientation.left)
 }
 
-pub fn player_control_system_right_touch(_ &IsControlledByPlayerTag, mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity) {
+// player_control_system_right_jump is triggered on players pressing the right arrow key or touching the right side of the screen.
+// This system is triggered from the corresponding App's input event.
+// It modifies the rendering_metadata and velocity components of the chicken entity to reflect the jump action to the right.
+pub fn player_control_system_right_jump(_ &IsControlledByPlayerTag, mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity) {
+	do_jump(mut rendering_metadata_component, mut velocity_component, common.Orientation.right)
+}
+
+fn do_jump(mut rendering_metadata_component common.RenderingMetadata, mut velocity_component common.Velocity, jump_orientation common.Orientation) {
 	rendering_metadata_component = &common.RenderingMetadata{
 		image_id: rendering_metadata_component.image_id
-		orientation: common.Orientation.right
+		orientation: jump_orientation
+	}
+
+	mut new_x_velocity := chicken.jump_velocity_x
+
+	if jump_orientation == common.Orientation.right {
+		new_x_velocity = new_x_velocity * -1
 	}
 
 	velocity_component = &common.Velocity{
-		x: -0.45
-		y: -1
+		x: new_x_velocity
+		y: chicken.jump_velocity_y
 	}
 }

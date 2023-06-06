@@ -190,10 +190,10 @@ fn (mut app App) touched(touches [8]gg.TouchPoint) {
 
 	if touches[0].pos_x > screen_width / 2 {
 		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
-			chicken.player_control_system_right_touch) or { return }
+			chicken.player_control_system_right_jump) or { return }
 	} else {
 		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
-			chicken.player_control_system_left_touch) or { return }
+			chicken.player_control_system_left_jump) or { return }
 	}
 }
 
@@ -201,11 +201,11 @@ fn (mut app App) key_down(key gg.KeyCode) {
 	match key {
 		.right {
 			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
-				chicken.player_control_system_right_touch) or { return }
+				chicken.player_control_system_right_jump) or { return }
 		}
 		.left {
 			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, common.RenderingMetadata, common.Velocity](app.ecs_world,
-				chicken.player_control_system_left_touch) or { return }
+				chicken.player_control_system_left_jump) or { return }
 		}
 		else {}
 	}
