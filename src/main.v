@@ -66,8 +66,8 @@ fn start_main_game_loop(mut app graphics.App) {
 			image_id: chicken_idle_image_id
 			orientation: common.Orientation.right
 		},
-		chicken.GravityAffection{
-			gravity_force: 2 * time_step_seconds
+		chicken.GravityInfluence{
+			force: 2 * time_step_seconds
 		},
 		common.Velocity{},
 		chicken.IsControlledByPlayerTag{},
@@ -102,7 +102,7 @@ fn start_main_game_loop(mut app graphics.App) {
 			egg_spawner_stopwatch.restart()
 		}
 
-		ecs.execute_system_with_two_components[common.Velocity, chicken.GravityAffection](ecs_world,
+		ecs.execute_system_with_two_components[common.Velocity, chicken.GravityInfluence](ecs_world,
 			chicken.gravity_system) or {}
 
 		ecs.execute_system_with_two_components[common.Velocity, common.Position](ecs_world,

@@ -2,11 +2,16 @@ module chicken
 
 import ecs
 
-pub struct GravityAffection {
+// GravityInfluence represents the gravitational force that is applied to an entity.
+// The `force` field indicates the strength of this gravitational effect.
+// In our game, this component applied only to the chicken and nothing else.
+pub struct GravityInfluence {
 pub:
-	gravity_force f64
+	force f64
 }
 
+// IsControlledByPlayerTag is a marker component indicating that an entity is controlled by the player.
+// In our game, this component is applied only to the chicken entity.
 pub struct IsControlledByPlayerTag {}
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.
@@ -18,5 +23,5 @@ pub struct IsControlledByPlayerTag {}
 // The function uses an array to accommodate multiple components, thereby preventing code duplication.
 // This hack should be removed when interface for ECS component will have methods or fields.
 fn component_interface_hack() []ecs.IComponent {
-	return [GravityAffection{}, IsControlledByPlayerTag{}]
+	return [GravityInfluence{}, IsControlledByPlayerTag{}]
 }
