@@ -217,24 +217,24 @@ fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parame
 
 fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector, obstacle_section_image_width int, obstacle_section_image_height int, obstacle_id int) []ecs.IComponent {
 	return [
-		common.Position{
+		ecs.Position{
 			x: section_position.x
 			y: section_position.y
 		},
-		common.RenderingMetadata{
+		ecs.RenderData{
 			image_id: obstacle_section_image_id
 			orientation: obstacle_side
 		},
-		common.Velocity{
+		ecs.Velocity{
 			x: move_vector.x
 			y: move_vector.y
 		},
-		common.DestroyIfBelowScreenTag{},
-		common.Collider{
+		ecs.DestroyIfBelowScreenTag{},
+		ecs.Collider{
 			width: obstacle_section_image_width
 			height: obstacle_section_image_height
-			collision_mask: common.CollisionMask.chicken
-			collision_tag: common.CollisionMask.obstacle
+			collidable_types: ecs.CollisionType.chicken
+			collider_type: ecs.CollisionType.obstacle
 		},
 		Obstacle{
 			id: obstacle_id

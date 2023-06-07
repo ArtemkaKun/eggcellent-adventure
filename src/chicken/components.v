@@ -2,7 +2,7 @@ module chicken
 
 import ecs
 
-// GravityInfluence represents the gravitational force that is applied to an entity.
+// GravityInfluence ECS component represents the gravitational force that is applied to an entity.
 // The `force` field indicates the strength of this gravitational effect.
 // In our game, this component applied only to the chicken and nothing else.
 pub struct GravityInfluence {
@@ -10,7 +10,7 @@ pub:
 	force f64
 }
 
-// IsControlledByPlayerTag is a marker component indicating that an entity is controlled by the player.
+// IsControlledByPlayerTag is a marker ECS component indicating that an entity is controlled by the player.
 // In our game, this component is applied only to the chicken entity.
 pub struct IsControlledByPlayerTag {}
 
