@@ -103,10 +103,10 @@ fn start_main_game_loop(mut app graphics.App) {
 		}
 
 		ecs.execute_system_with_two_components[ecs.Velocity, chicken.GravityInfluence](ecs_world,
-			chicken.gravity_system) or {}
+			chicken.gravity_system)
 
 		ecs.execute_system_with_two_components[ecs.Velocity, ecs.Position](ecs_world,
-			ecs.movement_system) or {}
+			ecs.movement_system)
 
 		destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
 		handle_collision(mut ecs_world) or {}
@@ -131,17 +131,19 @@ fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata wo
 }
 
 fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
-	entities_to_check := ecs.get_entities_with_two_components[ecs.Position, ecs.DestroyIfBelowScreenTag](ecs_world)!
+	query := ecs.query_for_two_components[ecs.Position, ecs.DestroyIfBelowScreenTag]
+	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
 
 	for entity in entities_to_check {
-		if ecs.get_component[ecs.Position](entity)!.y >= screen_height {
-			ecs.remove_entity(mut ecs_world, entity.id)
+		if ecs.get_entity_component[ecs.Position](entity)!.y >= screen_height {
+			ecs.remove_entity(mut ecs_world, entity.id)!
 		}
 	}
 }
 
 fn handle_collision(mut ecs_world ecs.World) ! {
-	entities_to_check := ecs.get_entities_with_two_components[ecs.Position, ecs.Collider](ecs_world)!
+	query := ecs.query_for_two_components[ecs.Position, ecs.Collider]
+	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
 
 	for first_index, entity_first in entities_to_check {
 		for second_index in first_index + 1 .. entities_to_check.len {
@@ -165,7 +167,7 @@ fn handle_collision(mut ecs_world ecs.World) ! {
 						chicken_entity.id)!
 					ecs.remove_component[ecs.Collider](mut ecs_world, chicken_entity.id)!
 				} else {
-					ecs.remove_entity(mut ecs_world, second_collided_entity.id)
+					ecs.remove_entity(mut ecs_world, second_collided_entity.id)!
 				}
 
 				break
@@ -175,11 +177,11 @@ fn handle_collision(mut ecs_world ecs.World) ! {
 }
 
 fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
-	first_position := ecs.get_component[ecs.Position](first_entity)!
-	first_collider := ecs.get_component[ecs.Collider](first_entity)!
+	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
+	first_collider := ecs.get_entity_component[ecs.Collider](first_entity)!
 
-	second_position := ecs.get_component[ecs.Position](second_entity)!
-	second_collider := ecs.get_component[ecs.Collider](second_entity)!
+	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
+	second_collider := ecs.get_entity_component[ecs.Collider](second_entity)!
 
 	if first_collider.collidable_types.has(second_collider.collider_type) == false
 		|| second_collider.collidable_types.has(first_collider.collider_type) == false {
@@ -197,19 +199,20 @@ fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
 }
 
 fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, screen_width int) ! {
-	obstacles := ecs.get_entities_with_three_components[ecs.Position, ecs.Collider, world.Obstacle](ecs_world)!
+	query := ecs.query_for_three_components[ecs.Position, ecs.Collider, world.Obstacle]
+	obstacles := ecs.get_entities_with_query(ecs_world, query)
 
 	// We need to find a good position to spawn an egg. This position should be not occupied by the closest obstacle.
 	// Implement an algorithm to find limits for egg spawning.
 	mut closest_obstacle_by_y := obstacles[0]
 
 	for entity in obstacles {
-		if ecs.get_component[ecs.Position](entity)!.y < ecs.get_component[ecs.Position](closest_obstacle_by_y)!.y {
+		if ecs.get_entity_component[ecs.Position](entity)!.y < ecs.get_entity_component[ecs.Position](closest_obstacle_by_y)!.y {
 			closest_obstacle_by_y = entity
 		}
 	}
 
-	closest_obstacles := obstacles.filter((ecs.get_component[world.Obstacle](it)!).id == (ecs.get_component[world.Obstacle](closest_obstacle_by_y)!).id)
+	closest_obstacles := obstacles.filter((ecs.get_entity_component[world.Obstacle](it)!).id == (ecs.get_entity_component[world.Obstacle](closest_obstacle_by_y)!).id)
 
 	mut free_pixel_x_positions := []int{}
 
@@ -218,8 +221,8 @@ fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, sc
 	}
 
 	for obstacle in closest_obstacles {
-		obstacle_position := ecs.get_component[ecs.Position](obstacle)!
-		obstacle_collider := ecs.get_component[ecs.Collider](obstacle)!
+		obstacle_position := ecs.get_entity_component[ecs.Position](obstacle)!
+		obstacle_collider := ecs.get_entity_component[ecs.Collider](obstacle)!
 
 		for pixel_x in int(obstacle_position.x) .. int(obstacle_position.x) +
 			obstacle_collider.width {

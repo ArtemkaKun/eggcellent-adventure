@@ -121,14 +121,15 @@ fn calculate_images_scale(mut app App) ! {
 fn draw_frame(mut app App) {
 	app.graphical_context.begin()
 
-	renderable_entities := ecs.get_entities_with_two_components[ecs.RenderData, ecs.Position](app.ecs_world) or {
-		return
-	}
+	query := ecs.query_for_two_components[ecs.RenderData, ecs.Position]
+	renderable_entities := ecs.get_entities_with_query(app.ecs_world, query)
 
 	for entity in renderable_entities {
-		position_component := ecs.get_component[ecs.Position](entity) or { continue }
+		position_component := ecs.get_entity_component[ecs.Position](entity) or { continue }
 
-		rendering_metadata_component := ecs.get_component[ecs.RenderData](entity) or { continue }
+		rendering_metadata_component := ecs.get_entity_component[ecs.RenderData](entity) or {
+			continue
+		}
 
 		app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
 			img_rect: gg.Rect{
@@ -188,10 +189,10 @@ fn (mut app App) touched(touches [8]gg.TouchPoint) {
 
 	if touches[0].pos_x > screen_width / 2 {
 		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-			chicken.player_control_system_right_jump) or { return }
+			chicken.player_control_system_right_jump)
 	} else {
 		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-			chicken.player_control_system_left_jump) or { return }
+			chicken.player_control_system_left_jump)
 	}
 }
 
@@ -199,11 +200,11 @@ fn (mut app App) key_down(key gg.KeyCode) {
 	match key {
 		.right {
 			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-				chicken.player_control_system_right_jump) or { return }
+				chicken.player_control_system_right_jump)
 		}
 		.left {
 			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-				chicken.player_control_system_left_jump) or { return }
+				chicken.player_control_system_left_jump)
 		}
 		else {}
 	}

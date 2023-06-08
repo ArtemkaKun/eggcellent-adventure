@@ -114,7 +114,7 @@ pub fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadat
 	}
 }
 
-fn spawn_single_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, random_orientation common.Orientation, move_vector transform.Vector, obstacle_id int) ![][]ecs.IComponent {
+fn spawn_single_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, random_orientation common.Orientation, move_vector transform.Vector, obstacle_id int) ![][]ecs.Component {
 	random_width_obstacle := obstacle.spawn_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata.obstacle_section_image_width,
 		min_blocks_count, random_orientation)!
 
@@ -123,7 +123,7 @@ fn spawn_single_random_width_obstacle(screen_width int, obstacle_graphical_asset
 		move_vector, obstacle_id)
 }
 
-fn spawn_double_random_width_obstacles(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, move_vector transform.Vector, obstacle_id int) !([][]ecs.IComponent, [][]ecs.IComponent) {
+fn spawn_double_random_width_obstacles(screen_width int, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, min_blocks_count int, move_vector transform.Vector, obstacle_id int) !([][]ecs.Component, [][]ecs.Component) {
 	mut left_obstacle_sections_positions := obstacle.spawn_random_width_obstacle(screen_width,
 		obstacle_graphical_assets_metadata.obstacle_section_image_width, min_blocks_count,
 		common.Orientation.left)!
@@ -146,7 +146,7 @@ fn spawn_double_random_width_obstacles(screen_width int, obstacle_graphical_asse
 	return left_obstacle, right_obstacle
 }
 
-fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions []transform.Position, random_orientation common.Orientation, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, move_vector transform.Vector, obstacle_id int) ![][]ecs.IComponent {
+fn setup_new_obstacle(obstacle_section_height int, obstacle_sections_positions []transform.Position, random_orientation common.Orientation, obstacle_graphical_assets_metadata ObstacleGraphicalAssetsMetadata, move_vector transform.Vector, obstacle_id int) ![][]ecs.Component {
 	above_screen_obstacle := place_obstacle_above_screen(obstacle_section_height, obstacle_sections_positions)
 
 	setup_parameters := ObstacleSetupParameters{
@@ -175,8 +175,8 @@ fn update_obstacle_section_position_y(obstacle_section_position transform.Positi
 	}
 }
 
-fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parameters ObstacleSetupParameters, obstacle_id int) ![][]ecs.IComponent {
-	mut obstacle_sections := [][]ecs.IComponent{}
+fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parameters ObstacleSetupParameters, obstacle_id int) ![][]ecs.Component {
+	mut obstacle_sections := [][]ecs.Component{}
 
 	for index, obstacle_sections_position in obstacle_sections_positions {
 		if index != obstacle_sections_positions.len - 1 {
@@ -215,7 +215,7 @@ fn setup_obstacle(obstacle_sections_positions []transform.Position, setup_parame
 	return obstacle_sections
 }
 
-fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector, obstacle_section_image_width int, obstacle_section_image_height int, obstacle_id int) []ecs.IComponent {
+fn create_obstacle_section(section_position transform.Position, obstacle_side common.Orientation, obstacle_section_image_id int, move_vector transform.Vector, obstacle_section_image_width int, obstacle_section_image_height int, obstacle_id int) []ecs.Component {
 	return [
 		ecs.Position{
 			x: section_position.x
@@ -269,12 +269,12 @@ fn try_remove_last_obstacle_section_position(mut obstacle_sections_positions []t
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.
 // In V, a struct automatically implements an interface if it satisfies all of the interface's methods and fields.
-// However, for our empty interface for ECS components, no struct can satisfy it as there are no methods or fields to implement.
+// However, for our empty interface for  components, no struct can satisfy it as there are no methods or fields to implement.
 // This function tackles this issue by returning a struct as an interface type, tricking the compiler into believing the struct implements the interface.
 // This approach, while unorthodox, allows for cleaner code as it avoids the need for an explicit base struct to be embedded in every component struct.
-// To use a component struct in ECS, it should be placed within a similar function.
+// To use a component struct in , it should be placed within a similar function.
 // The function uses an array to accommodate multiple components, thereby preventing code duplication.
-// This hack should be removed when interface for ECS component will have methods or fields.
-fn component_interface_hack() ecs.IComponent {
+// This hack should be removed when interface for  component will have methods or fields.
+fn component_interface_hack() ecs.Component {
 	return Obstacle{}
 }

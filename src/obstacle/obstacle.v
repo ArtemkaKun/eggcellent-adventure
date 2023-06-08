@@ -3,7 +3,6 @@
 module obstacle
 
 import transform
-import ecs
 import common
 
 pub const (
