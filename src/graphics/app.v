@@ -8,8 +8,8 @@ import scale_factor
 import math
 import ecs
 import common
-import chicken
 import world
+import player_input
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -17,27 +17,6 @@ import world
 const (
 	window_width_pixels  = 540
 	window_height_pixels = 1200
-)
-
-const (
-	obstacle_section_right_image_name                = 'obstacle_section_right.png'
-
-	obstacle_ending_simple_right_image_name          = 'obstacle_ending_simple_right.png'
-	obstacle_ending_closed_bud_up_right_image_name   = 'obstacle_ending_closed_bud_up_right.png'
-	obstacle_ending_closed_bud_down_right_image_name = 'obstacle_ending_closed_bud_down_right.png'
-	obstacle_ending_bud_right_image_name             = 'obstacle_ending_bud_right.png'
-	obstacle_ending_bud_eye_right_image_name         = 'obstacle_ending_bud_eye_right.png'
-)
-
-// ATTENTION!⚠ These values were carefully selected by hand to make the game look good. Don't change them without a good reason.
-const (
-	obstacle_ending_image_name_to_y_offset_map = {
-		obstacle_ending_simple_right_image_name:          2
-		obstacle_ending_closed_bud_up_right_image_name:   -1
-		obstacle_ending_closed_bud_down_right_image_name: 1
-		obstacle_ending_bud_right_image_name:             -2
-		obstacle_ending_bud_eye_right_image_name:         -2
-	}
 )
 
 const (
@@ -57,12 +36,8 @@ const background_color = gx.Color{
 	b: 124
 }
 
-const (
-	background_vine_image_name_template = 'background_vine_{0}.png'
-)
-
 // App stores the minimal data required for rendering the app, focusing on images and related data.
-// Also, it stores the world model, which contains all game data.
+// Also, it stores the ECS world structure.
 pub struct App {
 mut:
 	graphical_context &gg.Context
@@ -82,10 +57,10 @@ mut:
 }
 
 // create_app Creates and sets up graphical app.
-pub fn create_app() &App {
+pub fn create_app(ecs_world &ecs.World) &App {
 	mut app := &App{
 		graphical_context: unsafe { nil }
-		ecs_world: &ecs.World{}
+		ecs_world: ecs_world
 	}
 
 	app.graphical_context = gg.new_context(
@@ -98,7 +73,7 @@ pub fn create_app() &App {
 		init_fn: initialize
 		frame_fn: draw_frame
 		quit_fn: quit
-		event_fn: on_event
+		event_fn: react_on_input_event
 		user_data: app
 	)
 
@@ -125,41 +100,39 @@ fn draw_frame(mut app App) {
 	renderable_entities := ecs.get_entities_with_query(app.ecs_world, query)
 
 	for entity in renderable_entities {
-		position_component := ecs.get_entity_component[ecs.Position](entity) or { continue }
-
-		rendering_metadata_component := ecs.get_entity_component[ecs.RenderData](entity) or {
-			continue
-		}
-
-		app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
-			img_rect: gg.Rect{
-				x: f32(position_component.x)
-				y: f32(position_component.y)
-				width: get_image_width_by_id(mut app, rendering_metadata_component.image_id)
-				height: get_image_height_by_id(mut app, rendering_metadata_component.image_id)
-			}
-			flip_x: rendering_metadata_component.orientation == common.Orientation.left
-			img_id: rendering_metadata_component.image_id
-		})
+		draw_entity(mut app, entity)
 	}
 
 	app.graphical_context.end()
 }
 
-// get_obstacle_section_width Returns obstacle section width with scale applied.
-pub fn get_obstacle_section_width(mut app App) int {
-	return get_image_width_by_id(mut app, app.obstacle_section_right_image.id)
+fn draw_entity(mut app App, entity ecs.Entity) {
+	// NOTE: return will never be reached here, since the query function guarantees that the entity has both components.
+	position_component := ecs.get_entity_component[ecs.Position](entity) or { return }
+	rendering_metadata_component := ecs.get_entity_component[ecs.RenderData](entity) or { return }
+
+	image_id := rendering_metadata_component.image_id
+
+	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
+		img_rect: gg.Rect{
+			x: f32(position_component.x)
+			y: f32(position_component.y)
+			width: get_image_width_by_id(mut app, image_id)
+			height: get_image_height_by_id(mut app, image_id)
+		}
+		flip_x: rendering_metadata_component.orientation == common.Orientation.left
+		img_id: image_id
+	})
 }
 
-// get_obstacle_section_height Returns obstacle section height with scale applied.
-pub fn get_obstacle_section_height(mut app App) int {
-	return get_image_height_by_id(mut app, app.obstacle_section_right_image.id)
-}
-
+// get_image_width_by_id retrieves the width of the image with the specified image_id.
+// The returned width is scaled to current application scale factor.
 pub fn get_image_width_by_id(mut app App, image_id int) int {
 	return get_image_by_id(mut app, image_id).width * app.images_scale
 }
 
+// get_image_height_by_id retrieves the height of the image with the specified image_id.
+// The returned height is scaled to current application scale factor.
 pub fn get_image_height_by_id(mut app App, image_id int) int {
 	return get_image_by_id(mut app, image_id).height * app.images_scale
 }
@@ -172,42 +145,8 @@ fn quit(_ &gg.Event, mut app App) {
 	app.is_quited = true
 }
 
-fn on_event(event &gg.Event, mut app App) {
-	$if android {
-		if event.typ == .touches_ended && event.num_touches == 1 {
-			app.touched(event.touches)
-		}
-	} $else {
-		if event.typ == .key_down {
-			app.key_down(event.key_code)
-		}
-	}
-}
-
-fn (mut app App) touched(touches [8]gg.TouchPoint) {
-	screen_width := get_screen_size(app).width
-
-	if touches[0].pos_x > screen_width / 2 {
-		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-			chicken.player_control_system_right_jump)
-	} else {
-		ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-			chicken.player_control_system_left_jump)
-	}
-}
-
-fn (mut app App) key_down(key gg.KeyCode) {
-	match key {
-		.right {
-			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-				chicken.player_control_system_right_jump)
-		}
-		.left {
-			ecs.execute_system_with_three_components[chicken.IsControlledByPlayerTag, ecs.RenderData, ecs.Velocity](app.ecs_world,
-				chicken.player_control_system_left_jump)
-		}
-		else {}
-	}
+fn react_on_input_event(event &gg.Event, mut app App) {
+	player_input.react_on_input_event(event, app.ecs_world, get_screen_size(app).width)
 }
 
 // start_app Starts graphical app.
@@ -255,14 +194,12 @@ fn create_obstacle_ending(mut app App, image_id int) world.ObstacleEnding {
 	}
 }
 
-pub fn get_ecs_world(app App) &ecs.World {
-	return app.ecs_world
-}
-
+// get_chicken_idle_image_id Returns chicken idle image id.
 pub fn get_chicken_idle_image_id(app App) int {
 	return app.chicken_idle_image.id
 }
 
+// get_egg_1_image_id Returns egg 1 image id.
 pub fn get_egg_1_image_id(app App) int {
 	return app.egg_1_image.id
 }

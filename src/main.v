@@ -27,25 +27,26 @@ const (
 const egg_spawn_rate_seconds = 20 // NOTE: 60 was set only for testing. It may change in the future.
 
 fn main() {
-	mut app := graphics.create_app()
-	spawn start_main_game_loop(mut app)
+	mut ecs_world := &ecs.World{}
+	mut app := graphics.create_app(ecs_world)
+	spawn start_main_game_loop(mut app, mut ecs_world)
 	graphics.start_app(mut app)
 }
 
-fn start_main_game_loop(mut app graphics.App) {
+fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	wait_for_graphic_app_initialization(app)
 
 	screen_size := graphics.get_screen_size(app)
 	screen_width := screen_size.width
 
+	obstacle_section_id := graphics.get_obstacle_section_right_image_id(app)
+
 	obstacle_graphical_assets_metadata := world.ObstacleGraphicalAssetsMetadata{
-		obstacle_section_image_id: graphics.get_obstacle_section_right_image_id(app)
-		obstacle_section_image_width: graphics.get_obstacle_section_width(mut app)
-		obstacle_section_image_height: graphics.get_obstacle_section_height(mut app)
+		obstacle_section_image_id: obstacle_section_id
+		obstacle_section_image_width: graphics.get_image_width_by_id(mut app, obstacle_section_id)
+		obstacle_section_image_height: graphics.get_image_height_by_id(mut app, obstacle_section_id)
 		obstacle_endings: graphics.get_obstacle_endings(mut app)
 	}
-
-	mut ecs_world := graphics.get_ecs_world(app)
 
 	mut obstacle_id := 0
 

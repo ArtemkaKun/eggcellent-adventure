@@ -4,6 +4,27 @@ import gg
 import os
 import common
 
+const (
+	obstacle_section_right_image_name                = 'obstacle_section_right.png'
+
+	obstacle_ending_simple_right_image_name          = 'obstacle_ending_simple_right.png'
+	obstacle_ending_closed_bud_up_right_image_name   = 'obstacle_ending_closed_bud_up_right.png'
+	obstacle_ending_closed_bud_down_right_image_name = 'obstacle_ending_closed_bud_down_right.png'
+	obstacle_ending_bud_right_image_name             = 'obstacle_ending_bud_right.png'
+	obstacle_ending_bud_eye_right_image_name         = 'obstacle_ending_bud_eye_right.png'
+)
+
+// ATTENTION!⚠ These values were carefully selected by hand to make the game look good. Don't change them without a good reason.
+const (
+	obstacle_ending_image_name_to_y_offset_map = {
+		obstacle_ending_simple_right_image_name:          2
+		obstacle_ending_closed_bud_up_right_image_name:   -1
+		obstacle_ending_closed_bud_down_right_image_name: 1
+		obstacle_ending_bud_right_image_name:             -2
+		obstacle_ending_bud_eye_right_image_name:         -2
+	}
+)
+
 fn load_assets(mut app App) ! {
 	right_obstacle_assets_path := common.get_platform_dependent_asset_path('obstacle/right')
 	chicken_idle_asset_path := common.get_platform_dependent_asset_path('chicken/chicken_idle.png')
@@ -16,14 +37,14 @@ fn load_assets(mut app App) ! {
 
 fn load_images_right_obstacle_images(mut app App, root_path string) ! {
 	app.obstacle_section_right_image = load_image(mut app, os.join_path_single(root_path,
-		obstacle_section_right_image_name))!
+		graphics.obstacle_section_right_image_name))!
 
 	ending_images_names := [
-		obstacle_ending_simple_right_image_name,
-		obstacle_ending_closed_bud_up_right_image_name,
-		obstacle_ending_closed_bud_down_right_image_name,
-		obstacle_ending_bud_right_image_name,
-		obstacle_ending_bud_eye_right_image_name,
+		graphics.obstacle_ending_simple_right_image_name,
+		graphics.obstacle_ending_closed_bud_up_right_image_name,
+		graphics.obstacle_ending_closed_bud_down_right_image_name,
+		graphics.obstacle_ending_bud_right_image_name,
+		graphics.obstacle_ending_bud_eye_right_image_name,
 	]
 
 	app.obstacle_endings_right_images = ending_images_names.map(load_image_and_bind_offset(mut app,
@@ -32,7 +53,7 @@ fn load_images_right_obstacle_images(mut app App, root_path string) ! {
 
 fn load_image_and_bind_offset(mut app App, root_path string, image_name string) !gg.Image {
 	image := load_image(mut app, os.join_path_single(root_path, image_name))!
-	app.obstacle_image_id_to_y_offset[image.id] = obstacle_ending_image_name_to_y_offset_map[image_name] * app.images_scale
+	app.obstacle_image_id_to_y_offset[image.id] = graphics.obstacle_ending_image_name_to_y_offset_map[image_name] * app.images_scale
 
 	return image
 }
