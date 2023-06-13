@@ -5,11 +5,11 @@ module main
 import graphics
 import time
 import transform
-import world
 import ecs
 import common
 import chicken
 import egg
+import obstacle
 
 const (
 	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
@@ -41,16 +41,16 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 	obstacle_section_id := graphics.get_obstacle_section_right_image_id(app)
 
-	obstacle_graphical_assets_metadata := world.ObstacleGraphicalAssetsMetadata{
+	obstacles_render_data := obstacle.ObstaclesRenderData{
 		obstacle_section_image_id: obstacle_section_id
 		obstacle_section_image_width: graphics.get_image_width_by_id(mut app, obstacle_section_id)
 		obstacle_section_image_height: graphics.get_image_height_by_id(mut app, obstacle_section_id)
-		obstacle_endings: graphics.get_obstacle_endings(mut app)
+		obstacle_endings: graphics.get_obstacle_endings_render_data(mut app)
 	}
 
 	mut obstacle_id := 0
 
-	spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width, obstacle_id) or {
+	spawn_obstacle(mut ecs_world, obstacles_render_data, screen_width, obstacle_id) or {
 		panic(err)
 	}
 
@@ -88,8 +88,9 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 	for graphics.is_quited(app) == false {
 		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
-			spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width,
-				obstacle_id) or { panic(err) }
+			spawn_obstacle(mut ecs_world, obstacles_render_data, screen_width, obstacle_id) or {
+				panic(err)
+			}
 
 			obstacle_spawner_stopwatch.restart()
 			obstacle_id += 1
@@ -125,14 +126,14 @@ fn wait_for_graphic_app_initialization(app &graphics.App) {
 	}
 }
 
-fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata world.ObstacleGraphicalAssetsMetadata, screen_width int, obstacle_id int) ! {
-	world.spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width,
+fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata obstacle.ObstaclesRenderData, screen_width int, obstacle_id int) ! {
+	obstacle.spawn_obstacle(mut ecs_world, obstacle_graphical_assets_metadata, screen_width,
 		obstacle_min_blocks_count, transform.calculate_move_vector(obstacle_moving_direction,
 		obstacle_moving_speed, time_step_seconds)!, obstacle_id)!
 }
 
 fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
-	query := ecs.query_for_two_components[ecs.Position, ecs.DestroyIfBelowScreenTag]
+	query := ecs.check_if_entity_has_component[ecs.Position]
 	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
 
 	for entity in entities_to_check {
@@ -200,7 +201,7 @@ fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
 }
 
 fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, screen_width int) ! {
-	query := ecs.query_for_three_components[ecs.Position, ecs.Collider, world.Obstacle]
+	query := ecs.query_for_three_components[ecs.Position, ecs.Collider, obstacle.ObstacleSection]
 	obstacles := ecs.get_entities_with_query(ecs_world, query)
 
 	// We need to find a good position to spawn an egg. This position should be not occupied by the closest obstacle.
@@ -213,7 +214,7 @@ fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, sc
 		}
 	}
 
-	closest_obstacles := obstacles.filter((ecs.get_entity_component[world.Obstacle](it)!).id == (ecs.get_entity_component[world.Obstacle](closest_obstacle_by_y)!).id)
+	closest_obstacles := obstacles.filter((ecs.get_entity_component[obstacle.ObstacleSection](it)!).obstacle_id == (ecs.get_entity_component[obstacle.ObstacleSection](closest_obstacle_by_y)!).obstacle_id)
 
 	mut free_pixel_x_positions := []int{}
 
@@ -259,7 +260,6 @@ fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, egg_image_id int, sc
 			x: move_vector.x
 			y: move_vector.y
 		},
-		ecs.DestroyIfBelowScreenTag{},
 		ecs.Collider{
 			width: graphics.get_image_width_by_id(mut app, egg_image_id)
 			height: graphics.get_image_height_by_id(mut app, egg_image_id)

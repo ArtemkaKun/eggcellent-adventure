@@ -17,9 +17,6 @@ pub struct Velocity {
 	transform.Vector
 }
 
-// DestroyIfBelowScreenTag is a marker component indicating that an entity should be destroyed when it moves off the screen.
-pub struct DestroyIfBelowScreenTag {}
-
 // RenderData component contains metadata used for rendering an entity.
 // This includes the image_id to identify the sprite and the orientation for sprite rotation.
 pub struct RenderData {
@@ -57,6 +54,5 @@ pub enum CollisionType {
 // The function uses an array to accommodate multiple components, thereby preventing code duplication.
 // This hack should be removed when interface for component will have methods or fields.
 fn component_interface_hack() []Component {
-	return [Position{}, Velocity{}, DestroyIfBelowScreenTag{},
-		RenderData{}, Collider{}]
+	return [Position{}, Velocity{}, RenderData{}, Collider{}]
 }

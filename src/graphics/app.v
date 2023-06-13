@@ -8,8 +8,8 @@ import scale_factor
 import math
 import ecs
 import common
-import world
 import player_input
+import obstacle
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -56,7 +56,7 @@ mut:
 	ecs_world &ecs.World
 }
 
-// create_app Creates and sets up graphical app.
+// create_app creates and sets up graphical app.
 pub fn create_app(ecs_world &ecs.World) &App {
 	mut app := &App{
 		graphical_context: unsafe { nil }
@@ -149,44 +149,45 @@ fn react_on_input_event(event &gg.Event, mut app App) {
 	player_input.react_on_input_event(event, app.ecs_world, get_screen_size(app).width)
 }
 
-// start_app Starts graphical app.
+// start_app starts graphical app.
 pub fn start_app(mut app App) {
 	app.graphical_context.run()
 }
 
-// get_screen_size Returns screen size.
+// get_screen_size returns screen size.
 // ATTENTION!⚠ Right now for Android it returns the window size (since on Android window is the full screen, so it's the same as screen size).
 pub fn get_screen_size(app App) gg.Size {
 	return app.graphical_context.window_size()
 }
 
-// is_initialized Checks if graphical app is initialized (`initialize()` function was called).
+// is_initialized checks if graphical app is initialized (`initialize()` function was called).
 pub fn is_initialized(app App) bool {
 	return app.is_initialized
 }
 
-// is_quited Checks if graphical app is quited (`quit()` function was called).
+// is_quited checks if graphical app is quited (`quit()` function was called).
 pub fn is_quited(app App) bool {
 	return app.is_quited
 }
 
-// invoke_frame_draw Invokes frame draw (only should be used if `ui_mode` is set to `true`).
+// invoke_frame_draw invokes frame draw (only should be used if `ui_mode` is set to `true`).
 pub fn invoke_frame_draw(mut app App) {
 	app.graphical_context.refresh_ui()
 }
 
-// get_obstacle_section_right_image_id Returns obstacle section right image id.
+// get_obstacle_section_right_image_id returns obstacle section right image id.
 pub fn get_obstacle_section_right_image_id(app App) int {
 	return app.obstacle_section_right_image.id
 }
 
-// get_obstacle_endings Returns obstacle endings.
-pub fn get_obstacle_endings(mut app App) []world.ObstacleEnding {
-	return app.obstacle_endings_right_images.map(create_obstacle_ending(mut app, it.id))
+// get_obstacle_endings_render_data returns obstacle endings.
+pub fn get_obstacle_endings_render_data(mut app App) []obstacle.ObstacleEndingRenderData {
+	return app.obstacle_endings_right_images.map(create_obstacle_ending_render_data(mut app,
+		it.id))
 }
 
-fn create_obstacle_ending(mut app App, image_id int) world.ObstacleEnding {
-	return world.ObstacleEnding{
+fn create_obstacle_ending_render_data(mut app App, image_id int) obstacle.ObstacleEndingRenderData {
+	return obstacle.ObstacleEndingRenderData{
 		image_id: image_id
 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
 		width: get_image_width_by_id(mut app, image_id)
@@ -194,12 +195,12 @@ fn create_obstacle_ending(mut app App, image_id int) world.ObstacleEnding {
 	}
 }
 
-// get_chicken_idle_image_id Returns chicken idle image id.
+// get_chicken_idle_image_id returns chicken idle image id.
 pub fn get_chicken_idle_image_id(app App) int {
 	return app.chicken_idle_image.id
 }
 
-// get_egg_1_image_id Returns egg 1 image id.
+// get_egg_1_image_id returns egg 1 image id.
 pub fn get_egg_1_image_id(app App) int {
 	return app.egg_1_image.id
 }

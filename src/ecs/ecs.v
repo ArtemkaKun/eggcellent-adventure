@@ -85,13 +85,22 @@ pub fn check_if_entity_has_component[T](entity Entity) bool {
 // get_entity_component retrieves the first component of type T from the given entity's components.
 // If no component of type T is found, it returns an error.
 pub fn get_entity_component[T](entity Entity) !&T {
-	for component in entity.components {
+	return find_component[T](entity.components) or {
+		error('Entity with ID ${entity.id} does not have a component of type ${T.name}')
+	}
+}
+
+// find_component searches through the provided `components` array for a component of type `T`.
+// Returns a reference to the first component of type `T` found.
+// If no component of type `T` is found, returns an error with a message stating the same.
+pub fn find_component[T](components []Component) !&T {
+	for component in components {
 		if component is T {
 			return component
 		}
 	}
 
-	return error('Entity with ID ${entity.id} does not have a component of type ${T.name}')
+	return error("Can't find a component of type ${T.name}")
 }
 
 // get_entities_with_query applies a provided query function to filter entities within the given world.
