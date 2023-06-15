@@ -45,7 +45,6 @@ jobs:
     strategy:
       matrix:
         trimming: [ null , -skip-unused ]
-        memory-management: [ null , -autofree ]
     steps:
       - name: Restore Vlang
         uses: actions/cache/restore@v3
@@ -67,8 +66,8 @@ jobs:
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
 
-      - name: ${{ matrix.trimming }} ${{ matrix.memory-management }} build
-        run: v ${{ matrix.trimming }} ${{ matrix.memory-management }} .
+      - name: ${{ matrix.trimming }} build
+        run: v ${{ matrix.trimming }} .
 
   tests:
     needs: simple-build
@@ -128,7 +127,6 @@ jobs:
       matrix:
         compiler: [ gcc, clang ]
         trimming: [ null , -skip-unused ]
-        memory-management: [ null , -autofree ]
         optimization: [ null , -prod ]
     steps:
       - name: Restore Vlang
@@ -172,8 +170,8 @@ jobs:
       - name: Checkout ${{ github.event.repository.name }}
         uses: actions/checkout@v3
 
-      - name: ${{ matrix.compiler }} ${{ matrix.trimming }} ${{ matrix.optimization }} ${{ matrix.memory-management }} build
-        run: v -cc ${{ matrix.compiler }} ${{ matrix.trimming }} ${{ matrix.optimization }} ${{ matrix.memory-management }} .
+      - name: ${{ matrix.compiler }} ${{ matrix.trimming }} ${{ matrix.optimization }} build
+        run: v -cc ${{ matrix.compiler }} ${{ matrix.trimming }} ${{ matrix.optimization }} .
 
   clang-sanitizers:
     needs: different-compilers
