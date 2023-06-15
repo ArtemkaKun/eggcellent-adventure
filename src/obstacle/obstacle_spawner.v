@@ -4,6 +4,7 @@ import transform
 import rand
 import ecs
 import common
+import collision
 
 // ObstaclesRenderData is needed to couple graphical assets info, that will be used in obstacles spawning algorithm.
 pub struct ObstaclesRenderData {
@@ -127,11 +128,11 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 			orientation: random_orientation
 		}
 
-		new_entity_components << ecs.Collider{
+		new_entity_components << collision.Collider{
 			width: new_image_width
 			height: new_image_height
-			collidable_types: ecs.CollisionType.chicken
-			collider_type: ecs.CollisionType.obstacle
+			collidable_types: collision.CollisionType.chicken
+			collider_type: collision.CollisionType.obstacle
 		}
 
 		obstacle_sections << new_entity_components
@@ -177,7 +178,7 @@ fn is_spacing_too_small(right_obstacle_ending_components []ecs.Component, left_o
 
 fn calculate_left_ending_end_position(left_obstacle_ending_components []ecs.Component) !f64 {
 	left_position := ecs.find_component[ecs.Position](left_obstacle_ending_components)!
-	left_collider := ecs.find_component[ecs.Collider](left_obstacle_ending_components)!
+	left_collider := ecs.find_component[collision.Collider](left_obstacle_ending_components)!
 
 	return left_position.x + left_collider.width
 }

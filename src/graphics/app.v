@@ -10,6 +10,7 @@ import ecs
 import common
 import player_input
 import obstacle
+import collision
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -123,6 +124,12 @@ fn draw_entity(mut app App, entity ecs.Entity) {
 		flip_x: rendering_metadata_component.orientation == common.Orientation.left
 		img_id: image_id
 	})
+
+	// TODO: debug code, under debug flag
+	collider_component := ecs.get_entity_component[collision.Collider](entity) or { return }
+
+	app.graphical_context.draw_rect_empty(f32(position_component.x), f32(position_component.y),
+		f32(collider_component.width), f32(collider_component.height), gx.Color{ r: 255, g: 0, b: 0 })
 }
 
 // get_image_width_by_id retrieves the width of the image with the specified image_id.

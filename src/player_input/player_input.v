@@ -13,7 +13,7 @@ pub fn react_on_input_event(event &gg.Event, ecs_world ecs.World, screen_width i
 			execute_chicken_jump_system(ecs_world, event.touches[0].pos_x > screen_width / 2)
 		}
 	} $else {
-		if event.typ == .key_down {
+		if event.typ == .key_down && (event.key_code == .left || event.key_code == .right) {
 			execute_chicken_jump_system(ecs_world, event.key_code == .right)
 		}
 	}
