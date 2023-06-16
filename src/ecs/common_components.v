@@ -1,8 +1,29 @@
-module egg
+// Common components, that are used in multiple parts of the game.
 
-import ecs
+module ecs
 
-pub struct IsEggTag {}
+import transform
+import common
+
+// Position component represents the spatial location of an entity within the game world.
+// It embeds the `Position` struct from the `transform` module.
+pub struct Position {
+	transform.Position
+}
+
+// Velocity component represents the speed and direction of an entity's movement.
+// It embeds the `Vector` struct from the `transform` module.
+pub struct Velocity {
+	transform.Vector
+}
+
+// RenderData component contains metadata used for rendering an entity.
+// This includes the image_id to identify the sprite and the orientation for sprite rotation.
+pub struct RenderData {
+pub:
+	image_id    int
+	orientation common.Orientation
+}
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.
 // In V, a struct automatically implements an interface if it satisfies all of the interface's methods and fields.
@@ -12,6 +33,6 @@ pub struct IsEggTag {}
 // To use a component struct in, it should be placed within a similar function.
 // The function uses an array to accommodate multiple components, thereby preventing code duplication.
 // This hack should be removed when interface for component will have methods or fields.
-fn component_interface_hack() ecs.Component {
-	return IsEggTag{}
+fn component_interface_hack() []Component {
+	return [Position{}, Velocity{}, RenderData{}]
 }

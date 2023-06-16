@@ -6,7 +6,7 @@ import os
 // are in the one place. This value must stay the same all time.
 const assets_folder_path = 'assets/'
 
-// get_platform_dependent_asset_part Returns path to the asset.
+// get_platform_dependent_asset_path Returns path to the asset.
 // asset_path - a relative path to an asset from the `assets` folder. For example, if you have an asset with path
 // `assets/config/test.txt`, provide `config/test.txt`.
 //
@@ -16,7 +16,7 @@ const assets_folder_path = 'assets/'
 // which is already "assets folder oriented".
 //
 // For all other platforms (for example Linux), it will return the absolute path to an asset.
-pub fn get_platform_dependent_asset_part(asset_path string) string {
+pub fn get_platform_dependent_asset_path(asset_path string) string {
 	$if android {
 		return asset_path
 	} $else {
