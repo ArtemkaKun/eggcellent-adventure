@@ -1,16 +1,17 @@
 module collision
 
 import ecs
+import artemkakun.trnsfrm2d
+import artemkakun.pcoll2d
 
 // Collider component defines the collision properties of an entity.
 // It includes dimensions (`width` and `height`), the collision types of entities it can collide with (`collidable_types`),
 // and the collision type of the entity itself (`collider_type`).
 pub struct Collider {
 pub:
-	width            int
-	height           int
-	collidable_types CollisionType
-	collider_type    CollisionType
+	normalized_convex_polygons [][]trnsfrm2d.Position
+	collidable_types           CollisionType
+	collider_type              CollisionType
 }
 
 // CollisionType is an enum that categorizes entities for the purpose of collision detection, used in Collider  component.
@@ -30,20 +31,49 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
 	second_collider := ecs.get_entity_component[Collider](second_entity)!
 
-	is_first_can_collide_with_second := first_collider.collidable_types.has(second_collider.collider_type)
-	is_second_can_collide_with_first := second_collider.collidable_types.has(first_collider.collider_type)
+	mut first_moved_convex_polygons := [][]trnsfrm2d.Position{}
 
-	if is_first_can_collide_with_second == false || is_second_can_collide_with_first == false {
-		return false
+	for first_convex_polygon in first_collider.normalized_convex_polygons {
+		mut first_moved_convex_polygon := []trnsfrm2d.Position{}
+
+		for first_convex_polygon_vertex in first_convex_polygon {
+			first_moved_convex_polygon_vertex := trnsfrm2d.Position{
+				x: first_convex_polygon_vertex.x + first_position.x
+				y: first_convex_polygon_vertex.y + first_position.y
+			}
+
+			first_moved_convex_polygon << first_moved_convex_polygon_vertex
+		}
+
+		first_moved_convex_polygons << first_moved_convex_polygon
 	}
 
-	is_x_overlap := first_position.x < second_position.x + second_collider.width
-		&& first_position.x + first_collider.width > second_position.x
+	mut second_moved_convex_polygons := [][]trnsfrm2d.Position{}
 
-	is_y_overlap := first_position.y < second_position.y + second_collider.height
-		&& first_position.y + first_collider.height > second_position.y
+	for second_convex_polygon in second_collider.normalized_convex_polygons {
+		mut second_moved_convex_polygon := []trnsfrm2d.Position{}
 
-	return is_x_overlap && is_y_overlap
+		for second_convex_polygon_vertex in second_convex_polygon {
+			second_moved_convex_polygon_vertex := trnsfrm2d.Position{
+				x: second_convex_polygon_vertex.x + second_position.x
+				y: second_convex_polygon_vertex.y + second_position.y
+			}
+
+			second_moved_convex_polygon << second_moved_convex_polygon_vertex
+		}
+
+		second_moved_convex_polygons << second_moved_convex_polygon
+	}
+
+	for first_convex_polygon in first_moved_convex_polygons {
+		for second_convex_polygon in second_moved_convex_polygons {
+			if pcoll2d.check_collision(first_convex_polygon, second_convex_polygon)! {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.

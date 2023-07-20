@@ -42,13 +42,17 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	screen_size := graphics.get_screen_size(app)
 	screen_width := screen_size.width
 
-	obstacle_section_id := graphics.get_obstacle_section_right_image_id(app)
+	obstacle_section := graphics.get_obstacle_section_right_image(app)
+	obstacle_section_id := obstacle_section.id
 
 	obstacles_render_data := obstacle.ObstaclesRenderData{
 		obstacle_section_image_id: obstacle_section_id
 		obstacle_section_image_width: graphics.get_image_width_by_id(mut app, obstacle_section_id)
 		obstacle_section_image_height: graphics.get_image_height_by_id(mut app, obstacle_section_id)
-		obstacle_endings: graphics.get_obstacle_endings_render_data(mut app)
+		obstacle_endings: graphics.get_obstacle_endings_render_data(mut app) or { panic(err) }
+		obstacle_section_convex_polygons: common.load_polygon_and_get_convex_parts(obstacle_section.path.all_after_last('/').all_before_last('.')) or {
+			panic(err)
+		}
 	}
 
 	mut obstacle_id := 1

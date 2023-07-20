@@ -128,6 +128,8 @@ fn draw_entity(mut app App, entity ecs.Entity) {
 	// TODO: debug code, under debug flag
 	collider_component := ecs.get_entity_component[collision.Collider](entity) or { return }
 
+	for convex_polygon in collider_component.normalized_convex_polygons
+
 	app.graphical_context.draw_rect_empty(f32(position_component.x), f32(position_component.y),
 		f32(collider_component.width), f32(collider_component.height), gx.Color{ r: 255, g: 0, b: 0 })
 }
@@ -182,23 +184,23 @@ pub fn invoke_frame_draw(mut app App) {
 	app.graphical_context.refresh_ui()
 }
 
-// get_obstacle_section_right_image_id returns obstacle section right image id.
-pub fn get_obstacle_section_right_image_id(app App) int {
-	return app.obstacle_section_right_image.id
+// get_obstacle_section_right_image returns obstacle section right image.
+pub fn get_obstacle_section_right_image(app App) gg.Image {
+	return app.obstacle_section_right_image
 }
 
 // get_obstacle_endings_render_data returns obstacle endings.
-pub fn get_obstacle_endings_render_data(mut app App) []obstacle.ObstacleEndingRenderData {
+pub fn get_obstacle_endings_render_data(mut app App) ![]obstacle.ObstacleEndingRenderData {
 	return app.obstacle_endings_right_images.map(create_obstacle_ending_render_data(mut app,
-		it.id))
+		it.id, it.path)!)
 }
 
-fn create_obstacle_ending_render_data(mut app App, image_id int) obstacle.ObstacleEndingRenderData {
+fn create_obstacle_ending_render_data(mut app App, image_id int, image_path string) !obstacle.ObstacleEndingRenderData {
 	return obstacle.ObstacleEndingRenderData{
 		image_id: image_id
 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
 		width: get_image_width_by_id(mut app, image_id)
-		height: get_image_height_by_id(mut app, image_id)
+		convex_polygons: common.load_polygon_and_get_convex_parts(image_path.all_after_last('/').all_before_last('.'))!
 	}
 }
 

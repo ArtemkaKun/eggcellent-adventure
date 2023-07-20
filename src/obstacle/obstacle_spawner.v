@@ -8,18 +8,19 @@ import collision
 
 // ObstaclesRenderData is needed to couple graphical assets info, that will be used in obstacles spawning algorithm.
 pub struct ObstaclesRenderData {
-	obstacle_section_image_id     int
-	obstacle_section_image_width  int
-	obstacle_section_image_height int
-	obstacle_endings              []ObstacleEndingRenderData
+	obstacle_section_image_id        int
+	obstacle_section_image_width     int
+	obstacle_section_image_height    int
+	obstacle_endings                 []ObstacleEndingRenderData
+	obstacle_section_convex_polygons [][]transform.Position
 }
 
 // ObstacleEndingRenderData is a structure that holds the information about the obstacle ending.
 pub struct ObstacleEndingRenderData {
-	image_id int
-	y_offset int
-	width    int
-	height   int
+	image_id        int
+	y_offset        int
+	width           int
+	convex_polygons [][]transform.Position
 }
 
 // NOTE: This set a chance of spawning a single obstacle to 70%.
@@ -88,8 +89,7 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 
 		mut new_position := obstacle_sections_position
 		mut new_image_id := obstacle_graphical_assets_metadata.obstacle_section_image_id
-		mut new_image_width := obstacle_graphical_assets_metadata.obstacle_section_image_width
-		mut new_image_height := obstacle_graphical_assets_metadata.obstacle_section_image_height
+		mut convex_polygons := obstacle_graphical_assets_metadata.obstacle_section_convex_polygons
 
 		if index == above_screen_obstacle.len - 1 {
 			random_obstacle_ending := rand.element[ObstacleEndingRenderData](obstacle_graphical_assets_metadata.obstacle_endings)!
@@ -114,8 +114,7 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 			}
 
 			new_image_id = random_obstacle_ending.image_id
-			new_image_width = random_obstacle_ending.width
-			new_image_height = random_obstacle_ending.height
+			convex_polygons = random_obstacle_ending.convex_polygons
 		}
 
 		new_entity_components << ecs.Position{
@@ -129,8 +128,7 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 		}
 
 		new_entity_components << collision.Collider{
-			width: new_image_width
-			height: new_image_height
+			normalized_convex_polygons: convex_polygons
 			collidable_types: collision.CollisionType.chicken
 			collider_type: collision.CollisionType.obstacle
 		}
@@ -180,7 +178,22 @@ fn calculate_left_ending_end_position(left_obstacle_ending_components []ecs.Comp
 	left_position := ecs.find_component[ecs.Position](left_obstacle_ending_components)!
 	left_collider := ecs.find_component[collision.Collider](left_obstacle_ending_components)!
 
-	return left_position.x + left_collider.width
+	mut most_left_x := 0.0
+	mut most_right_x := 0.0
+
+	for polygon in left_collider.normalized_convex_polygons {
+		for point in polygon {
+			if point.x < most_left_x {
+				most_left_x = point.x
+			}
+
+			if point.x > most_right_x {
+				most_right_x = point.x
+			}
+		}
+	}
+
+	return left_position.x + (most_right_x - most_left_x)
 }
 
 fn remove_first_obstacle_section(mut obstacle_sections [][]ecs.Component, obstacle_section_width int) ! {
