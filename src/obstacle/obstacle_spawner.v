@@ -1,6 +1,6 @@
 module obstacle
 
-import transform
+import artemkakun.trnsfrm2d as transform
 import rand
 import ecs
 import common

@@ -3,5 +3,5 @@ Module {
 	description: ''
 	version: ''
 	license: 'BSD-3-Clause'
-	dependencies: []
+	dependencies: ['ArtemkaKun.trnsfrm2d', 'ArtemkaKun.pcoll2d']
 }

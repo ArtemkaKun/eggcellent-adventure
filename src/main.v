@@ -4,7 +4,7 @@ module main
 
 import graphics
 import time
-import transform
+import artemkakun.trnsfrm2d as transform
 import ecs
 import common
 import chicken

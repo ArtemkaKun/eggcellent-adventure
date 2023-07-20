@@ -3,7 +3,7 @@ module egg
 import obstacle
 import ecs
 import common
-import transform
+import artemkakun.trnsfrm2d as transform
 import collision
 
 // spawn_egg adds a new egg entity into the ECS world

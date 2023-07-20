@@ -2,7 +2,7 @@
 
 module obstacle
 
-import transform
+import artemkakun.trnsfrm2d as transform
 import common
 
 pub const (
