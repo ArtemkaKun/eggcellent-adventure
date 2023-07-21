@@ -5,10 +5,30 @@ import artemkakun.pcoll2d
 import json
 import os
 
-pub fn load_polygon_and_get_convex_parts(polygon_file_name string) ![][]trnsfrm2d.Position {
-	polygon_file_path := get_platform_dependent_asset_path('${polygon_file_name}${pcoll2d.polygon_file_extension}')
+pub fn load_polygon_and_get_convex_parts(image_file_path string, image_scale int) ![][]trnsfrm2d.Position {
+	assets_folder_relative_path := image_file_path.all_after('assets/')
+
+	polygon_file_path := get_platform_dependent_asset_path(assets_folder_relative_path.replace('.png',
+		pcoll2d.polygon_file_extension))
 	polygon_data := os.read_file(polygon_file_path)!
 	polygon := json.decode(pcoll2d.Polygon, polygon_data)!
 
-	return pcoll2d.decompose(polygon.points)
+	convex_polygons := pcoll2d.decompose(polygon.points)
+
+	mut scaled_convex_polygons := [][]trnsfrm2d.Position{}
+
+	for convex_polygon in convex_polygons {
+		mut scaled_convex_polygon := []trnsfrm2d.Position{}
+
+		for vertex in convex_polygon {
+			scaled_convex_polygon << trnsfrm2d.Position{
+				x: vertex.x * image_scale
+				y: vertex.y * image_scale
+			}
+		}
+
+		scaled_convex_polygons << scaled_convex_polygon
+	}
+
+	return scaled_convex_polygons
 }

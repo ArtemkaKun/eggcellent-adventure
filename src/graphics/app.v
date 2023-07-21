@@ -11,6 +11,7 @@ import common
 import player_input
 import obstacle
 import collision
+import rand
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -128,10 +129,42 @@ fn draw_entity(mut app App, entity ecs.Entity) {
 	// TODO: debug code, under debug flag
 	collider_component := ecs.get_entity_component[collision.Collider](entity) or { return }
 
-	for convex_polygon in collider_component.normalized_convex_polygons
+	mut pol := []f32{}
 
-	app.graphical_context.draw_rect_empty(f32(position_component.x), f32(position_component.y),
-		f32(collider_component.width), f32(collider_component.height), gx.Color{ r: 255, g: 0, b: 0 })
+	for vertex in collider_component.normalized_convex_polygons[4] {
+		pol << f32(vertex.x + position_component.x)
+		pol << f32(vertex.y + position_component.y)
+	}
+
+	app.graphical_context.draw_poly_empty(pol, gx.blue)
+
+	for convex_polygon in collider_component.normalized_convex_polygons {
+		// mut pol := []f32{}
+		//
+		// for vertex in convex_polygon {
+		// 	pol << f32(vertex.x + position_component.x)
+		// 	pol << f32(vertex.y + position_component.y)
+		// }
+		//
+		// app.graphical_context.draw_poly_empty(pol, gx.blue)
+		// x_normalized := convex_polygon[0].x / 1000
+		// y_normalized := convex_polygon[0].y / 1000
+		// num_vertices_normalized := convex_polygon.len / 10
+		// r := u8(x_normalized * 255)
+		// g := u8(y_normalized * 255)
+		// b := u8(num_vertices_normalized * 255)
+		//
+		// for vertex_id, vertex in convex_polygon {
+		// 	next_vertex := convex_polygon[(vertex_id + 1) % convex_polygon.len]
+		// 	app.graphical_context.draw_line(f32(vertex.x + position_component.x), f32(vertex.y +
+		// 		position_component.y), f32(next_vertex.x + position_component.x), f32(
+		// 		next_vertex.y + position_component.y), gx.Color{
+		// 		r: r
+		// 		g: g
+		// 		b: b
+		// 	})
+		// }
+	}
 }
 
 // get_image_width_by_id retrieves the width of the image with the specified image_id.
@@ -200,16 +233,20 @@ fn create_obstacle_ending_render_data(mut app App, image_id int, image_path stri
 		image_id: image_id
 		y_offset: app.obstacle_image_id_to_y_offset[image_id]
 		width: get_image_width_by_id(mut app, image_id)
-		convex_polygons: common.load_polygon_and_get_convex_parts(image_path.all_after_last('/').all_before_last('.'))!
+		convex_polygons: common.load_polygon_and_get_convex_parts(image_path, app.images_scale)!
 	}
 }
 
 // get_chicken_idle_image_id returns chicken idle image id.
-pub fn get_chicken_idle_image_id(app App) int {
-	return app.chicken_idle_image.id
+pub fn get_chicken_idle_image(app App) gg.Image {
+	return app.chicken_idle_image
 }
 
 // get_egg_1_image_id returns egg 1 image id.
-pub fn get_egg_1_image_id(app App) int {
-	return app.egg_1_image.id
+pub fn get_egg_1_image(app App) gg.Image {
+	return app.egg_1_image
+}
+
+pub fn get_images_scale(app App) int {
+	return app.images_scale
 }

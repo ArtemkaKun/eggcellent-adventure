@@ -7,7 +7,7 @@ import artemkakun.trnsfrm2d as transform
 import collision
 
 // spawn_egg adds a new egg entity into the ECS world
-pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_width int, egg_image_height int, egg_image_id int, obstacle_move_vector transform.Vector) {
+pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_path string, egg_image_height int, egg_image_id int, obstacle_move_vector transform.Vector, images_scale int) ! {
 	ecs.register_entity(mut ecs_world, [
 		ecs.Position{
 			x: egg_x_position
@@ -22,8 +22,8 @@ pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_width in
 			y: obstacle_move_vector.y
 		},
 		collision.Collider{
-			width: egg_image_width
-			height: egg_image_height
+			normalized_convex_polygons: common.load_polygon_and_get_convex_parts(egg_image_path,
+				images_scale)!
 			collidable_types: collision.CollisionType.chicken
 			collider_type: collision.CollisionType.egg
 		},
@@ -54,8 +54,23 @@ fn find_free_x_pixels(ecs_world ecs.World, screen_width int, obstacle_id int) []
 		obstacle_position := ecs.get_entity_component[ecs.Position](obstacle) or { continue }
 		obstacle_collider := ecs.get_entity_component[collision.Collider](obstacle) or { continue }
 
+		mut most_left_x := 0.0
+		mut most_right_x := 0.0
+
+		for polygon in obstacle_collider.normalized_convex_polygons {
+			for point in polygon {
+				if point.x < most_left_x {
+					most_left_x = point.x
+				}
+
+				if point.x > most_right_x {
+					most_right_x = point.x
+				}
+			}
+		}
+
 		// vfmt off
-		for occupied_x_pixel in int(obstacle_position.x) .. int(obstacle_position.x) + obstacle_collider.width {
+		for occupied_x_pixel in int(obstacle_position.x) .. int(obstacle_position.x) + int(most_right_x - most_left_x) {
 			x_pixels[occupied_x_pixel] = -1
 		}
 		// vfmt on
