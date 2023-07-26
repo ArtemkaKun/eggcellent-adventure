@@ -11,7 +11,7 @@ import common
 import player_input
 import obstacle
 import collision
-import rand
+import artemkakun.trnsfrm2d
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -129,41 +129,54 @@ fn draw_entity(mut app App, entity ecs.Entity) {
 	// TODO: debug code, under debug flag
 	collider_component := ecs.get_entity_component[collision.Collider](entity) or { return }
 
-	mut pol := []f32{}
+	if rendering_metadata_component.orientation == common.Orientation.left {
+		mut flipped_convex_polygons := [][]trnsfrm2d.Position{}
 
-	for vertex in collider_component.normalized_convex_polygons[4] {
-		pol << f32(vertex.x + position_component.x)
-		pol << f32(vertex.y + position_component.y)
-	}
+		for convex_polygon in collider_component.normalized_convex_polygons {
+			mut flipped_convex_polygon := []trnsfrm2d.Position{}
 
-	app.graphical_context.draw_poly_empty(pol, gx.blue)
+			mut most_left_x := 0.0
+			mut most_right_x := 0.0
 
-	for convex_polygon in collider_component.normalized_convex_polygons {
-		// mut pol := []f32{}
-		//
-		// for vertex in convex_polygon {
-		// 	pol << f32(vertex.x + position_component.x)
-		// 	pol << f32(vertex.y + position_component.y)
-		// }
-		//
-		// app.graphical_context.draw_poly_empty(pol, gx.blue)
-		// x_normalized := convex_polygon[0].x / 1000
-		// y_normalized := convex_polygon[0].y / 1000
-		// num_vertices_normalized := convex_polygon.len / 10
-		// r := u8(x_normalized * 255)
-		// g := u8(y_normalized * 255)
-		// b := u8(num_vertices_normalized * 255)
-		//
-		// for vertex_id, vertex in convex_polygon {
-		// 	next_vertex := convex_polygon[(vertex_id + 1) % convex_polygon.len]
-		// 	app.graphical_context.draw_line(f32(vertex.x + position_component.x), f32(vertex.y +
-		// 		position_component.y), f32(next_vertex.x + position_component.x), f32(
-		// 		next_vertex.y + position_component.y), gx.Color{
-		// 		r: r
-		// 		g: g
-		// 		b: b
-		// 	})
-		// }
+			for polygon in collider_component.normalized_convex_polygons {
+				for point in polygon {
+					if point.x < most_left_x {
+						most_left_x = point.x
+					}
+
+					if point.x > most_right_x {
+						most_right_x = point.x
+					}
+				}
+			}
+
+			for vertex in convex_polygon {
+				flipped_convex_polygon << trnsfrm2d.Position{
+					x: -vertex.x + (most_right_x - most_left_x)
+					y: vertex.y
+				}
+			}
+
+			flipped_convex_polygons << flipped_convex_polygon
+		}
+
+		for convex_polygon in flipped_convex_polygons {
+			for vertex_id, vertex in convex_polygon {
+				next_vertex := convex_polygon[(vertex_id + 1) % convex_polygon.len]
+				app.graphical_context.draw_line(f32(vertex.x + position_component.x),
+					f32(vertex.y + position_component.y), f32(next_vertex.x + position_component.x),
+					f32(next_vertex.y + position_component.y), gx.red)
+			}
+		}
+	} else {
+		for convex_polygon in collider_component.normalized_convex_polygons {
+			for vertex_id, vertex in convex_polygon {
+				next_vertex := convex_polygon[(vertex_id + 1) % convex_polygon.len]
+				app.graphical_context.draw_line(f32(vertex.x + position_component.x),
+					f32(vertex.y + position_component.y), f32(next_vertex.x + position_component.x),
+					f32(next_vertex.y + position_component.y), gx.red)
+			}
+		}
 	}
 }
 

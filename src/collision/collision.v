@@ -1,6 +1,7 @@
 module collision
 
 import ecs
+import common
 import artemkakun.trnsfrm2d
 import artemkakun.pcoll2d
 
@@ -25,11 +26,18 @@ pub enum CollisionType {
 
 // check_collision checks if two entities are colliding (AABB collision box).
 pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
-	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
 	first_collider := ecs.get_entity_component[Collider](first_entity)!
-
-	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
 	second_collider := ecs.get_entity_component[Collider](second_entity)!
+
+	is_first_can_collide_with_second := first_collider.collidable_types.has(second_collider.collider_type)
+	is_second_can_collide_with_first := second_collider.collidable_types.has(first_collider.collider_type)
+
+	if is_first_can_collide_with_second == false || is_second_can_collide_with_first == false {
+		return false
+	}
+
+	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
+	first_render_data := ecs.get_entity_component[ecs.RenderData](first_entity)!
 
 	mut first_moved_convex_polygons := [][]trnsfrm2d.Position{}
 
@@ -37,9 +45,32 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		mut first_moved_convex_polygon := []trnsfrm2d.Position{}
 
 		for first_convex_polygon_vertex in first_convex_polygon {
-			first_moved_convex_polygon_vertex := trnsfrm2d.Position{
-				x: first_convex_polygon_vertex.x + first_position.x
-				y: first_convex_polygon_vertex.y + first_position.y
+			first_moved_convex_polygon_vertex := if first_render_data.orientation == common.Orientation.left {
+				mut most_left_x := 0.0
+				mut most_right_x := 0.0
+
+				for polygon in first_collider.normalized_convex_polygons {
+					for point in polygon {
+						if point.x < most_left_x {
+							most_left_x = point.x
+						}
+
+						if point.x > most_right_x {
+							most_right_x = point.x
+						}
+					}
+				}
+
+				trnsfrm2d.Position{
+					x: (-first_convex_polygon_vertex.x + (most_right_x - most_left_x)) +
+						first_position.x
+					y: first_convex_polygon_vertex.y + first_position.y
+				}
+			} else {
+				trnsfrm2d.Position{
+					x: first_convex_polygon_vertex.x + first_position.x
+					y: first_convex_polygon_vertex.y + first_position.y
+				}
 			}
 
 			first_moved_convex_polygon << first_moved_convex_polygon_vertex
@@ -48,15 +79,41 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		first_moved_convex_polygons << first_moved_convex_polygon
 	}
 
+	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
+	second_render_data := ecs.get_entity_component[ecs.RenderData](second_entity)!
+
 	mut second_moved_convex_polygons := [][]trnsfrm2d.Position{}
 
 	for second_convex_polygon in second_collider.normalized_convex_polygons {
 		mut second_moved_convex_polygon := []trnsfrm2d.Position{}
 
 		for second_convex_polygon_vertex in second_convex_polygon {
-			second_moved_convex_polygon_vertex := trnsfrm2d.Position{
-				x: second_convex_polygon_vertex.x + second_position.x
-				y: second_convex_polygon_vertex.y + second_position.y
+			second_moved_convex_polygon_vertex := if second_render_data.orientation == common.Orientation.left {
+				mut most_left_x := 0.0
+				mut most_right_x := 0.0
+
+				for polygon in second_collider.normalized_convex_polygons {
+					for point in polygon {
+						if point.x < most_left_x {
+							most_left_x = point.x
+						}
+
+						if point.x > most_right_x {
+							most_right_x = point.x
+						}
+					}
+				}
+
+				trnsfrm2d.Position{
+					x: (-second_convex_polygon_vertex.x + (most_right_x - most_left_x)) +
+						second_position.x
+					y: second_convex_polygon_vertex.y + second_position.y
+				}
+			} else {
+				trnsfrm2d.Position{
+					x: second_convex_polygon_vertex.x + second_position.x
+					y: second_convex_polygon_vertex.y + second_position.y
+				}
 			}
 
 			second_moved_convex_polygon << second_moved_convex_polygon_vertex
