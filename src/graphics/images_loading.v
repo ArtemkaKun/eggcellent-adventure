@@ -59,11 +59,5 @@ fn load_image_and_bind_offset(mut app App, root_path string, image_name string) 
 }
 
 fn load_image(mut app App, path string) !gg.Image {
-	$if android {
-		image := os.read_apk_asset(path)!
-
-		return app.graphical_context.create_image_from_byte_array(image)
-	} $else {
-		return app.graphical_context.create_image(path)
-	}
+	return app.graphical_context.create_image(path)
 }

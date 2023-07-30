@@ -120,7 +120,7 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 
 		mut new_position := obstacle_sections_position
 		mut new_image_id := obstacle_graphical_assets_metadata.obstacle_section_image_id
-		mut convex_polygons := obstacle_graphical_assets_metadata.obstacle_section_convex_polygons
+		mut convex_polygons := obstacle_graphical_assets_metadata.obstacle_section_convex_polygons.clone()
 
 		if index == above_screen_obstacle.len - 1 {
 			random_obstacle_ending := rand.element[ObstacleEndingRenderData](obstacle_graphical_assets_metadata.obstacle_endings)!
@@ -145,7 +145,7 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 			}
 
 			new_image_id = random_obstacle_ending.image_id
-			convex_polygons = random_obstacle_ending.convex_polygons
+			convex_polygons = random_obstacle_ending.convex_polygons.clone()
 		}
 
 		new_entity_components << ecs.Position{

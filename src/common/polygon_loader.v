@@ -14,8 +14,15 @@ pub fn load_polygon_and_get_convex_parts(image_file_path string, image_scale int
 	polygon_file_path := get_platform_dependent_asset_path(assets_folder_relative_path.replace('.png',
 		pcoll2d.polygon_file_extension))
 
-	polygon_data := os.read_file(polygon_file_path)!
-	polygon := json.decode(pcoll2d.Polygon, polygon_data)!
+	mut polygon := pcoll2d.Polygon{}
+
+	$if android {
+		polygon_data := os.read_apk_asset(polygon_file_path)!
+		polygon = json.decode(pcoll2d.Polygon, polygon_data.bytestr())!
+	} $else {
+		polygon_data := os.read_file(polygon_file_path)!
+		polygon = json.decode(pcoll2d.Polygon, polygon_data)!
+	}
 
 	convex_polygons := pcoll2d.decompose(polygon.points)
 
