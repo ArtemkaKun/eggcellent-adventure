@@ -13,6 +13,7 @@ pub:
 	normalized_convex_polygons [][]trnsfrm2d.Position
 	collidable_types           CollisionType
 	collider_type              CollisionType
+	width                      f64
 }
 
 // CollisionType is an enum that categorizes entities for the purpose of collision detection, used in Collider  component.
@@ -36,94 +37,11 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		return false
 	}
 
-	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
-	first_render_data := ecs.get_entity_component[ecs.RenderData](first_entity)!
+	first_global_polygon := calculate_global_polygons(first_entity)!
+	second_global_polygon := calculate_global_polygons(second_entity)!
 
-	mut first_moved_convex_polygons := [][]trnsfrm2d.Position{}
-
-	for first_convex_polygon in first_collider.normalized_convex_polygons {
-		mut first_moved_convex_polygon := []trnsfrm2d.Position{}
-
-		for first_convex_polygon_vertex in first_convex_polygon {
-			first_moved_convex_polygon_vertex := if first_render_data.orientation == common.Orientation.left {
-				mut most_left_x := 0.0
-				mut most_right_x := 0.0
-
-				for polygon in first_collider.normalized_convex_polygons {
-					for point in polygon {
-						if point.x < most_left_x {
-							most_left_x = point.x
-						}
-
-						if point.x > most_right_x {
-							most_right_x = point.x
-						}
-					}
-				}
-
-				trnsfrm2d.Position{
-					x: (-first_convex_polygon_vertex.x + (most_right_x - most_left_x)) +
-						first_position.x
-					y: first_convex_polygon_vertex.y + first_position.y
-				}
-			} else {
-				trnsfrm2d.Position{
-					x: first_convex_polygon_vertex.x + first_position.x
-					y: first_convex_polygon_vertex.y + first_position.y
-				}
-			}
-
-			first_moved_convex_polygon << first_moved_convex_polygon_vertex
-		}
-
-		first_moved_convex_polygons << first_moved_convex_polygon
-	}
-
-	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
-	second_render_data := ecs.get_entity_component[ecs.RenderData](second_entity)!
-
-	mut second_moved_convex_polygons := [][]trnsfrm2d.Position{}
-
-	for second_convex_polygon in second_collider.normalized_convex_polygons {
-		mut second_moved_convex_polygon := []trnsfrm2d.Position{}
-
-		for second_convex_polygon_vertex in second_convex_polygon {
-			second_moved_convex_polygon_vertex := if second_render_data.orientation == common.Orientation.left {
-				mut most_left_x := 0.0
-				mut most_right_x := 0.0
-
-				for polygon in second_collider.normalized_convex_polygons {
-					for point in polygon {
-						if point.x < most_left_x {
-							most_left_x = point.x
-						}
-
-						if point.x > most_right_x {
-							most_right_x = point.x
-						}
-					}
-				}
-
-				trnsfrm2d.Position{
-					x: (-second_convex_polygon_vertex.x + (most_right_x - most_left_x)) +
-						second_position.x
-					y: second_convex_polygon_vertex.y + second_position.y
-				}
-			} else {
-				trnsfrm2d.Position{
-					x: second_convex_polygon_vertex.x + second_position.x
-					y: second_convex_polygon_vertex.y + second_position.y
-				}
-			}
-
-			second_moved_convex_polygon << second_moved_convex_polygon_vertex
-		}
-
-		second_moved_convex_polygons << second_moved_convex_polygon
-	}
-
-	for first_convex_polygon in first_moved_convex_polygons {
-		for second_convex_polygon in second_moved_convex_polygons {
+	for first_convex_polygon in first_global_polygon {
+		for second_convex_polygon in second_global_polygon {
 			if pcoll2d.check_collision(first_convex_polygon, second_convex_polygon)! {
 				return true
 			}
@@ -131,6 +49,79 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 	}
 
 	return false
+}
+
+// calculate_global_polygons calculates global positions of the collider's polygons.
+pub fn calculate_global_polygons(entity ecs.Entity) ![][]trnsfrm2d.Position {
+	collider := ecs.get_entity_component[Collider](entity)!
+	position := ecs.get_entity_component[ecs.Position](entity)!
+	render_data := ecs.get_entity_component[ecs.RenderData](entity)!
+
+	work_polygons := if render_data.orientation == common.Orientation.left {
+		flip_polygons_by_x(collider.normalized_convex_polygons, collider.width)
+	} else {
+		collider.normalized_convex_polygons
+	}
+
+	return move_polygons(work_polygons, position.Position.Vector)
+}
+
+fn flip_polygons_by_x(polygons [][]trnsfrm2d.Position, main_polygon_width f64) [][]trnsfrm2d.Position {
+	mut flipped_polygons := [][]trnsfrm2d.Position{}
+
+	for polygon in polygons {
+		mut flipped_polygon := []trnsfrm2d.Position{}
+
+		for vertex in polygon {
+			flipped_polygon << trnsfrm2d.Position{
+				x: -vertex.x + main_polygon_width
+				y: vertex.y
+			}
+		}
+
+		flipped_polygons << flipped_polygon
+	}
+
+	return flipped_polygons
+}
+
+fn move_polygons(polygons [][]trnsfrm2d.Position, move_vector trnsfrm2d.Vector) [][]trnsfrm2d.Position {
+	mut moved_polygons := [][]trnsfrm2d.Position{}
+
+	for polygon in polygons {
+		mut moved_polygon := []trnsfrm2d.Position{}
+
+		for vertex in polygon {
+			moved_polygon << trnsfrm2d.Position{
+				x: vertex.x + move_vector.x
+				y: vertex.y + move_vector.y
+			}
+		}
+
+		moved_polygons << moved_polygon
+	}
+
+	return moved_polygons
+}
+
+// calculate_polygon_collider_width calculates the width of a polygon collider.
+pub fn calculate_polygon_collider_width(polygon_parts [][]trnsfrm2d.Position) f64 {
+	mut most_left_x := 0.0
+	mut most_right_x := 0.0
+
+	for polygon in polygon_parts {
+		for vertex in polygon {
+			if vertex.x < most_left_x {
+				most_left_x = vertex.x
+			}
+
+			if vertex.x > most_right_x {
+				most_right_x = vertex.x
+			}
+		}
+	}
+
+	return most_right_x - most_left_x
 }
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.

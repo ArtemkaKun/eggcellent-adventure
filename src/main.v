@@ -6,7 +6,6 @@ import graphics
 import time
 import artemkakun.trnsfrm2d as transform
 import ecs
-import common
 import chicken
 import egg
 import obstacle
@@ -21,7 +20,7 @@ const (
 const (
 	obstacle_moving_direction    = transform.Vector{0, 1} // Down
 	obstacle_moving_speed        = 50.0 // NOTE: 50.0 was set only for testing. It may change in the future.
-	obstacles_spawn_rate_seconds = 5 // NOTE: 5 was set only for testing. It may change in the future.
+	obstacles_spawn_rate_seconds = u64(5) // NOTE: 5 was set only for testing. It may change in the future.
 	obstacle_min_blocks_count    = 2 // NOTE: these value was discussed with Igor and should not be changed without his approval.
 	obstacle_move_vector         = transform.calculate_move_vector(obstacle_moving_direction,
 		obstacle_moving_speed, time_step_seconds) or { panic(err) }
@@ -32,6 +31,7 @@ const egg_spawn_rate_obstacles = 2 // NOTE: this value means "spawn an egg every
 fn main() {
 	mut ecs_world := &ecs.World{}
 	mut app := graphics.create_app(ecs_world)
+
 	spawn start_main_game_loop(mut app, mut ecs_world)
 	graphics.start_app(mut app)
 }
@@ -40,67 +40,26 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	wait_for_graphic_app_initialization(app)
 
 	screen_size := graphics.get_screen_size(app)
-	screen_width := screen_size.width
 
-	obstacle_section := graphics.get_obstacle_section_right_image(app)
-	obstacle_section_id := obstacle_section.id
+	chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_idle_image(app),
+		graphics.get_images_scale(app), time_step_seconds) or {
+		panic("Can't spawn chicken - ${err}")
+	}
 
-	obstacles_render_data := obstacle.ObstaclesRenderData{
-		obstacle_section_image_id: obstacle_section_id
-		obstacle_section_image_width: graphics.get_image_width_by_id(mut app, obstacle_section_id)
-		obstacle_section_image_height: graphics.get_image_height_by_id(mut app, obstacle_section_id)
-		obstacle_endings: graphics.get_obstacle_endings_render_data(mut app) or { panic(err) }
-		obstacle_section_convex_polygons: common.load_polygon_and_get_convex_parts(obstacle_section.path,
-			graphics.get_images_scale(app)) or { panic(err) }
+	obstacles_render_data := obstacle.create_obstacles_render_data(mut app) or {
+		panic("Can't create obstacles render data - ${err}")
 	}
 
 	mut obstacle_id := 1
 
-	spawn_obstacle(mut ecs_world, obstacles_render_data, screen_width, obstacle_id) or {
-		panic(err)
-	}
-
-	obstacle_id += 1
-
-	chicken_idle_image := graphics.get_chicken_idle_image(app)
-
-	ecs.register_entity(mut ecs_world, [
-		ecs.Position{
-			x: 100
-			y: 100
-		},
-		ecs.RenderData{
-			image_id: chicken_idle_image.id
-			orientation: common.Orientation.right
-		},
-		chicken.GravityInfluence{
-			force: 2 * time_step_seconds
-		},
-		ecs.Velocity{},
-		chicken.IsControlledByPlayerTag{},
-		collision.Collider{
-			normalized_convex_polygons: common.load_polygon_and_get_convex_parts(chicken_idle_image.path,
-				graphics.get_images_scale(app)) or { panic(err) }
-			collidable_types: collision.CollisionType.obstacle | collision.CollisionType.egg
-			collider_type: collision.CollisionType.chicken
-		},
-	])
-
 	mut obstacle_spawner_stopwatch := time.new_stopwatch()
 	obstacle_spawner_stopwatch.start()
+	obstacle_spawner_stopwatch.start = obstacles_spawn_rate_seconds // HACK: to spawn first obstacle immediately.
 
 	for graphics.is_quited(app) == false {
-		if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
-			spawn_obstacle(mut ecs_world, obstacles_render_data, screen_width, obstacle_id) or {
-				panic(err)
-			}
-
-			if obstacle_id % egg_spawn_rate_obstacles == 0 {
-				spawn_egg(mut ecs_world, mut app, obstacle_id) or { panic(err) }
-			}
-
-			obstacle_id += 1
-			obstacle_spawner_stopwatch.restart()
+		obstacle_id = try_spawn_obstacle_and_egg(mut obstacle_spawner_stopwatch, mut ecs_world,
+			obstacles_render_data, screen_size.width, obstacle_id, mut app) or {
+			panic("Can't spawn obstacle or egg - ${err}")
 		}
 
 		ecs.execute_system_with_two_components[ecs.Velocity, chicken.GravityInfluence](ecs_world,
@@ -123,6 +82,22 @@ fn wait_for_graphic_app_initialization(app &graphics.App) {
 	for graphics.is_initialized(app) == false {
 		time.sleep(1 * time.nanosecond)
 	}
+}
+
+fn try_spawn_obstacle_and_egg(mut obstacle_spawner_stopwatch time.StopWatch, mut ecs_world ecs.World, obstacles_render_data obstacle.ObstaclesRenderData, screen_width int, obstacle_id int, mut app graphics.App) !int {
+	if obstacle_spawner_stopwatch.elapsed().seconds() >= obstacles_spawn_rate_seconds {
+		spawn_obstacle(mut ecs_world, obstacles_render_data, screen_width, obstacle_id)!
+
+		if obstacle_id % egg_spawn_rate_obstacles == 0 {
+			spawn_egg(mut ecs_world, mut app, obstacle_id)!
+		}
+
+		obstacle_spawner_stopwatch.restart()
+
+		return obstacle_id + 1
+	}
+
+	return obstacle_id
 }
 
 fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata obstacle.ObstaclesRenderData, screen_width int, obstacle_id int) ! {

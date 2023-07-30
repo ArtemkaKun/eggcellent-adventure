@@ -5,11 +5,15 @@ import artemkakun.pcoll2d
 import json
 import os
 
+// load_polygon_and_get_convex_parts loads polygon from a polygon file that has the same name as the image file
+// scales the polygon by image_scale
+// and returns a list of convex polygons
 pub fn load_polygon_and_get_convex_parts(image_file_path string, image_scale int) ![][]trnsfrm2d.Position {
 	assets_folder_relative_path := image_file_path.all_after('assets/')
 
 	polygon_file_path := get_platform_dependent_asset_path(assets_folder_relative_path.replace('.png',
 		pcoll2d.polygon_file_extension))
+
 	polygon_data := os.read_file(polygon_file_path)!
 	polygon := json.decode(pcoll2d.Polygon, polygon_data)!
 

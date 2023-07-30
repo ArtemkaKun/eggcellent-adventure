@@ -2,6 +2,8 @@ module chicken
 
 import ecs
 import common
+import collision
+import gg
 
 // NOTE:
 // These constants are used to define the jump velocity of the chicken.
@@ -11,6 +13,36 @@ const (
 	jump_velocity_x = 0.45
 	jump_velocity_y = -1
 )
+
+// spawn_chicken creates a new chicken entity and adds it to the world.
+pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_idle_image gg.Image, image_scale int, time_step_seconds f64) ! {
+	polygon_convex_parts := common.load_polygon_and_get_convex_parts(chicken_idle_image.path,
+		image_scale)!
+
+	polygon_width := collision.calculate_polygon_collider_width(polygon_convex_parts)
+
+	ecs.register_entity(mut ecs_world, [
+		ecs.Position{
+			x: screen_size.width / 2 - polygon_width / 2
+			y: screen_size.height / 4
+		},
+		ecs.RenderData{
+			image_id: chicken_idle_image.id
+			orientation: common.Orientation.right
+		},
+		GravityInfluence{
+			force: 2 * time_step_seconds
+		},
+		ecs.Velocity{},
+		IsControlledByPlayerTag{},
+		collision.Collider{
+			normalized_convex_polygons: polygon_convex_parts
+			collidable_types: collision.CollisionType.obstacle | collision.CollisionType.egg
+			collider_type: collision.CollisionType.chicken
+			width: polygon_width
+		},
+	])
+}
 
 // gravity_system applies the force of gravity to an entity's velocity.
 // It adjusts the y component of the entity's velocity based on the gravity force.

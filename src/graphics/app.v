@@ -9,9 +9,7 @@ import math
 import ecs
 import common
 import player_input
-import obstacle
 import collision
-import artemkakun.trnsfrm2d
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -110,72 +108,36 @@ fn draw_frame(mut app App) {
 
 fn draw_entity(mut app App, entity ecs.Entity) {
 	// NOTE: return will never be reached here, since the query function guarantees that the entity has both components.
-	position_component := ecs.get_entity_component[ecs.Position](entity) or { return }
-	rendering_metadata_component := ecs.get_entity_component[ecs.RenderData](entity) or { return }
+	position := ecs.get_entity_component[ecs.Position](entity) or { return }
+	render_data := ecs.get_entity_component[ecs.RenderData](entity) or { return }
 
-	image_id := rendering_metadata_component.image_id
+	image_id := render_data.image_id
 
 	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
 		img_rect: gg.Rect{
-			x: f32(position_component.x)
-			y: f32(position_component.y)
+			x: f32(position.x)
+			y: f32(position.y)
 			width: get_image_width_by_id(mut app, image_id)
 			height: get_image_height_by_id(mut app, image_id)
 		}
-		flip_x: rendering_metadata_component.orientation == common.Orientation.left
+		flip_x: render_data.orientation == common.Orientation.left
 		img_id: image_id
 	})
 
-	// TODO: debug code, under debug flag
-	collider_component := ecs.get_entity_component[collision.Collider](entity) or { return }
+	$if debug_colliders ? {
+		draw_debug_colliders(mut app, entity)
+	}
+}
 
-	if rendering_metadata_component.orientation == common.Orientation.left {
-		mut flipped_convex_polygons := [][]trnsfrm2d.Position{}
+fn draw_debug_colliders(mut app App, entity ecs.Entity) {
+	global_polygons := collision.calculate_global_polygons(entity) or { return }
 
-		for convex_polygon in collider_component.normalized_convex_polygons {
-			mut flipped_convex_polygon := []trnsfrm2d.Position{}
+	for polygon in global_polygons {
+		for vertex_id, vertex in polygon {
+			next_vertex := polygon[(vertex_id + 1) % polygon.len]
 
-			mut most_left_x := 0.0
-			mut most_right_x := 0.0
-
-			for polygon in collider_component.normalized_convex_polygons {
-				for point in polygon {
-					if point.x < most_left_x {
-						most_left_x = point.x
-					}
-
-					if point.x > most_right_x {
-						most_right_x = point.x
-					}
-				}
-			}
-
-			for vertex in convex_polygon {
-				flipped_convex_polygon << trnsfrm2d.Position{
-					x: -vertex.x + (most_right_x - most_left_x)
-					y: vertex.y
-				}
-			}
-
-			flipped_convex_polygons << flipped_convex_polygon
-		}
-
-		for convex_polygon in flipped_convex_polygons {
-			for vertex_id, vertex in convex_polygon {
-				next_vertex := convex_polygon[(vertex_id + 1) % convex_polygon.len]
-				app.graphical_context.draw_line(f32(vertex.x + position_component.x),
-					f32(vertex.y + position_component.y), f32(next_vertex.x + position_component.x),
-					f32(next_vertex.y + position_component.y), gx.red)
-			}
-		}
-	} else {
-		for convex_polygon in collider_component.normalized_convex_polygons {
-			for vertex_id, vertex in convex_polygon {
-				next_vertex := convex_polygon[(vertex_id + 1) % convex_polygon.len]
-				app.graphical_context.draw_line(f32(vertex.x + position_component.x),
-					f32(vertex.y + position_component.y), f32(next_vertex.x + position_component.x),
-					f32(next_vertex.y + position_component.y), gx.red)
-			}
+			app.graphical_context.draw_line(f32(vertex.x), f32(vertex.y), f32(next_vertex.x),
+				f32(next_vertex.y), gx.red)
 		}
 	}
 }
@@ -235,31 +197,27 @@ pub fn get_obstacle_section_right_image(app App) gg.Image {
 	return app.obstacle_section_right_image
 }
 
-// get_obstacle_endings_render_data returns obstacle endings.
-pub fn get_obstacle_endings_render_data(mut app App) ![]obstacle.ObstacleEndingRenderData {
-	return app.obstacle_endings_right_images.map(create_obstacle_ending_render_data(mut app,
-		it.id, it.path)!)
-}
-
-fn create_obstacle_ending_render_data(mut app App, image_id int, image_path string) !obstacle.ObstacleEndingRenderData {
-	return obstacle.ObstacleEndingRenderData{
-		image_id: image_id
-		y_offset: app.obstacle_image_id_to_y_offset[image_id]
-		width: get_image_width_by_id(mut app, image_id)
-		convex_polygons: common.load_polygon_and_get_convex_parts(image_path, app.images_scale)!
-	}
-}
-
-// get_chicken_idle_image_id returns chicken idle image id.
+// get_chicken_idle_image returns chicken idle image id.
 pub fn get_chicken_idle_image(app App) gg.Image {
 	return app.chicken_idle_image
 }
 
-// get_egg_1_image_id returns egg 1 image id.
+// get_egg_1_image returns egg 1 image id.
 pub fn get_egg_1_image(app App) gg.Image {
 	return app.egg_1_image
 }
 
+// get_images_scale returns images scale.
 pub fn get_images_scale(app App) int {
 	return app.images_scale
+}
+
+// get_obstacle_endings_right_images returns obstacle endings right images.
+pub fn get_obstacle_endings_right_images(app App) []gg.Image {
+	return app.obstacle_endings_right_images
+}
+
+// get_obstacle_image_y_offset returns obstacle image y offset.
+pub fn get_obstacle_image_y_offset(app App, image_id int) int {
+	return app.obstacle_image_id_to_y_offset[image_id]
 }
