@@ -1,25 +1,27 @@
 module obstacle
 
-import transform
+import artemkakun.trnsfrm2d as transform
 import rand
 import ecs
 import common
 import collision
+import graphics
 
 // ObstaclesRenderData is needed to couple graphical assets info, that will be used in obstacles spawning algorithm.
 pub struct ObstaclesRenderData {
-	obstacle_section_image_id     int
-	obstacle_section_image_width  int
-	obstacle_section_image_height int
-	obstacle_endings              []ObstacleEndingRenderData
+	obstacle_section_image_id        int
+	obstacle_section_image_width     int
+	obstacle_section_image_height    int
+	obstacle_endings                 []ObstacleEndingRenderData
+	obstacle_section_convex_polygons [][]transform.Position
 }
 
 // ObstacleEndingRenderData is a structure that holds the information about the obstacle ending.
 pub struct ObstacleEndingRenderData {
-	image_id int
-	y_offset int
-	width    int
-	height   int
+	image_id        int
+	y_offset        int
+	width           int
+	convex_polygons [][]transform.Position
 }
 
 // NOTE: This set a chance of spawning a single obstacle to 70%.
@@ -27,38 +29,69 @@ pub struct ObstacleEndingRenderData {
 // This value may be adjusted in the future.
 const single_obstacle_spawn_chance = 0.7
 
+// create_obstacles_render_data creates a structure that holds the information about obstacle graphical assets
+pub fn create_obstacles_render_data(mut app graphics.App) !ObstaclesRenderData {
+	obstacle_section := graphics.get_obstacle_section_right_image(app)
+	obstacle_section_id := obstacle_section.id
+
+	return ObstaclesRenderData{
+		obstacle_section_image_id: obstacle_section_id
+		obstacle_section_image_width: graphics.get_image_width_by_id(mut app, obstacle_section_id)
+		obstacle_section_image_height: graphics.get_image_height_by_id(mut app, obstacle_section_id)
+		obstacle_endings: get_obstacle_endings_render_data(mut app)!
+		obstacle_section_convex_polygons: common.load_polygon_and_get_convex_parts(obstacle_section.path,
+			graphics.get_images_scale(app))!
+	}
+}
+
+fn get_obstacle_endings_render_data(mut app graphics.App) ![]ObstacleEndingRenderData {
+	obstacle_endings_right_images := graphics.get_obstacle_endings_right_images(app)
+
+	return obstacle_endings_right_images.map(create_obstacle_ending_render_data(mut app,
+		it.id, it.path)!)
+}
+
+fn create_obstacle_ending_render_data(mut app graphics.App, image_id int, image_path string) !ObstacleEndingRenderData {
+	return ObstacleEndingRenderData{
+		image_id: image_id
+		y_offset: graphics.get_obstacle_image_y_offset(app, image_id)
+		width: graphics.get_image_width_by_id(mut app, image_id)
+		convex_polygons: common.load_polygon_and_get_convex_parts(image_path, graphics.get_images_scale(app))!
+	}
+}
+
 // spawn_obstacle spawns a new random width obstacle above the screen.
 pub fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata ObstaclesRenderData, screen_width int, min_blocks_count int, move_vector transform.Vector, obstacle_id int) ! {
 	mut random_width_obstacle := create_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata,
-		min_blocks_count)!
+		min_blocks_count, obstacle_id)!
 
-	add_shared_components(mut random_width_obstacle, move_vector, obstacle_id)
+	add_shared_components(mut random_width_obstacle, move_vector)
 
 	for section_entity in random_width_obstacle {
 		ecs.register_entity(mut ecs_world, section_entity)
 	}
 }
 
-fn create_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstaclesRenderData, min_blocks_count int) ![][]ecs.Component {
+fn create_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstaclesRenderData, min_blocks_count int, obstacle_id int) ![][]ecs.Component {
 	if rand.f32() < obstacle.single_obstacle_spawn_chance {
 		random_orientation := unsafe {
 			common.Orientation(rand.int_in_range(0, 2)!)
 		}
 
 		return create_single_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata,
-			min_blocks_count, random_orientation)!
+			min_blocks_count, random_orientation, obstacle_id)!
 	} else {
 		return spawn_double_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata,
-			min_blocks_count)!
+			min_blocks_count, obstacle_id)!
 	}
 }
 
-fn spawn_double_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstaclesRenderData, min_blocks_count int) ![][]ecs.Component {
+fn spawn_double_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstaclesRenderData, min_blocks_count int, obstacle_id int) ![][]ecs.Component {
 	mut left_obstacle := create_single_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata,
-		min_blocks_count, common.Orientation.left)!
+		min_blocks_count, common.Orientation.left, obstacle_id)!
 
 	mut right_obstacle := create_single_random_width_obstacle(screen_width, obstacle_graphical_assets_metadata,
-		min_blocks_count, common.Orientation.right)!
+		min_blocks_count, common.Orientation.right, obstacle_id)!
 
 	adjust_obstacles_spacing(mut left_obstacle, mut right_obstacle, obstacle_graphical_assets_metadata.obstacle_section_image_width)!
 
@@ -69,15 +102,15 @@ fn spawn_double_random_width_obstacle(screen_width int, obstacle_graphical_asset
 	return double_obstacle
 }
 
-fn create_single_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstaclesRenderData, min_blocks_count int, random_orientation common.Orientation) ![][]ecs.Component {
+fn create_single_random_width_obstacle(screen_width int, obstacle_graphical_assets_metadata ObstaclesRenderData, min_blocks_count int, random_orientation common.Orientation, obstacle_id int) ![][]ecs.Component {
 	random_width_obstacle := calculate_positions_for_new_obstacle(screen_width, obstacle_graphical_assets_metadata.obstacle_section_image_width,
 		min_blocks_count, random_orientation)!
 
 	return create_obstacle_sections_entities(random_width_obstacle, random_orientation,
-		obstacle_graphical_assets_metadata)
+		obstacle_graphical_assets_metadata, obstacle_id)
 }
 
-fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Position, random_orientation common.Orientation, obstacle_graphical_assets_metadata ObstaclesRenderData) ![][]ecs.Component {
+fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Position, random_orientation common.Orientation, obstacle_graphical_assets_metadata ObstaclesRenderData, obstacle_id int) ![][]ecs.Component {
 	above_screen_obstacle := place_obstacle_above_screen(obstacle_graphical_assets_metadata.obstacle_section_image_height,
 		obstacle_sections_positions)
 
@@ -88,8 +121,8 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 
 		mut new_position := obstacle_sections_position
 		mut new_image_id := obstacle_graphical_assets_metadata.obstacle_section_image_id
-		mut new_image_width := obstacle_graphical_assets_metadata.obstacle_section_image_width
-		mut new_image_height := obstacle_graphical_assets_metadata.obstacle_section_image_height
+		mut convex_polygons := obstacle_graphical_assets_metadata.obstacle_section_convex_polygons.clone()
+		mut is_ending := false
 
 		if index == above_screen_obstacle.len - 1 {
 			random_obstacle_ending := rand.element[ObstacleEndingRenderData](obstacle_graphical_assets_metadata.obstacle_endings)!
@@ -114,8 +147,8 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 			}
 
 			new_image_id = random_obstacle_ending.image_id
-			new_image_width = random_obstacle_ending.width
-			new_image_height = random_obstacle_ending.height
+			convex_polygons = random_obstacle_ending.convex_polygons.clone()
+			is_ending = true
 		}
 
 		new_entity_components << ecs.Position{
@@ -129,10 +162,16 @@ fn create_obstacle_sections_entities(obstacle_sections_positions []transform.Pos
 		}
 
 		new_entity_components << collision.Collider{
-			width: new_image_width
-			height: new_image_height
+			normalized_convex_polygons: convex_polygons
 			collidable_types: collision.CollisionType.chicken
 			collider_type: collision.CollisionType.obstacle
+			width: collision.calculate_polygon_collider_width(convex_polygons)
+			height: collision.calculate_polygon_collider_height(convex_polygons)
+		}
+
+		new_entity_components << ObstacleSection{
+			obstacle_id: obstacle_id
+			is_ending: is_ending
 		}
 
 		obstacle_sections << new_entity_components
@@ -197,16 +236,11 @@ fn remove_first_obstacle_section(mut obstacle_sections [][]ecs.Component, obstac
 	}
 }
 
-fn add_shared_components(mut obstacle_sections [][]ecs.Component, move_vector transform.Vector, obstacle_id int) {
+fn add_shared_components(mut obstacle_sections [][]ecs.Component, move_vector transform.Vector) {
 	for mut section_entity in obstacle_sections {
-		section_entity << [
-			ecs.Velocity{
-				x: move_vector.x
-				y: move_vector.y
-			},
-			ObstacleSection{
-				obstacle_id: obstacle_id
-			},
-		]
+		section_entity << ecs.Velocity{
+			x: move_vector.x
+			y: move_vector.y
+		}
 	}
 }

@@ -1,7 +1,7 @@
 module main
 
 import obstacle
-import transform
+import artemkakun.trnsfrm2d as transform
 import tests_helpers
 import common
 

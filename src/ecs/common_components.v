@@ -2,7 +2,7 @@
 
 module ecs
 
-import transform
+import artemkakun.trnsfrm2d as transform
 import common
 
 // Position component represents the spatial location of an entity within the game world.

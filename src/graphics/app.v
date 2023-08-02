@@ -8,9 +8,9 @@ import scale_factor
 import math
 import ecs
 import common
-import player_input
-import obstacle
 import collision
+import player_input
+import chicken
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -54,7 +54,10 @@ mut:
 
 	egg_1_image gg.Image
 
-	ecs_world &ecs.World
+	ecs_world                     &ecs.World
+	chicken_entity_id             u64
+	chicken_render_data_component &ecs.RenderData
+	chicken_velocity_component    &ecs.Velocity
 }
 
 // create_app creates and sets up graphical app.
@@ -62,6 +65,8 @@ pub fn create_app(ecs_world &ecs.World) &App {
 	mut app := &App{
 		graphical_context: unsafe { nil }
 		ecs_world: ecs_world
+		chicken_render_data_component: unsafe { nil }
+		chicken_velocity_component: unsafe { nil }
 	}
 
 	app.graphical_context = gg.new_context(
@@ -79,6 +84,21 @@ pub fn create_app(ecs_world &ecs.World) &App {
 	)
 
 	return app
+}
+
+// set_chicken_data sets chicken data (id, components) to the app.
+pub fn set_chicken_data(mut app App, chicken_entity &ecs.Entity) {
+	chicken_render_data_component := ecs.get_entity_component[ecs.RenderData](chicken_entity) or {
+		panic('Chicken entity does not have render data component!')
+	}
+
+	chicken_velocity_component := ecs.get_entity_component[ecs.Velocity](chicken_entity) or {
+		panic('Chicken entity does not have velocity component!')
+	}
+
+	app.chicken_entity_id = chicken_entity.id
+	app.chicken_render_data_component = chicken_render_data_component
+	app.chicken_velocity_component = chicken_velocity_component
 }
 
 fn initialize(mut app App) {
@@ -109,27 +129,38 @@ fn draw_frame(mut app App) {
 
 fn draw_entity(mut app App, entity ecs.Entity) {
 	// NOTE: return will never be reached here, since the query function guarantees that the entity has both components.
-	position_component := ecs.get_entity_component[ecs.Position](entity) or { return }
-	rendering_metadata_component := ecs.get_entity_component[ecs.RenderData](entity) or { return }
+	position := ecs.get_entity_component[ecs.Position](entity) or { return }
+	render_data := ecs.get_entity_component[ecs.RenderData](entity) or { return }
 
-	image_id := rendering_metadata_component.image_id
+	image_id := render_data.image_id
 
 	app.graphical_context.draw_image_with_config(gg.DrawImageConfig{
 		img_rect: gg.Rect{
-			x: f32(position_component.x)
-			y: f32(position_component.y)
+			x: f32(position.x)
+			y: f32(position.y)
 			width: get_image_width_by_id(mut app, image_id)
 			height: get_image_height_by_id(mut app, image_id)
 		}
-		flip_x: rendering_metadata_component.orientation == common.Orientation.left
+		flip_x: render_data.orientation == common.Orientation.left
 		img_id: image_id
 	})
 
-	// TODO: debug code, under debug flag
-	collider_component := ecs.get_entity_component[collision.Collider](entity) or { return }
+	$if debug_colliders ? {
+		draw_debug_colliders(mut app, entity)
+	}
+}
 
-	app.graphical_context.draw_rect_empty(f32(position_component.x), f32(position_component.y),
-		f32(collider_component.width), f32(collider_component.height), gx.Color{ r: 255, g: 0, b: 0 })
+fn draw_debug_colliders(mut app App, entity ecs.Entity) {
+	global_polygons := collision.calculate_global_polygons(entity) or { return }
+
+	for polygon in global_polygons {
+		for vertex_id, vertex in polygon {
+			next_vertex := polygon[(vertex_id + 1) % polygon.len]
+
+			app.graphical_context.draw_line(f32(vertex.x), f32(vertex.y), f32(next_vertex.x),
+				f32(next_vertex.y), gx.red)
+		}
+	}
 }
 
 // get_image_width_by_id retrieves the width of the image with the specified image_id.
@@ -153,7 +184,11 @@ fn quit(_ &gg.Event, mut app App) {
 }
 
 fn react_on_input_event(event &gg.Event, mut app App) {
-	player_input.react_on_input_event(event, app.ecs_world, get_screen_size(app).width)
+	ecs.get_entity_component_by_entity_id[chicken.IsControlledByPlayerTag](app.ecs_world,
+		app.chicken_entity_id) or { return }
+
+	player_input.react_on_input_event(event, mut app.chicken_render_data_component, mut
+		app.chicken_velocity_component, get_screen_size(app).width)
 }
 
 // start_app starts graphical app.
@@ -182,32 +217,32 @@ pub fn invoke_frame_draw(mut app App) {
 	app.graphical_context.refresh_ui()
 }
 
-// get_obstacle_section_right_image_id returns obstacle section right image id.
-pub fn get_obstacle_section_right_image_id(app App) int {
-	return app.obstacle_section_right_image.id
+// get_obstacle_section_right_image returns obstacle section right image.
+pub fn get_obstacle_section_right_image(app App) gg.Image {
+	return app.obstacle_section_right_image
 }
 
-// get_obstacle_endings_render_data returns obstacle endings.
-pub fn get_obstacle_endings_render_data(mut app App) []obstacle.ObstacleEndingRenderData {
-	return app.obstacle_endings_right_images.map(create_obstacle_ending_render_data(mut app,
-		it.id))
+// get_chicken_idle_image returns chicken idle image id.
+pub fn get_chicken_idle_image(app App) gg.Image {
+	return app.chicken_idle_image
 }
 
-fn create_obstacle_ending_render_data(mut app App, image_id int) obstacle.ObstacleEndingRenderData {
-	return obstacle.ObstacleEndingRenderData{
-		image_id: image_id
-		y_offset: app.obstacle_image_id_to_y_offset[image_id]
-		width: get_image_width_by_id(mut app, image_id)
-		height: get_image_height_by_id(mut app, image_id)
-	}
+// get_egg_1_image returns egg 1 image id.
+pub fn get_egg_1_image(app App) gg.Image {
+	return app.egg_1_image
 }
 
-// get_chicken_idle_image_id returns chicken idle image id.
-pub fn get_chicken_idle_image_id(app App) int {
-	return app.chicken_idle_image.id
+// get_images_scale returns images scale.
+pub fn get_images_scale(app App) int {
+	return app.images_scale
 }
 
-// get_egg_1_image_id returns egg 1 image id.
-pub fn get_egg_1_image_id(app App) int {
-	return app.egg_1_image.id
+// get_obstacle_endings_right_images returns obstacle endings right images.
+pub fn get_obstacle_endings_right_images(app App) []gg.Image {
+	return app.obstacle_endings_right_images
+}
+
+// get_obstacle_image_y_offset returns obstacle image y offset.
+pub fn get_obstacle_image_y_offset(app App, image_id int) int {
+	return app.obstacle_image_id_to_y_offset[image_id]
 }

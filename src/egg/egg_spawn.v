@@ -3,11 +3,11 @@ module egg
 import obstacle
 import ecs
 import common
-import transform
+import artemkakun.trnsfrm2d
 import collision
 
 // spawn_egg adds a new egg entity into the ECS world
-pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_width int, egg_image_height int, egg_image_id int, obstacle_move_vector transform.Vector) {
+pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_height int, egg_image_id int, obstacle_move_vector trnsfrm2d.Vector, polygon_convex_parts [][]trnsfrm2d.Position, polygon_width f64, polygon_height f64) ! {
 	ecs.register_entity(mut ecs_world, [
 		ecs.Position{
 			x: egg_x_position
@@ -22,10 +22,11 @@ pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_width in
 			y: obstacle_move_vector.y
 		},
 		collision.Collider{
-			width: egg_image_width
-			height: egg_image_height
+			normalized_convex_polygons: polygon_convex_parts
 			collidable_types: collision.CollisionType.chicken
 			collider_type: collision.CollisionType.egg
+			width: polygon_width
+			height: polygon_height
 		},
 		IsEggTag{},
 	])
@@ -37,8 +38,8 @@ pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_width in
 // adjusts this position by half the width of the egg image to ensure the egg will be centered in the free space.
 //
 // Returns the calculated x position for the egg on the screen.
-pub fn calculate_egg_x_position(ecs_world ecs.World, screen_width int, egg_image_width int, obstacle_id int) int {
-	free_pixel_x_positions := find_free_x_pixels(ecs_world, screen_width, obstacle_id)
+pub fn calculate_egg_x_position(ecs_world ecs.World, egg_image_width int, obstacle_id int, get_screen_pixels []int) int {
+	free_pixel_x_positions := find_free_x_pixels(ecs_world, obstacle_id, get_screen_pixels)
 
 	min_x_position := free_pixel_x_positions[0]
 	max_x_position := free_pixel_x_positions.last()
@@ -46,38 +47,79 @@ pub fn calculate_egg_x_position(ecs_world ecs.World, screen_width int, egg_image
 	return ((max_x_position - min_x_position) / 2 + min_x_position) - egg_image_width / 2
 }
 
-fn find_free_x_pixels(ecs_world ecs.World, screen_width int, obstacle_id int) []int {
-	mut x_pixels := get_all_x_pixels(screen_width)
+fn find_free_x_pixels(ecs_world ecs.World, obstacle_id int, get_screen_pixels []int) []int {
+	obstacle_endings := get_obstacle_endings_near_future_egg(ecs_world, obstacle_id)
 
-	for obstacle in get_obstacle_sections_near_future_egg(ecs_world, obstacle_id) {
-		// NOTE: continue will never be reached because of `get_obstacle_sections_near_future_egg` returns only entities with Position and Collider components.
-		obstacle_position := ecs.get_entity_component[ecs.Position](obstacle) or { continue }
-		obstacle_collider := ecs.get_entity_component[collision.Collider](obstacle) or { continue }
+	if obstacle_endings.len == 1 {
+		obstacle_ending := obstacle_endings[0]
 
-		// vfmt off
-		for occupied_x_pixel in int(obstacle_position.x) .. int(obstacle_position.x) + obstacle_collider.width {
-			x_pixels[occupied_x_pixel] = -1
+		obstacle_orientation := ecs.get_entity_component[ecs.RenderData](obstacle_ending) or {
+			panic(err)
 		}
-		// vfmt on
-	}
 
-	return x_pixels.filter(it != -1)
+		obstacle_position := ecs.get_entity_component[ecs.Position](obstacle_ending) or {
+			panic(err)
+		}
+
+		obstacle_collider := ecs.get_entity_component[collision.Collider](obstacle_ending) or {
+			panic(err)
+		}
+
+		if obstacle_orientation.orientation == common.Orientation.left {
+			return get_screen_pixels[int(obstacle_position.x) + int(obstacle_collider.width)..]
+		}
+
+		return get_screen_pixels[..int(obstacle_position.x)]
+	} else {
+		first_obstacle_ending := obstacle_endings[0]
+		second_obstacle_ending := obstacle_endings[1]
+
+		first_obstacle_position := ecs.get_entity_component[ecs.Position](first_obstacle_ending) or {
+			panic(err)
+		}
+
+		second_obstacle_position := ecs.get_entity_component[ecs.Position](second_obstacle_ending) or {
+			panic(err)
+		}
+
+		first_obstacle_collider := ecs.get_entity_component[collision.Collider](first_obstacle_ending) or {
+			panic(err)
+		}
+
+		second_obstacle_collider := ecs.get_entity_component[collision.Collider](second_obstacle_ending) or {
+			panic(err)
+		}
+
+		first_obstacle_orientation := ecs.get_entity_component[ecs.RenderData](first_obstacle_ending) or {
+			panic(err)
+		}
+
+		if first_obstacle_orientation.orientation == common.Orientation.left {
+			return get_screen_pixels[int(first_obstacle_position.x) +
+				int(first_obstacle_collider.width)..int(second_obstacle_position.x)]
+		} else {
+			return get_screen_pixels[int(second_obstacle_position.x) +
+				int(second_obstacle_collider.width)..int(first_obstacle_position.x)]
+		}
+	}
 }
 
-fn get_all_x_pixels(screen_width int) []int {
-	mut x_pixels := []int{}
-
-	for pixel_x in 0 .. screen_width {
-		x_pixels << pixel_x
-	}
-
-	return x_pixels
-}
-
-fn get_obstacle_sections_near_future_egg(ecs_world ecs.World, obstacle_id int) []ecs.Entity {
-	query := ecs.query_for_three_components[ecs.Position, collision.Collider, obstacle.ObstacleSection]
+fn get_obstacle_endings_near_future_egg(ecs_world ecs.World, obstacle_id int) []ecs.Entity {
+	query := ecs.query_for_component[obstacle.ObstacleSection]
 	obstacles := ecs.get_entities_with_query(ecs_world, query)
 
-	// NOTE: false will never be returned because of `query_for_three_components` returns only entities with Position, Collider and ObstacleSection components.
-	return obstacles.filter((ecs.get_entity_component[obstacle.ObstacleSection](it) or { false }).obstacle_id == obstacle_id)
+	mut obstacles_endings := []ecs.Entity{}
+
+	for obstacle in obstacles {
+		// NOTE: continue will never be executed because of `query_for_component` returns only entities with ObstacleSection component.
+		obstacle_section := ecs.get_entity_component[obstacle.ObstacleSection](obstacle) or {
+			continue
+		}
+
+		if obstacle_section.obstacle_id == obstacle_id && obstacle_section.is_ending {
+			obstacles_endings << obstacle
+		}
+	}
+
+	return obstacles_endings
 }

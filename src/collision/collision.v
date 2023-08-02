@@ -1,16 +1,20 @@
 module collision
 
 import ecs
+import common
+import artemkakun.trnsfrm2d
+import artemkakun.pcoll2d
 
 // Collider component defines the collision properties of an entity.
 // It includes dimensions (`width` and `height`), the collision types of entities it can collide with (`collidable_types`),
 // and the collision type of the entity itself (`collider_type`).
 pub struct Collider {
 pub:
-	width            int
-	height           int
-	collidable_types CollisionType
-	collider_type    CollisionType
+	normalized_convex_polygons [][]trnsfrm2d.Position
+	collidable_types           CollisionType
+	collider_type              CollisionType
+	width                      f64
+	height                     f64
 }
 
 // CollisionType is an enum that categorizes entities for the purpose of collision detection, used in Collider  component.
@@ -24,10 +28,7 @@ pub enum CollisionType {
 
 // check_collision checks if two entities are colliding (AABB collision box).
 pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
-	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
 	first_collider := ecs.get_entity_component[Collider](first_entity)!
-
-	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
 	second_collider := ecs.get_entity_component[Collider](second_entity)!
 
 	is_first_can_collide_with_second := first_collider.collidable_types.has(second_collider.collider_type)
@@ -37,6 +38,17 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		return false
 	}
 
+	return first_collision_pass(first_entity, second_entity)!
+		&& second_collision_pass(first_entity, second_entity)!
+}
+
+fn first_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
+	first_collider := ecs.get_entity_component[Collider](first_entity)!
+	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
+
+	second_collider := ecs.get_entity_component[Collider](second_entity)!
+	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
+
 	is_x_overlap := first_position.x < second_position.x + second_collider.width
 		&& first_position.x + first_collider.width > second_position.x
 
@@ -44,6 +56,118 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		&& first_position.y + first_collider.height > second_position.y
 
 	return is_x_overlap && is_y_overlap
+}
+
+fn second_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
+	first_global_polygons := calculate_global_polygons(first_entity)!
+	second_global_polygons := calculate_global_polygons(second_entity)!
+
+	return any_polygons_collide(first_global_polygons, second_global_polygons)
+}
+
+// calculate_global_polygons calculates global positions of the collider's polygons.
+pub fn calculate_global_polygons(entity ecs.Entity) ![][]trnsfrm2d.Position {
+	collider := ecs.get_entity_component[Collider](entity)!
+	position := ecs.get_entity_component[ecs.Position](entity)!
+	render_data := ecs.get_entity_component[ecs.RenderData](entity)!
+
+	work_polygons := if render_data.orientation == common.Orientation.left {
+		flip_polygons_by_x(collider.normalized_convex_polygons, collider.width)
+	} else {
+		collider.normalized_convex_polygons
+	}
+
+	return move_polygons(work_polygons, position.Position.Vector)
+}
+
+fn flip_polygons_by_x(polygons [][]trnsfrm2d.Position, main_polygon_width f64) [][]trnsfrm2d.Position {
+	mut flipped_polygons := [][]trnsfrm2d.Position{}
+
+	for polygon in polygons {
+		mut flipped_polygon := []trnsfrm2d.Position{}
+
+		for vertex in polygon {
+			flipped_polygon << trnsfrm2d.Position{
+				x: -vertex.x + main_polygon_width
+				y: vertex.y
+			}
+		}
+
+		flipped_polygons << flipped_polygon
+	}
+
+	return flipped_polygons
+}
+
+fn move_polygons(polygons [][]trnsfrm2d.Position, move_vector trnsfrm2d.Vector) [][]trnsfrm2d.Position {
+	mut moved_polygons := [][]trnsfrm2d.Position{}
+
+	for polygon in polygons {
+		mut moved_polygon := []trnsfrm2d.Position{}
+
+		for vertex in polygon {
+			moved_polygon << trnsfrm2d.Position{
+				x: vertex.x + move_vector.x
+				y: vertex.y + move_vector.y
+			}
+		}
+
+		moved_polygons << moved_polygon
+	}
+
+	return moved_polygons
+}
+
+// calculate_polygon_collider_width calculates the width of a polygon collider.
+pub fn calculate_polygon_collider_width(polygon_parts [][]trnsfrm2d.Position) f64 {
+	mut most_left_x := 0.0
+	mut most_right_x := 0.0
+
+	for polygon in polygon_parts {
+		for vertex in polygon {
+			if vertex.x < most_left_x {
+				most_left_x = vertex.x
+			}
+
+			if vertex.x > most_right_x {
+				most_right_x = vertex.x
+			}
+		}
+	}
+
+	return most_right_x - most_left_x
+}
+
+// calculate_polygon_collider_height calculates the height of a polygon collider.
+pub fn calculate_polygon_collider_height(polygon_parts [][]trnsfrm2d.Position) f64 {
+	mut most_top_y := 0.0
+	mut most_bottom_y := 0.0
+
+	for polygon in polygon_parts {
+		for vertex in polygon {
+			if vertex.y < most_top_y {
+				most_top_y = vertex.y
+			}
+
+			if vertex.y > most_bottom_y {
+				most_bottom_y = vertex.y
+			}
+		}
+	}
+
+	return most_bottom_y - most_top_y
+}
+
+fn any_polygons_collide(first_polygons [][]trnsfrm2d.Position, second_polygons [][]trnsfrm2d.Position) bool {
+	for first_polygon in first_polygons {
+		for second_polygon in second_polygons {
+			if pcoll2d.check_collision(first_polygon, second_polygon) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.
