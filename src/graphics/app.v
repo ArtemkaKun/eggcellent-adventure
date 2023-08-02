@@ -8,8 +8,9 @@ import scale_factor
 import math
 import ecs
 import common
-import player_input
 import collision
+import player_input
+import chicken
 
 // NOTE:
 // Window size on Android works a bit like changing DPI, since app in the full screen mode all the time.
@@ -53,7 +54,10 @@ mut:
 
 	egg_1_image gg.Image
 
-	ecs_world &ecs.World
+	ecs_world                     &ecs.World
+	chicken_entity_id             u64
+	chicken_render_data_component &ecs.RenderData
+	chicken_velocity_component    &ecs.Velocity
 }
 
 // create_app creates and sets up graphical app.
@@ -61,6 +65,8 @@ pub fn create_app(ecs_world &ecs.World) &App {
 	mut app := &App{
 		graphical_context: unsafe { nil }
 		ecs_world: ecs_world
+		chicken_render_data_component: unsafe { nil }
+		chicken_velocity_component: unsafe { nil }
 	}
 
 	app.graphical_context = gg.new_context(
@@ -78,6 +84,20 @@ pub fn create_app(ecs_world &ecs.World) &App {
 	)
 
 	return app
+}
+
+pub fn set_chicken_data(mut app App, chicken_entity &ecs.Entity) {
+	chicken_render_data_component := ecs.get_entity_component[ecs.RenderData](chicken_entity) or {
+		panic('Chicken entity does not have render data component!')
+	}
+
+	chicken_velocity_component := ecs.get_entity_component[ecs.Velocity](chicken_entity) or {
+		panic('Chicken entity does not have velocity component!')
+	}
+
+	app.chicken_entity_id = chicken_entity.id
+	app.chicken_render_data_component = chicken_render_data_component
+	app.chicken_velocity_component = chicken_velocity_component
 }
 
 fn initialize(mut app App) {
@@ -163,7 +183,11 @@ fn quit(_ &gg.Event, mut app App) {
 }
 
 fn react_on_input_event(event &gg.Event, mut app App) {
-	player_input.react_on_input_event(event, app.ecs_world, get_screen_size(app).width)
+	ecs.get_entity_component_by_entity_id[chicken.IsControlledByPlayerTag](app.ecs_world,
+		app.chicken_entity_id) or { return }
+
+	player_input.react_on_input_event(event, mut app.chicken_render_data_component, mut
+		app.chicken_velocity_component, get_screen_size(app).width)
 }
 
 // start_app starts graphical app.

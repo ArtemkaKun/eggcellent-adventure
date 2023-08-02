@@ -14,6 +14,7 @@ pub:
 	collidable_types           CollisionType
 	collider_type              CollisionType
 	width                      f64
+	height                     f64
 }
 
 // CollisionType is an enum that categorizes entities for the purpose of collision detection, used in Collider  component.
@@ -37,18 +38,31 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		return false
 	}
 
-	first_global_polygon := calculate_global_polygons(first_entity)!
-	second_global_polygon := calculate_global_polygons(second_entity)!
+	return first_collision_pass(first_entity, second_entity)!
+		&& second_collision_pass(first_entity, second_entity)!
+}
 
-	for first_convex_polygon in first_global_polygon {
-		for second_convex_polygon in second_global_polygon {
-			if pcoll2d.check_collision(first_convex_polygon, second_convex_polygon)! {
-				return true
-			}
-		}
-	}
+fn first_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
+	first_collider := ecs.get_entity_component[Collider](first_entity)!
+	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
 
-	return false
+	second_collider := ecs.get_entity_component[Collider](second_entity)!
+	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
+
+	is_x_overlap := first_position.x < second_position.x + second_collider.width
+		&& first_position.x + first_collider.width > second_position.x
+
+	is_y_overlap := first_position.y < second_position.y + second_collider.height
+		&& first_position.y + first_collider.height > second_position.y
+
+	return is_x_overlap && is_y_overlap
+}
+
+fn second_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
+	first_global_polygons := calculate_global_polygons(first_entity)!
+	second_global_polygons := calculate_global_polygons(second_entity)!
+
+	return any_polygons_collide(first_global_polygons, second_global_polygons)
 }
 
 // calculate_global_polygons calculates global positions of the collider's polygons.
@@ -122,6 +136,38 @@ pub fn calculate_polygon_collider_width(polygon_parts [][]trnsfrm2d.Position) f6
 	}
 
 	return most_right_x - most_left_x
+}
+
+// calculate_polygon_collider_height calculates the height of a polygon collider.
+pub fn calculate_polygon_collider_height(polygon_parts [][]trnsfrm2d.Position) f64 {
+	mut most_top_y := 0.0
+	mut most_bottom_y := 0.0
+
+	for polygon in polygon_parts {
+		for vertex in polygon {
+			if vertex.y < most_top_y {
+				most_top_y = vertex.y
+			}
+
+			if vertex.y > most_bottom_y {
+				most_bottom_y = vertex.y
+			}
+		}
+	}
+
+	return most_bottom_y - most_top_y
+}
+
+fn any_polygons_collide(first_polygons [][]trnsfrm2d.Position, second_polygons [][]trnsfrm2d.Position) bool {
+	for first_polygon in first_polygons {
+		for second_polygon in second_polygons {
+			if pcoll2d.check_collision(first_polygon, second_polygon) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.

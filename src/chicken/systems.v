@@ -15,16 +15,16 @@ const (
 )
 
 // spawn_chicken creates a new chicken entity and adds it to the world.
-pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_idle_image gg.Image, image_scale int, time_step_seconds f64) ! {
+pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_idle_image gg.Image, image_scale int, time_step_seconds f64) !&ecs.Entity {
 	polygon_convex_parts := common.load_polygon_and_get_convex_parts(chicken_idle_image.path,
 		image_scale)!
 
 	polygon_width := collision.calculate_polygon_collider_width(polygon_convex_parts)
 
-	ecs.register_entity(mut ecs_world, [
+	return ecs.register_entity(mut ecs_world, [
 		ecs.Position{
 			x: screen_size.width / 2 - polygon_width / 2
-			y: screen_size.height / 4
+			y: screen_size.height / 2
 		},
 		ecs.RenderData{
 			image_id: chicken_idle_image.id
@@ -40,6 +40,7 @@ pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_idle_
 			collidable_types: collision.CollisionType.obstacle | collision.CollisionType.egg
 			collider_type: collision.CollisionType.chicken
 			width: polygon_width
+			height: collision.calculate_polygon_collider_height(polygon_convex_parts)
 		},
 	])
 }
@@ -56,14 +57,14 @@ pub fn gravity_system(mut velocity_component ecs.Velocity, gravity_affection &Gr
 // player_control_system_left_jump is triggered on players pressing the left arrow key or touching the left side of the screen.
 // This system is triggered from the corresponding App's input event.
 // It modifies the rendering_metadata and velocity components of the chicken entity to reflect the jump action to the left.
-pub fn player_control_system_left_jump(_ &IsControlledByPlayerTag, mut rendering_metadata_component ecs.RenderData, mut velocity_component ecs.Velocity) {
+pub fn player_control_system_left_jump(mut rendering_metadata_component ecs.RenderData, mut velocity_component ecs.Velocity) {
 	do_jump(mut rendering_metadata_component, mut velocity_component, common.Orientation.left)
 }
 
 // player_control_system_right_jump is triggered on players pressing the right arrow key or touching the right side of the screen.
 // This system is triggered from the corresponding App's input event.
 // It modifies the rendering_metadata and velocity components of the chicken entity to reflect the jump action to the right.
-pub fn player_control_system_right_jump(_ &IsControlledByPlayerTag, mut rendering_metadata_component ecs.RenderData, mut velocity_component ecs.Velocity) {
+pub fn player_control_system_right_jump(mut rendering_metadata_component ecs.RenderData, mut velocity_component ecs.Velocity) {
 	do_jump(mut rendering_metadata_component, mut velocity_component, common.Orientation.right)
 }
 

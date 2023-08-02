@@ -7,6 +7,7 @@ import ecs
 pub struct ObstacleSection {
 pub:
 	obstacle_id int
+	is_ending   bool
 }
 
 // HACK: This function is a workaround to a limitation in V's interface implementation.
