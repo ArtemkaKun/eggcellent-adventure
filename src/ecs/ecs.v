@@ -36,27 +36,6 @@ pub fn register_entity(mut world World, components []Component) &Entity {
 	return new_entity
 }
 
-// execute_system_with_three_components applies a system function to each entity that has components of type A, B, and D in the given world.
-// The system function must take three parameters, all of which are references to components of type A, B, and D respectively.
-pub fn execute_system_with_three_components[A, B, D](world World, system fn (&A, &B, &D)) {
-	query := query_for_three_components[A, B, D]
-	entities := get_entities_with_query(world, query)
-
-	for entity in entities {
-		// NOTE: continue will never be reached here, since the query function guarantees that the entity has both components.
-		a_component := get_entity_component[A](entity) or { continue }
-		b_component := get_entity_component[B](entity) or { continue }
-		d_component := get_entity_component[D](entity) or { continue }
-
-		system(a_component, b_component, d_component)
-	}
-}
-
-// query_for_three_components is a query function that checks if an entity has components of type A, B, and D.
-pub fn query_for_three_components[A, B, D](entity Entity) bool {
-	return query_for_two_components[A, B](entity) && query_for_component[D](entity)
-}
-
 // execute_system_with_two_components applies a system function to each entity that has both components of type A and B in the given world.
 // The system function must take two parameters, both of which are references to components of type A and B respectively.
 pub fn execute_system_with_two_components[A, B](world World, system fn (&A, &B)) {
@@ -98,6 +77,8 @@ pub fn get_entity_component[T](entity Entity) !&T {
 	}
 }
 
+// get_entity_component_by_entity_id retrieves the first component of type T from the given entity's (searched by ID) components.
+// If no component of type T is found, it returns an error.
 pub fn get_entity_component_by_entity_id[T](world World, entity_id u64) !&T {
 	entity := world.entities[entity_id] or {
 		return error('Entity with ID ${entity_id} not found in world')

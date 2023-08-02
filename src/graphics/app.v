@@ -86,6 +86,7 @@ pub fn create_app(ecs_world &ecs.World) &App {
 	return app
 }
 
+// set_chicken_data sets chicken data (id, components) to the app.
 pub fn set_chicken_data(mut app App, chicken_entity &ecs.Entity) {
 	chicken_render_data_component := ecs.get_entity_component[ecs.RenderData](chicken_entity) or {
 		panic('Chicken entity does not have render data component!')

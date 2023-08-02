@@ -29,6 +29,7 @@ pub struct ObstacleEndingRenderData {
 // This value may be adjusted in the future.
 const single_obstacle_spawn_chance = 0.7
 
+// create_obstacles_render_data creates a structure that holds the information about obstacle graphical assets
 pub fn create_obstacles_render_data(mut app graphics.App) !ObstaclesRenderData {
 	obstacle_section := graphics.get_obstacle_section_right_image(app)
 	obstacle_section_id := obstacle_section.id
