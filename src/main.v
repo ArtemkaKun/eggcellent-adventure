@@ -13,9 +13,10 @@ import collision
 import common
 
 const (
-	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
-	time_step_seconds     = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
-	time_step_nanoseconds = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
+	target_fps             = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
+	time_step_seconds      = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
+	time_step_nanoseconds  = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
+	time_step_milliseconds = int(time_step_seconds * 1e3) // NOTE: This is used only for game loop sleep.
 )
 
 const (
@@ -43,7 +44,7 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	screen_size := graphics.get_screen_size(app)
 	images_scale := graphics.get_images_scale(app)
 
-	chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_idle_image(app),
+	chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_animation_frames(app),
 		images_scale, time_step_seconds) or { panic("Can't spawn chicken - ${err}") }
 
 	graphics.set_chicken_data(mut app, chicken_entity)
@@ -75,6 +76,14 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 		panic('Chicken entity does not have velocity component!')
 	}
 
+	mut chicken_animation_component := ecs.get_entity_component[ecs.Animation](chicken_entity) or {
+		panic('Chicken entity does not have animation component!')
+	}
+
+	mut chicken_render_data_component := ecs.get_entity_component[ecs.RenderData](chicken_entity) or {
+		panic('Chicken entity does not have render data component!')
+	}
+
 	for graphics.is_quited(app) == false {
 		obstacle_id = try_spawn_obstacle_and_egg(mut obstacle_spawner_stopwatch, mut ecs_world,
 			obstacles_render_data, screen_width, obstacle_id, mut app, get_screen_pixels,
@@ -92,6 +101,9 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 		handle_collision(mut ecs_world, chicken_entity) or {
 			println("Can't handle collision - ${err}")
 		}
+
+		ecs.animation_system(mut chicken_animation_component, mut chicken_render_data_component,
+			time_step_milliseconds)
 
 		graphics.invoke_frame_draw(mut app)
 

@@ -4,6 +4,7 @@ module ecs
 
 import artemkakun.trnsfrm2d as transform
 import common
+import gg
 
 // Position component represents the spatial location of an entity within the game world.
 // It embeds the `Position` struct from the `transform` module.
@@ -25,6 +26,16 @@ pub:
 	orientation common.Orientation
 }
 
+pub struct Animation {
+pub mut:
+	frames                     []gg.Image
+	time_between_frames_ms     int
+	is_playing                 bool
+	time_left_to_next_frame_ms int
+	current_frame_id           int
+	next_frame_id              int
+}
+
 // HACK: This function is a workaround to a limitation in V's interface implementation.
 // In V, a struct automatically implements an interface if it satisfies all of the interface's methods and fields.
 // However, for our empty interface for components, no struct can satisfy it as there are no methods or fields to implement.
@@ -34,5 +45,5 @@ pub:
 // The function uses an array to accommodate multiple components, thereby preventing code duplication.
 // This hack should be removed when interface for component will have methods or fields.
 fn component_interface_hack() []Component {
-	return [Position{}, Velocity{}, RenderData{}]
+	return [Position{}, Velocity{}, RenderData{}, Animation{}]
 }

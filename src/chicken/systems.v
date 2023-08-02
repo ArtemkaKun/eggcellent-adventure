@@ -15,8 +15,8 @@ const (
 )
 
 // spawn_chicken creates a new chicken entity and adds it to the world.
-pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_idle_image gg.Image, image_scale int, time_step_seconds f64) !&ecs.Entity {
-	polygon_convex_parts := common.load_polygon_and_get_convex_parts(chicken_idle_image.path,
+pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_animation_frames []gg.Image, image_scale int, time_step_seconds f64) !&ecs.Entity {
+	polygon_convex_parts := common.load_polygon_and_get_convex_parts(chicken_animation_frames[0].path,
 		image_scale)!
 
 	polygon_width := collision.calculate_polygon_collider_width(polygon_convex_parts)
@@ -27,8 +27,14 @@ pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_idle_
 			y: screen_size.height / 2
 		},
 		ecs.RenderData{
-			image_id: chicken_idle_image.id
+			image_id: chicken_animation_frames[0].id
 			orientation: common.Orientation.right
+		},
+		ecs.Animation{
+			frames: chicken_animation_frames
+			time_between_frames_ms: 77
+			current_frame_id: 0
+			next_frame_id: 1
 		},
 		GravityInfluence{
 			force: 2 * time_step_seconds
