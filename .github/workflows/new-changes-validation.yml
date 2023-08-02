@@ -279,7 +279,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
-          java-version: 20
+          java-version: 17
 
       - name: Setup Android SDK
         uses: amyu/setup-android@v2
@@ -307,7 +307,7 @@ jobs:
           sudo ln -s ~/.vmodules/vab/vab /usr/local/bin/vab
 
       - name: Build APK
-        run: vab --min-sdk-version 28 --api 33 --gles 3 --archs 'arm64-v8a' -v 3 --flag '-skip-unused' .
+        run: vab --min-sdk-version 28 --api 31 --gles 3 --archs 'arm64-v8a' -v 3 --flag '-skip-unused' .
 
   check-formatting:
     needs: vab-compilation
