@@ -5,17 +5,24 @@ import ecs
 import common
 import artemkakun.trnsfrm2d
 import collision
+import gg
 
 // spawn_egg adds a new egg entity into the ECS world
-pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_height int, egg_image_id int, obstacle_move_vector trnsfrm2d.Vector, polygon_convex_parts [][]trnsfrm2d.Position, polygon_width f64, polygon_height f64) ! {
+pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_height int, egg_animation_frames []gg.Image, obstacle_move_vector trnsfrm2d.Vector, polygon_convex_parts [][]trnsfrm2d.Position, polygon_width f64, polygon_height f64) ! {
 	ecs.register_entity(mut ecs_world, [
 		ecs.Position{
 			x: egg_x_position
 			y: 0 - egg_image_height
 		},
 		ecs.RenderData{
-			image_id: egg_image_id
+			image_id: egg_animation_frames[0].id
 			orientation: common.Orientation.right
+		},
+		ecs.Animation{
+			frames: egg_animation_frames
+			time_between_frames_ms: 67
+			current_frame_id: 0
+			next_frame_id: 1
 		},
 		ecs.Velocity{
 			x: obstacle_move_vector.x

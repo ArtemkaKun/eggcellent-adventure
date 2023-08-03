@@ -52,7 +52,7 @@ mut:
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
 
-	egg_1_image gg.Image
+	egg_animation_frames []gg.Image
 
 	ecs_world                     &ecs.World
 	chicken_entity_id             u64
@@ -230,9 +230,9 @@ pub fn get_chicken_animation_frames(app App) []gg.Image {
 	return app.chicken_animation_frames
 }
 
-// get_egg_1_image returns egg 1 image id.
-pub fn get_egg_1_image(app App) gg.Image {
-	return app.egg_1_image
+// get_egg_animation_frames returns egg animation frames.
+pub fn get_egg_animation_frames(app App) []gg.Image {
+	return app.egg_animation_frames
 }
 
 // get_images_scale returns images scale.

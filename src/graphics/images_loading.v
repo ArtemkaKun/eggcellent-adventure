@@ -25,20 +25,27 @@ const (
 	}
 )
 
-const chicken_frames_count = 5
+const (
+	chicken_frames_count = 5
+	egg_frames_count     = 6
+)
 
 fn load_assets(mut app App) ! {
 	right_obstacle_assets_path := common.get_platform_dependent_asset_path('obstacle/right')
-	egg_1_asset_path := common.get_platform_dependent_asset_path('egg/egg_1.png')
-
 	load_images_right_obstacle_images(mut app, right_obstacle_assets_path)!
-	app.egg_1_image = load_image(mut app, egg_1_asset_path)!
 
 	for chicken_frame_count in 0 .. graphics.chicken_frames_count {
 		chicken_frame_asset_path := common.get_platform_dependent_asset_path('chicken/chicken_flight_${
 			chicken_frame_count + 1}.png')
 
 		app.chicken_animation_frames << load_image(mut app, chicken_frame_asset_path)!
+	}
+
+	for egg_frame_count in 0 .. graphics.egg_frames_count {
+		egg_frame_asset_path := common.get_platform_dependent_asset_path('egg/egg_${
+			egg_frame_count + 1}.png')
+
+		app.egg_animation_frames << load_image(mut app, egg_frame_asset_path)!
 	}
 }
 
