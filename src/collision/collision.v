@@ -27,9 +27,9 @@ pub enum CollisionType {
 }
 
 // check_collision checks if two entities are colliding (AABB collision box).
-pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
-	first_collider := ecs.get_entity_component[Collider](first_entity)!
-	second_collider := ecs.get_entity_component[Collider](second_entity)!
+pub fn check_collision(ecs_world ecs.World, first_entity_id u64, second_entity_id u64) !bool {
+	first_collider := ecs.get_component[Collider](ecs_world, first_entity_id)!
+	second_collider := ecs.get_component[Collider](ecs_world, second_entity_id)!
 
 	is_first_can_collide_with_second := first_collider.collidable_types.has(second_collider.collider_type)
 	is_second_can_collide_with_first := second_collider.collidable_types.has(first_collider.collider_type)
@@ -38,16 +38,16 @@ pub fn check_collision(first_entity ecs.Entity, second_entity ecs.Entity) !bool 
 		return false
 	}
 
-	return first_collision_pass(first_entity, second_entity)!
-		&& second_collision_pass(first_entity, second_entity)!
+	return first_collision_pass(ecs_world, first_entity_id, second_entity_id)!
+		&& second_collision_pass(ecs_world, first_entity_id, second_entity_id)!
 }
 
-fn first_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
-	first_collider := ecs.get_entity_component[Collider](first_entity)!
-	first_position := ecs.get_entity_component[ecs.Position](first_entity)!
+fn first_collision_pass(ecs_world ecs.World, first_entity_id u64, second_entity_id u64) !bool {
+	first_collider := ecs.get_component[Collider](ecs_world, first_entity_id)!
+	first_position := ecs.get_component[ecs.Position](ecs_world, first_entity_id)!
 
-	second_collider := ecs.get_entity_component[Collider](second_entity)!
-	second_position := ecs.get_entity_component[ecs.Position](second_entity)!
+	second_collider := ecs.get_component[Collider](ecs_world, second_entity_id)!
+	second_position := ecs.get_component[ecs.Position](ecs_world, second_entity_id)!
 
 	is_x_overlap := first_position.x < second_position.x + second_collider.width
 		&& first_position.x + first_collider.width > second_position.x
@@ -58,18 +58,18 @@ fn first_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool
 	return is_x_overlap && is_y_overlap
 }
 
-fn second_collision_pass(first_entity ecs.Entity, second_entity ecs.Entity) !bool {
-	first_global_polygons := calculate_global_polygons(first_entity)!
-	second_global_polygons := calculate_global_polygons(second_entity)!
+fn second_collision_pass(ecs_world ecs.World, first_entity_id u64, second_entity_id u64) !bool {
+	first_global_polygons := calculate_global_polygons(ecs_world, first_entity_id)!
+	second_global_polygons := calculate_global_polygons(ecs_world, second_entity_id)!
 
 	return any_polygons_collide(first_global_polygons, second_global_polygons)
 }
 
 // calculate_global_polygons calculates global positions of the collider's polygons.
-pub fn calculate_global_polygons(entity ecs.Entity) ![][]trnsfrm2d.Position {
-	collider := ecs.get_entity_component[Collider](entity)!
-	position := ecs.get_entity_component[ecs.Position](entity)!
-	render_data := ecs.get_entity_component[ecs.RenderData](entity)!
+pub fn calculate_global_polygons(ecs_world ecs.World, entity_id u64) ![][]trnsfrm2d.Position {
+	collider := ecs.get_component[Collider](ecs_world, entity_id)!
+	position := ecs.get_component[ecs.Position](ecs_world, entity_id)!
+	render_data := ecs.get_component[ecs.RenderData](ecs_world, entity_id)!
 
 	work_polygons := if render_data.orientation == common.Orientation.left {
 		flip_polygons_by_x(collider.normalized_convex_polygons, collider.width)

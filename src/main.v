@@ -44,10 +44,10 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	screen_size := graphics.get_screen_size(app)
 	images_scale := graphics.get_images_scale(app)
 
-	chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_animation_frames(app),
+	chicken_entity_id := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_animation_frames(app),
 		images_scale, time_step_seconds) or { panic("Can't spawn chicken - ${err}") }
 
-	graphics.set_chicken_data(mut app, chicken_entity)
+	graphics.set_chicken_data(mut app, chicken_entity_id)
 
 	obstacles_render_data := obstacle.create_obstacles_render_data(mut app) or {
 		panic("Can't create obstacles render data - ${err}")
@@ -68,13 +68,12 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	egg_polygon_width := collision.calculate_polygon_collider_width(egg_polygon_convex_parts)
 	egg_polygon_height := collision.calculate_polygon_collider_height(egg_polygon_convex_parts)
 
-	mut chicken_velocity_component := ecs.get_entity_component[ecs.Velocity](chicken_entity) or {
+	mut chicken_velocity_component := ecs.get_component[ecs.Velocity](ecs_world, chicken_entity_id) or {
 		panic('Chicken entity does not have velocity component!')
 	}
 
-	chicken_gravity_component := ecs.get_entity_component[chicken.GravityInfluence](chicken_entity) or {
-		panic('Chicken entity does not have velocity component!')
-	}
+	chicken_gravity_component := ecs.get_component[chicken.GravityInfluence](ecs_world,
+		chicken_entity_id) or { panic('Chicken entity does not have velocity component!') }
 
 	mut egg_entities_to_remove_on_animation_end := []u64{}
 
@@ -92,9 +91,7 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 		destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
 
-		handle_collision(mut ecs_world, chicken_entity, mut egg_entities_to_remove_on_animation_end) or {
-			println("Can't handle collision - ${err}")
-		}
+		handle_collision(mut ecs_world, chicken_entity_id, mut egg_entities_to_remove_on_animation_end) or {}
 
 		play_animations(mut ecs_world) or { println("Can't play animations - ${err}") }
 
@@ -159,33 +156,38 @@ fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, obstacle_id int, get
 }
 
 fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
-	query := ecs.check_if_entity_has_component[ecs.Position]
-	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
+	query := ecs.query_for_component[ecs.Position]
+	entities_to_check := ecs.get_entities_ids_with_query(ecs_world, query) or { panic(err) }
 
 	for entity in entities_to_check {
-		if ecs.get_entity_component[ecs.Position](entity)!.y >= screen_height {
-			ecs.remove_entity(mut ecs_world, entity.id)!
+		if ecs.get_component[ecs.Position](ecs_world, entity)!.y >= screen_height {
+			ecs.remove_entity(mut ecs_world, entity)!
 		}
 	}
 }
 
-fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity, mut egg_entities []u64) ! {
-	if ecs.check_if_entity_has_component[collision.Collider](chicken_entity) == false {
+fn handle_collision(mut ecs_world ecs.World, chicken_entity_id u64, mut egg_entities []u64) ! {
+	if ecs.entity_has_component[collision.Collider](ecs_world, chicken_entity_id)! == false {
 		return
 	}
 
 	query := ecs.query_for_two_components[ecs.Position, collision.Collider]
-	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
+	entities_to_check := ecs.get_entities_ids_with_query(ecs_world, query) or { panic(err) }
 
-	for entity in entities_to_check {
-		if collision.check_collision(chicken_entity, entity)! {
-			if ecs.check_if_entity_has_component[egg.IsEggTag](entity) == true {
-				mut animation_component := ecs.get_entity_component[ecs.Animation](entity)!
+	for entity_id in entities_to_check {
+		if collision.check_collision(ecs_world, chicken_entity_id, entity_id)! {
+			if ecs.entity_has_component[egg.IsEggTag](ecs_world, entity_id)! == true {
+				ecs.remove_component[collision.Collider](mut ecs_world, entity_id)!
+				ecs.remove_component[ecs.Velocity](mut ecs_world, entity_id)!
+
+				mut animation_component := ecs.get_component[ecs.Animation](ecs_world,
+					entity_id)!
+
 				animation_component.is_playing = true
-				egg_entities << entity.id
+				egg_entities << entity_id
 			} else {
-				ecs.remove_component[chicken.IsControlledByPlayerTag](mut ecs_world, chicken_entity.id)!
-				ecs.remove_component[collision.Collider](mut ecs_world, chicken_entity.id)!
+				ecs.remove_component[chicken.IsControlledByPlayerTag](mut ecs_world, chicken_entity_id)!
+				ecs.remove_component[collision.Collider](mut ecs_world, chicken_entity_id)!
 			}
 
 			break
@@ -195,24 +197,23 @@ fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity, mut egg_
 
 fn play_animations(mut ecs_world ecs.World) ! {
 	query := ecs.query_for_two_components[ecs.Animation, ecs.RenderData]
-	entities := ecs.get_entities_with_query(ecs_world, query)
+	entities := ecs.get_entities_ids_with_query(ecs_world, query) or { panic(err) }
 
 	for entity in entities {
-		mut animation_component := ecs.get_entity_component[ecs.Animation](entity)!
-		mut render_data_component := ecs.get_entity_component[ecs.RenderData](entity)!
+		mut animation_component := ecs.get_component[ecs.Animation](ecs_world, entity)!
+		mut render_data_component := ecs.get_component[ecs.RenderData](ecs_world, entity)!
 
 		ecs.animation_system(mut animation_component, mut render_data_component, time_step_milliseconds)
 	}
 }
 
 fn remove_egg_entities_on_animation_end(mut egg_entities []u64, mut ecs_world ecs.World) {
-	for id in egg_entities {
-		mut animation_component := ecs.get_entity_component_by_entity_id[ecs.Animation](ecs_world,
-			id) or { continue }
+	for index, id in egg_entities {
+		mut animation_component := ecs.get_component[ecs.Animation](ecs_world, id) or { continue }
 
 		if animation_component.is_playing == false {
 			ecs.remove_entity(mut ecs_world, id) or { continue }
-			egg_entities.delete(id)
+			egg_entities.delete(index)
 		}
 	}
 }

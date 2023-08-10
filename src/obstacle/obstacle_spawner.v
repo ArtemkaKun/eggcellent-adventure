@@ -68,7 +68,7 @@ pub fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadat
 	add_shared_components(mut random_width_obstacle, move_vector)
 
 	for section_entity in random_width_obstacle {
-		ecs.register_entity(mut ecs_world, section_entity)
+		ecs.create_entity(mut ecs_world, section_entity)
 	}
 }
 
@@ -209,15 +209,15 @@ fn adjust_obstacles_spacing(mut left_obstacle_sections [][]ecs.Component, mut ri
 // vfmt on
 
 fn is_spacing_too_small(right_obstacle_ending_components []ecs.Component, left_obstacle_ending_components []ecs.Component, obstacle_section_width int) !bool {
-	right_position := ecs.find_component[ecs.Position](right_obstacle_ending_components)!
+	right_position := find_component[ecs.Position](right_obstacle_ending_components)!
 	position_of_left_section_end := calculate_left_ending_end_position(left_obstacle_ending_components)!
 
 	return right_position.x - position_of_left_section_end < obstacle_section_width
 }
 
 fn calculate_left_ending_end_position(left_obstacle_ending_components []ecs.Component) !f64 {
-	left_position := ecs.find_component[ecs.Position](left_obstacle_ending_components)!
-	left_collider := ecs.find_component[collision.Collider](left_obstacle_ending_components)!
+	left_position := find_component[ecs.Position](left_obstacle_ending_components)!
+	left_collider := find_component[collision.Collider](left_obstacle_ending_components)!
 
 	return left_position.x + left_collider.width
 }
@@ -226,7 +226,7 @@ fn remove_first_obstacle_section(mut obstacle_sections [][]ecs.Component, obstac
 	obstacle_sections.delete(0)
 
 	for index, _ in obstacle_sections {
-		mut position_component := ecs.find_component[ecs.Position](obstacle_sections[index])!
+		mut position_component := find_component[ecs.Position](obstacle_sections[index])!
 		component_index := obstacle_sections[index].index(position_component)
 
 		obstacle_sections[index][component_index] = ecs.Position{
@@ -243,4 +243,14 @@ fn add_shared_components(mut obstacle_sections [][]ecs.Component, move_vector tr
 			y: move_vector.y
 		}
 	}
+}
+
+pub fn find_component[T](components []ecs.Component) !&T {
+	for component in components {
+		if component is T {
+			return component
+		}
+	}
+
+	return error("Can't find a component of type ${T.name}")
 }

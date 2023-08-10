@@ -9,7 +9,7 @@ import gg
 
 // spawn_egg adds a new egg entity into the ECS world
 pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_height int, egg_animation_frames []gg.Image, obstacle_move_vector trnsfrm2d.Vector, polygon_convex_parts [][]trnsfrm2d.Position, polygon_width f64, polygon_height f64) ! {
-	ecs.register_entity(mut ecs_world, [
+	ecs.create_entity(mut ecs_world, [
 		ecs.Position{
 			x: egg_x_position
 			y: 0 - egg_image_height
@@ -60,15 +60,15 @@ fn find_free_x_pixels(ecs_world ecs.World, obstacle_id int, get_screen_pixels []
 	if obstacle_endings.len == 1 {
 		obstacle_ending := obstacle_endings[0]
 
-		obstacle_orientation := ecs.get_entity_component[ecs.RenderData](obstacle_ending) or {
+		obstacle_orientation := ecs.get_component[ecs.RenderData](ecs_world, obstacle_ending) or {
 			panic(err)
 		}
 
-		obstacle_position := ecs.get_entity_component[ecs.Position](obstacle_ending) or {
+		obstacle_position := ecs.get_component[ecs.Position](ecs_world, obstacle_ending) or {
 			panic(err)
 		}
 
-		obstacle_collider := ecs.get_entity_component[collision.Collider](obstacle_ending) or {
+		obstacle_collider := ecs.get_component[collision.Collider](ecs_world, obstacle_ending) or {
 			panic(err)
 		}
 
@@ -81,23 +81,23 @@ fn find_free_x_pixels(ecs_world ecs.World, obstacle_id int, get_screen_pixels []
 		first_obstacle_ending := obstacle_endings[0]
 		second_obstacle_ending := obstacle_endings[1]
 
-		first_obstacle_position := ecs.get_entity_component[ecs.Position](first_obstacle_ending) or {
+		first_obstacle_position := ecs.get_component[ecs.Position](ecs_world, first_obstacle_ending) or {
 			panic(err)
 		}
 
-		second_obstacle_position := ecs.get_entity_component[ecs.Position](second_obstacle_ending) or {
+		second_obstacle_position := ecs.get_component[ecs.Position](ecs_world, second_obstacle_ending) or {
 			panic(err)
 		}
 
-		first_obstacle_collider := ecs.get_entity_component[collision.Collider](first_obstacle_ending) or {
+		first_obstacle_collider := ecs.get_component[collision.Collider](ecs_world, first_obstacle_ending) or {
 			panic(err)
 		}
 
-		second_obstacle_collider := ecs.get_entity_component[collision.Collider](second_obstacle_ending) or {
+		second_obstacle_collider := ecs.get_component[collision.Collider](ecs_world, second_obstacle_ending) or {
 			panic(err)
 		}
 
-		first_obstacle_orientation := ecs.get_entity_component[ecs.RenderData](first_obstacle_ending) or {
+		first_obstacle_orientation := ecs.get_component[ecs.RenderData](ecs_world, first_obstacle_ending) or {
 			panic(err)
 		}
 
@@ -111,15 +111,15 @@ fn find_free_x_pixels(ecs_world ecs.World, obstacle_id int, get_screen_pixels []
 	}
 }
 
-fn get_obstacle_endings_near_future_egg(ecs_world ecs.World, obstacle_id int) []ecs.Entity {
+fn get_obstacle_endings_near_future_egg(ecs_world ecs.World, obstacle_id int) []u64 {
 	query := ecs.query_for_component[obstacle.ObstacleSection]
-	obstacles := ecs.get_entities_with_query(ecs_world, query)
+	obstacles := ecs.get_entities_ids_with_query(ecs_world, query) or { panic(err) }
 
-	mut obstacles_endings := []ecs.Entity{}
+	mut obstacles_endings := []u64{}
 
 	for obstacle in obstacles {
 		// NOTE: continue will never be executed because of `query_for_component` returns only entities with ObstacleSection component.
-		obstacle_section := ecs.get_entity_component[obstacle.ObstacleSection](obstacle) or {
+		obstacle_section := ecs.get_component[obstacle.ObstacleSection](ecs_world, obstacle) or {
 			continue
 		}
 

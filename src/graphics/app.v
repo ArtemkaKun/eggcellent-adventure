@@ -87,16 +87,15 @@ pub fn create_app(ecs_world &ecs.World) &App {
 }
 
 // set_chicken_data sets chicken data (id, components) to the app.
-pub fn set_chicken_data(mut app App, chicken_entity &ecs.Entity) {
-	chicken_render_data_component := ecs.get_entity_component[ecs.RenderData](chicken_entity) or {
-		panic('Chicken entity does not have render data component!')
-	}
+pub fn set_chicken_data(mut app App, chicken_entity_id u64) {
+	chicken_render_data_component := ecs.get_component[ecs.RenderData](app.ecs_world,
+		chicken_entity_id) or { panic('Chicken entity does not have render data component!') }
 
-	chicken_velocity_component := ecs.get_entity_component[ecs.Velocity](chicken_entity) or {
+	chicken_velocity_component := ecs.get_component[ecs.Velocity](app.ecs_world, chicken_entity_id) or {
 		panic('Chicken entity does not have velocity component!')
 	}
 
-	app.chicken_entity_id = chicken_entity.id
+	app.chicken_entity_id = chicken_entity_id
 	app.chicken_render_data_component = chicken_render_data_component
 	app.chicken_velocity_component = chicken_velocity_component
 }
@@ -118,7 +117,7 @@ fn draw_frame(mut app App) {
 	app.graphical_context.begin()
 
 	query := ecs.query_for_two_components[ecs.RenderData, ecs.Position]
-	renderable_entities := ecs.get_entities_with_query(app.ecs_world, query)
+	renderable_entities := ecs.get_entities_ids_with_query(app.ecs_world, query) or { panic(err) }
 
 	for entity in renderable_entities {
 		draw_entity(mut app, entity)
@@ -127,10 +126,10 @@ fn draw_frame(mut app App) {
 	app.graphical_context.end()
 }
 
-fn draw_entity(mut app App, entity ecs.Entity) {
+fn draw_entity(mut app App, entity_id u64) {
 	// NOTE: return will never be reached here, since the query function guarantees that the entity has both components.
-	position := ecs.get_entity_component[ecs.Position](entity) or { return }
-	render_data := ecs.get_entity_component[ecs.RenderData](entity) or { return }
+	position := ecs.get_component[ecs.Position](app.ecs_world, entity_id) or { return }
+	render_data := ecs.get_component[ecs.RenderData](app.ecs_world, entity_id) or { return }
 
 	image_id := render_data.image_id
 
@@ -146,12 +145,12 @@ fn draw_entity(mut app App, entity ecs.Entity) {
 	})
 
 	$if debug_colliders ? {
-		draw_debug_colliders(mut app, entity)
+		draw_debug_colliders(mut app, entity_id)
 	}
 }
 
-fn draw_debug_colliders(mut app App, entity ecs.Entity) {
-	global_polygons := collision.calculate_global_polygons(entity) or { return }
+fn draw_debug_colliders(mut app App, entity_id u64) {
+	global_polygons := collision.calculate_global_polygons(app.ecs_world, entity_id) or { return }
 
 	for polygon in global_polygons {
 		for vertex_id, vertex in polygon {
@@ -184,11 +183,13 @@ fn quit(_ &gg.Event, mut app App) {
 }
 
 fn react_on_input_event(event &gg.Event, mut app App) {
-	ecs.get_entity_component_by_entity_id[chicken.IsControlledByPlayerTag](app.ecs_world,
-		app.chicken_entity_id) or { return }
+	ecs.get_component[chicken.IsControlledByPlayerTag](app.ecs_world, app.chicken_entity_id) or {
+		return
+	}
 
-	mut animation_component := ecs.get_entity_component_by_entity_id[ecs.Animation](app.ecs_world,
-		app.chicken_entity_id) or { return }
+	mut animation_component := ecs.get_component[ecs.Animation](app.ecs_world, app.chicken_entity_id) or {
+		return
+	}
 
 	player_input.react_on_input_event(event, mut app.chicken_render_data_component, mut
 		app.chicken_velocity_component, mut animation_component, get_screen_size(app).width)
