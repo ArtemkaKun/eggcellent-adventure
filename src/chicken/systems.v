@@ -10,8 +10,8 @@ import gg
 // They were adjusted manually to achieve the desired jump behavior.
 // Don't change them unless you know what you are doing.
 const (
-	jump_velocity_x = 0.45
-	jump_velocity_y = -1
+	jump_velocity_x = 0.6
+	jump_velocity_y = -1.25
 )
 
 // spawn_chicken creates a new chicken entity and adds it to the world.
