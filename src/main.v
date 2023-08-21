@@ -13,7 +13,7 @@ import collision
 import common
 
 const (
-	target_fps             = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
+	target_fps             = 60.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
 	time_step_seconds      = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
 	time_step_nanoseconds  = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
 	time_step_milliseconds = int(time_step_seconds * 1e3) // NOTE: This is used only for game loop sleep.
