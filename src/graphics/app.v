@@ -46,13 +46,13 @@ mut:
 	is_quited         bool
 	images_scale      int
 
-	chicken_idle_image gg.Image
+	chicken_animation_frames []gg.Image
 
 	obstacle_section_right_image  gg.Image
 	obstacle_endings_right_images []gg.Image
 	obstacle_image_id_to_y_offset map[int]int
 
-	egg_1_image gg.Image
+	egg_animation_frames []gg.Image
 
 	ecs_world                     &ecs.World
 	chicken_entity_id             u64
@@ -187,8 +187,11 @@ fn react_on_input_event(event &gg.Event, mut app App) {
 	ecs.get_entity_component_by_entity_id[chicken.IsControlledByPlayerTag](app.ecs_world,
 		app.chicken_entity_id) or { return }
 
+	mut animation_component := ecs.get_entity_component_by_entity_id[ecs.Animation](app.ecs_world,
+		app.chicken_entity_id) or { return }
+
 	player_input.react_on_input_event(event, mut app.chicken_render_data_component, mut
-		app.chicken_velocity_component, get_screen_size(app).width)
+		app.chicken_velocity_component, mut animation_component, get_screen_size(app).width)
 }
 
 // start_app starts graphical app.
@@ -222,14 +225,14 @@ pub fn get_obstacle_section_right_image(app App) gg.Image {
 	return app.obstacle_section_right_image
 }
 
-// get_chicken_idle_image returns chicken idle image id.
-pub fn get_chicken_idle_image(app App) gg.Image {
-	return app.chicken_idle_image
+// get_chicken_animation_frames returns chicken animation frames.
+pub fn get_chicken_animation_frames(app App) []gg.Image {
+	return app.chicken_animation_frames
 }
 
-// get_egg_1_image returns egg 1 image id.
-pub fn get_egg_1_image(app App) gg.Image {
-	return app.egg_1_image
+// get_egg_animation_frames returns egg animation frames.
+pub fn get_egg_animation_frames(app App) []gg.Image {
+	return app.egg_animation_frames
 }
 
 // get_images_scale returns images scale.

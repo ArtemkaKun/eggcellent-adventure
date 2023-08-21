@@ -13,9 +13,10 @@ import collision
 import common
 
 const (
-	target_fps            = 144.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
-	time_step_seconds     = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
-	time_step_nanoseconds = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
+	target_fps             = 60.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
+	time_step_seconds      = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
+	time_step_nanoseconds  = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
+	time_step_milliseconds = int(time_step_seconds * 1e3) // NOTE: This is used only for game loop sleep.
 )
 
 const (
@@ -43,7 +44,7 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	screen_size := graphics.get_screen_size(app)
 	images_scale := graphics.get_images_scale(app)
 
-	chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_idle_image(app),
+	chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_animation_frames(app),
 		images_scale, time_step_seconds) or { panic("Can't spawn chicken - ${err}") }
 
 	graphics.set_chicken_data(mut app, chicken_entity)
@@ -61,7 +62,7 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	screen_width := screen_size.width
 	get_screen_pixels := get_all_x_pixels(screen_width)
 
-	egg_polygon_convex_parts := common.load_polygon_and_get_convex_parts(graphics.get_egg_1_image(app).path,
+	egg_polygon_convex_parts := common.load_polygon_and_get_convex_parts(graphics.get_egg_animation_frames(app)[0].path,
 		images_scale) or { panic("Can't load egg's polygon - ${err}") }
 
 	egg_polygon_width := collision.calculate_polygon_collider_width(egg_polygon_convex_parts)
@@ -74,6 +75,8 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	chicken_gravity_component := ecs.get_entity_component[chicken.GravityInfluence](chicken_entity) or {
 		panic('Chicken entity does not have velocity component!')
 	}
+
+	mut egg_entities_to_remove_on_animation_end := []u64{}
 
 	for graphics.is_quited(app) == false {
 		obstacle_id = try_spawn_obstacle_and_egg(mut obstacle_spawner_stopwatch, mut ecs_world,
@@ -89,9 +92,14 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 		destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
 
-		handle_collision(mut ecs_world, chicken_entity) or {
+		handle_collision(mut ecs_world, chicken_entity, mut egg_entities_to_remove_on_animation_end) or {
 			println("Can't handle collision - ${err}")
 		}
+
+		play_animations(mut ecs_world) or { println("Can't play animations - ${err}") }
+
+		remove_egg_entities_on_animation_end(mut egg_entities_to_remove_on_animation_end, mut
+			ecs_world)
 
 		graphics.invoke_frame_draw(mut app)
 
@@ -138,6 +146,18 @@ fn spawn_obstacle(mut ecs_world ecs.World, obstacle_graphical_assets_metadata ob
 		obstacle_min_blocks_count, obstacle_move_vector, obstacle_id)!
 }
 
+fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, obstacle_id int, get_screen_pixels []int, polygon_convex_parts [][]transform.Position, polygon_width f64, polygon_height f64) ! {
+	egg_image_id := graphics.get_egg_animation_frames(app)[0].id
+	egg_image_width := graphics.get_image_width_by_id(mut app, egg_image_id)
+	egg_image_height := graphics.get_image_height_by_id(mut app, egg_image_id)
+
+	egg_x_position := egg.calculate_egg_x_position(ecs_world, egg_image_width, obstacle_id,
+		get_screen_pixels)
+
+	egg.spawn_egg(mut ecs_world, egg_x_position, egg_image_height, graphics.get_egg_animation_frames(app),
+		obstacle_move_vector, polygon_convex_parts, polygon_width, polygon_height)!
+}
+
 fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
 	query := ecs.check_if_entity_has_component[ecs.Position]
 	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
@@ -149,7 +169,7 @@ fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
 	}
 }
 
-fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity) ! {
+fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity, mut egg_entities []u64) ! {
 	if ecs.check_if_entity_has_component[collision.Collider](chicken_entity) == false {
 		return
 	}
@@ -160,7 +180,9 @@ fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity) ! {
 	for entity in entities_to_check {
 		if collision.check_collision(chicken_entity, entity)! {
 			if ecs.check_if_entity_has_component[egg.IsEggTag](entity) == true {
-				ecs.remove_entity(mut ecs_world, entity.id)!
+				mut animation_component := ecs.get_entity_component[ecs.Animation](entity)!
+				animation_component.is_playing = true
+				egg_entities << entity.id
 			} else {
 				ecs.remove_component[chicken.IsControlledByPlayerTag](mut ecs_world, chicken_entity.id)!
 				ecs.remove_component[collision.Collider](mut ecs_world, chicken_entity.id)!
@@ -171,14 +193,26 @@ fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity) ! {
 	}
 }
 
-fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, obstacle_id int, get_screen_pixels []int, polygon_convex_parts [][]transform.Position, polygon_width f64, polygon_height f64) ! {
-	egg_image_id := graphics.get_egg_1_image(app).id
-	egg_image_width := graphics.get_image_width_by_id(mut app, egg_image_id)
-	egg_image_height := graphics.get_image_height_by_id(mut app, egg_image_id)
+fn play_animations(mut ecs_world ecs.World) ! {
+	query := ecs.query_for_two_components[ecs.Animation, ecs.RenderData]
+	entities := ecs.get_entities_with_query(ecs_world, query)
 
-	egg_x_position := egg.calculate_egg_x_position(ecs_world, egg_image_width, obstacle_id,
-		get_screen_pixels)
+	for entity in entities {
+		mut animation_component := ecs.get_entity_component[ecs.Animation](entity)!
+		mut render_data_component := ecs.get_entity_component[ecs.RenderData](entity)!
 
-	egg.spawn_egg(mut ecs_world, egg_x_position, egg_image_height, egg_image_id, obstacle_move_vector,
-		polygon_convex_parts, polygon_width, polygon_height)!
+		ecs.animation_system(mut animation_component, mut render_data_component, time_step_milliseconds)
+	}
+}
+
+fn remove_egg_entities_on_animation_end(mut egg_entities []u64, mut ecs_world ecs.World) {
+	for id in egg_entities {
+		mut animation_component := ecs.get_entity_component_by_entity_id[ecs.Animation](ecs_world,
+			id) or { continue }
+
+		if animation_component.is_playing == false {
+			ecs.remove_entity(mut ecs_world, id) or { continue }
+			egg_entities.delete(id)
+		}
+	}
 }
