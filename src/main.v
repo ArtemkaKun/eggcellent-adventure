@@ -44,20 +44,9 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	screen_size := graphics.get_screen_size(app)
 	images_scale := graphics.get_images_scale(app)
 
-	chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_animation_frames(app),
-		images_scale, time_step_seconds) or { panic("Can't spawn chicken - ${err}") }
-
-	graphics.set_chicken_data(mut app, chicken_entity)
-
 	obstacles_render_data := obstacle.create_obstacles_render_data(mut app) or {
 		panic("Can't create obstacles render data - ${err}")
 	}
-
-	mut obstacle_id := 1
-
-	mut obstacle_spawner_stopwatch := time.new_stopwatch()
-	obstacle_spawner_stopwatch.start()
-	obstacle_spawner_stopwatch.start = obstacles_spawn_rate_milliseconds // HACK: to spawn first obstacle immediately.
 
 	screen_width := screen_size.width
 	get_screen_pixels := get_all_x_pixels(screen_width)
@@ -68,42 +57,68 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	egg_polygon_width := collision.calculate_polygon_collider_width(egg_polygon_convex_parts)
 	egg_polygon_height := collision.calculate_polygon_collider_height(egg_polygon_convex_parts)
 
-	mut chicken_velocity_component := ecs.get_entity_component[ecs.Velocity](chicken_entity) or {
-		panic('Chicken entity does not have velocity component!')
-	}
-
-	chicken_gravity_component := ecs.get_entity_component[chicken.GravityInfluence](chicken_entity) or {
-		panic('Chicken entity does not have velocity component!')
-	}
-
-	mut egg_entities_to_remove_on_animation_end := []u64{}
+	// dynamic
 
 	for graphics.is_quited(app) == false {
-		obstacle_id = try_spawn_obstacle_and_egg(mut obstacle_spawner_stopwatch, mut ecs_world,
-			obstacles_render_data, screen_width, obstacle_id, mut app, get_screen_pixels,
-			egg_polygon_convex_parts, egg_polygon_width, egg_polygon_height) or {
-			panic("Can't spawn obstacle or egg - ${err}")
+		chicken_entity := chicken.spawn_chicken(mut ecs_world, screen_size, graphics.get_chicken_animation_frames(app),
+			images_scale, time_step_seconds) or { panic("Can't spawn chicken - ${err}") }
+
+		graphics.set_chicken_data(mut app, chicken_entity)
+
+		mut obstacle_id := 1
+
+		mut obstacle_spawner_stopwatch := time.new_stopwatch()
+		obstacle_spawner_stopwatch.start()
+		obstacle_spawner_stopwatch.start = obstacles_spawn_rate_milliseconds // HACK: to spawn first obstacle immediately.
+
+		mut chicken_velocity_component := ecs.get_entity_component[ecs.Velocity](chicken_entity) or {
+			panic('Chicken entity does not have velocity component!')
 		}
 
-		chicken.gravity_system(mut chicken_velocity_component, chicken_gravity_component)
-
-		ecs.execute_system_with_two_components[ecs.Velocity, ecs.Position](ecs_world,
-			ecs.movement_system)
-
-		destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
-
-		handle_collision(mut ecs_world, chicken_entity, mut egg_entities_to_remove_on_animation_end) or {
-			println("Can't handle collision - ${err}")
+		chicken_gravity_component := ecs.get_entity_component[chicken.GravityInfluence](chicken_entity) or {
+			panic('Chicken entity does not have velocity component!')
 		}
 
-		play_animations(mut ecs_world) or { println("Can't play animations - ${err}") }
+		mut egg_entities_to_remove_on_animation_end := []u64{}
 
-		remove_egg_entities_on_animation_end(mut egg_entities_to_remove_on_animation_end, mut
-			ecs_world)
+		mut died := false
 
-		graphics.invoke_frame_draw(mut app)
+		for died == false {
+			obstacle_id = try_spawn_obstacle_and_egg(mut obstacle_spawner_stopwatch, mut
+				ecs_world, obstacles_render_data, screen_width, obstacle_id, mut app,
+				get_screen_pixels, egg_polygon_convex_parts, egg_polygon_width, egg_polygon_height) or {
+				panic("Can't spawn obstacle or egg - ${err}")
+			}
 
-		time.sleep(time_step_nanoseconds * time.nanosecond)
+			chicken.gravity_system(mut chicken_velocity_component, chicken_gravity_component)
+
+			ecs.execute_system_with_two_components[ecs.Velocity, ecs.Position](ecs_world,
+				ecs.movement_system)
+
+			destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
+
+			if ecs.check_if_entity_has_component[collision.Collider](chicken_entity) {
+				is_chicken_dead := handle_collision(mut ecs_world, chicken_entity, mut
+					egg_entities_to_remove_on_animation_end) or {
+					panic("Can't handle collision - ${err}")
+				}
+
+				if is_chicken_dead {
+					died = true
+				}
+			}
+
+			play_animations(mut ecs_world) or { println("Can't play animations - ${err}") }
+
+			remove_egg_entities_on_animation_end(mut egg_entities_to_remove_on_animation_end, mut
+				ecs_world)
+
+			graphics.invoke_frame_draw(mut app)
+
+			time.sleep(time_step_nanoseconds * time.nanosecond)
+		}
+
+		ecs.clear_world(mut ecs_world)
 	}
 }
 
@@ -169,11 +184,7 @@ fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
 	}
 }
 
-fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity, mut egg_entities []u64) ! {
-	if ecs.check_if_entity_has_component[collision.Collider](chicken_entity) == false {
-		return
-	}
-
+fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity, mut egg_entities []u64) !bool {
 	query := ecs.query_for_two_components[ecs.Position, collision.Collider]
 	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
 
@@ -186,11 +197,15 @@ fn handle_collision(mut ecs_world ecs.World, chicken_entity ecs.Entity, mut egg_
 			} else {
 				ecs.remove_component[chicken.IsControlledByPlayerTag](mut ecs_world, chicken_entity.id)!
 				ecs.remove_component[collision.Collider](mut ecs_world, chicken_entity.id)!
+
+				return true
 			}
 
 			break
 		}
 	}
+
+	return false
 }
 
 fn play_animations(mut ecs_world ecs.World) ! {
@@ -212,7 +227,7 @@ fn remove_egg_entities_on_animation_end(mut egg_entities []u64, mut ecs_world ec
 
 		if animation_component.is_playing == false {
 			ecs.remove_entity(mut ecs_world, id) or { continue }
-			egg_entities.delete(id)
+			egg_entities.delete(egg_entities.index(id))
 		}
 	}
 }
