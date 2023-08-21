@@ -145,3 +145,9 @@ pub fn remove_component[T](mut ecs_world World, entity_id u64) ! {
 
 	entity.components.delete(component_index)
 }
+
+pub fn clear_world(mut world World) {
+	for entity_id in 0 .. world.entities_id_counter {
+		remove_entity(mut world, entity_id) or { continue }
+	}
+}
