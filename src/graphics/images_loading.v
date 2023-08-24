@@ -47,6 +47,8 @@ fn load_assets(mut app App) ! {
 
 		app.egg_animation_frames << load_image(mut app, egg_frame_asset_path)!
 	}
+
+	app.side_obstacle_right_image = load_image(mut app, common.get_platform_dependent_asset_path('obstacle/side/side_obstacle_right.png'))!
 }
 
 fn load_images_right_obstacle_images(mut app App, root_path string) ! {
