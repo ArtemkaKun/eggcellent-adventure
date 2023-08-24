@@ -79,6 +79,9 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 			panic('Chicken entity does not have velocity component!')
 		}
 
+		obstacle.spawn_side_obstacles(app, images_scale, mut ecs_world, screen_width,
+			obstacle_move_vector)
+
 		mut egg_entities_to_remove_on_animation_end := []u64{}
 
 		mut died := false
@@ -94,6 +97,10 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 			ecs.execute_system_with_two_components[ecs.Velocity, ecs.Position](ecs_world,
 				ecs.movement_system)
+
+			continue_side_obstacles(app, images_scale, mut ecs_world, screen_width, obstacle_move_vector) or {
+				panic("Can't continue side obstacles - ${err}")
+			}
 
 			destroy_entities_below_screen(mut ecs_world, screen_size.height) or {}
 
@@ -228,6 +235,28 @@ fn remove_egg_entities_on_animation_end(mut egg_entities []u64, mut ecs_world ec
 		if animation_component.is_playing == false {
 			ecs.remove_entity(mut ecs_world, id) or { continue }
 			egg_entities.delete(egg_entities.index(id))
+		}
+	}
+}
+
+fn continue_side_obstacles(app graphics.App, images_scale int, mut ecs_world ecs.World, screen_width int, obstacle_move_vector transform.Vector) ! {
+	query := ecs.check_if_entity_has_component[obstacle.EndlessElement]
+	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
+
+	for entity in entities_to_check {
+		mut position := ecs.get_entity_component[ecs.Position](entity)!
+		mut tag := ecs.get_entity_component[obstacle.EndlessElement](entity)!
+
+		if position.y >= 0 && tag.already_continued == false {
+			tag.already_continued = true
+
+			position = &ecs.Position{
+				x: position.x
+				y: 0
+			}
+
+			obstacle.spawn_side_obstacles(app, images_scale, mut ecs_world, screen_width,
+				obstacle_move_vector)
 		}
 	}
 }

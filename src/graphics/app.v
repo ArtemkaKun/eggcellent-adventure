@@ -58,6 +58,8 @@ mut:
 	chicken_entity_id             u64
 	chicken_render_data_component &ecs.RenderData
 	chicken_velocity_component    &ecs.Velocity
+
+	side_obstacle_right_image gg.Image
 }
 
 // create_app creates and sets up graphical app.
@@ -248,4 +250,8 @@ pub fn get_obstacle_endings_right_images(app App) []gg.Image {
 // get_obstacle_image_y_offset returns obstacle image y offset.
 pub fn get_obstacle_image_y_offset(app App, image_id int) int {
 	return app.obstacle_image_id_to_y_offset[image_id]
+}
+
+pub fn get_side_obstacle_right_image(app App) gg.Image {
+	return app.side_obstacle_right_image
 }
