@@ -24,6 +24,7 @@ pub fn spawn_egg(mut ecs_world ecs.World, egg_x_position int, egg_image_height i
 			current_frame_id: 0
 			next_frame_id: 1
 		},
+		ecs.DestroyBelowScreen{},
 		ecs.Velocity{
 			x: obstacle_move_vector.x
 			y: obstacle_move_vector.y

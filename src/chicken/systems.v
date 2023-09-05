@@ -10,8 +10,8 @@ import gg
 // They were adjusted manually to achieve the desired jump behavior.
 // Don't change them unless you know what you are doing.
 const (
-	jump_velocity_x = 0.6
-	jump_velocity_y = -1.25
+	jump_velocity_x = 0.25
+	jump_velocity_y = -0.75
 )
 
 // spawn_chicken creates a new chicken entity and adds it to the world.
@@ -37,7 +37,7 @@ pub fn spawn_chicken(mut ecs_world ecs.World, screen_size gg.Size, chicken_anima
 			next_frame_id: 1
 		},
 		GravityInfluence{
-			force: 2 * time_step_seconds
+			force: 0.01
 		},
 		ecs.Velocity{},
 		IsControlledByPlayerTag{},
