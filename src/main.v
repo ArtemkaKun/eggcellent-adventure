@@ -11,9 +11,10 @@ import egg
 import obstacle
 import collision
 import common
+import math
 
 const (
-	target_fps             = 60.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
+	target_fps             = 120.0 // NOTE: 144.0 is a target value for my phone. Most phones should have 60.0 I think.
 	time_step_seconds      = 1.0 / target_fps // NOTE: This should be used for all game logic. Analog of delta time is some engines.
 	time_step_nanoseconds  = i64(time_step_seconds * 1e9) // NOTE: This is used only for game loop sleep.
 	time_step_milliseconds = int(time_step_seconds * 1e3) // NOTE: This is used only for game loop sleep.
@@ -38,6 +39,13 @@ fn main() {
 	graphics.start_app(mut app)
 }
 
+fn test(mut position ecs.Position, chicken_position_component ecs.Position, screen_height int, obstacle_height f64) {
+	position = &ecs.Position{
+		x: position.x
+		y: (screen_height - obstacle_height) + ((screen_height - chicken_position_component.y) / 2)
+	}
+}
+
 fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 	wait_for_graphic_app_initialization(app)
 
@@ -56,6 +64,12 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 	egg_polygon_width := collision.calculate_polygon_collider_width(egg_polygon_convex_parts)
 	egg_polygon_height := collision.calculate_polygon_collider_height(egg_polygon_convex_parts)
+
+	bottom_obstacle_polygon_convex_parts := common.load_polygon_and_get_convex_parts(graphics.get_bottom_obstacle_image(app).path,
+		images_scale) or { panic("Can't load side obstacle's polygon - ${err}") }
+
+	polygon_width := collision.calculate_polygon_collider_width(bottom_obstacle_polygon_convex_parts)
+	polygon_height := collision.calculate_polygon_collider_height(bottom_obstacle_polygon_convex_parts)
 
 	// dynamic
 
@@ -79,8 +93,26 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 			panic('Chicken entity does not have velocity component!')
 		}
 
+		chicken_position_component := ecs.get_entity_component[ecs.Position](chicken_entity) or {
+			panic('Chicken entity does not have velocity component!')
+		}
+
 		obstacle.spawn_side_obstacles(app, images_scale, mut ecs_world, screen_width,
 			obstacle_move_vector)
+
+		bottom_obstacles_count := int(math.ceil(screen_width / polygon_width))
+
+		mut bottom_obstacles_positions := []&ecs.Position{cap: bottom_obstacles_count}
+
+		for obstacle_index in 0 .. bottom_obstacles_count {
+			bottom_obstacle_entity := obstacle.spawn_bottom_obstacle(mut ecs_world, screen_size.height,
+				polygon_height, bottom_obstacle_polygon_convex_parts, app, polygon_width,
+				obstacle_index)
+
+			bottom_obstacles_positions << ecs.get_entity_component[ecs.Position](bottom_obstacle_entity) or {
+				panic('Bottom obstacle entity does not have position component!')
+			}
+		}
 
 		mut egg_entities_to_remove_on_animation_end := []u64{}
 
@@ -97,6 +129,11 @@ fn start_main_game_loop(mut app graphics.App, mut ecs_world ecs.World) {
 
 			ecs.execute_system_with_two_components[ecs.Velocity, ecs.Position](ecs_world,
 				ecs.movement_system)
+
+			for index in 0 .. bottom_obstacles_positions.len {
+				test(mut bottom_obstacles_positions[index], chicken_position_component,
+					screen_size.height, polygon_height)
+			}
 
 			continue_side_obstacles(app, images_scale, mut ecs_world, screen_width, obstacle_move_vector) or {
 				panic("Can't continue side obstacles - ${err}")
@@ -181,7 +218,7 @@ fn spawn_egg(mut ecs_world ecs.World, mut app graphics.App, obstacle_id int, get
 }
 
 fn destroy_entities_below_screen(mut ecs_world ecs.World, screen_height int) ! {
-	query := ecs.check_if_entity_has_component[ecs.Position]
+	query := ecs.query_for_two_components[ecs.Position, ecs.DestroyBelowScreen]
 	entities_to_check := ecs.get_entities_with_query(ecs_world, query)
 
 	for entity in entities_to_check {

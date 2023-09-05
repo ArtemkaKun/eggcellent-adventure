@@ -242,5 +242,7 @@ fn add_shared_components(mut obstacle_sections [][]ecs.Component, move_vector tr
 			x: move_vector.x
 			y: move_vector.y
 		}
+
+		section_entity << ecs.DestroyBelowScreen{}
 	}
 }

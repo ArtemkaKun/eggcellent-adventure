@@ -26,6 +26,7 @@ pub fn spawn_side_obstacles(app graphics.App, images_scale int, mut ecs_world ec
 			image_id: graphics.get_side_obstacle_right_image(app).id
 			orientation: common.Orientation.right
 		},
+		ecs.DestroyBelowScreen{},
 		EndlessElement{
 			already_continued: false
 		},
@@ -47,6 +48,7 @@ pub fn spawn_side_obstacles(app graphics.App, images_scale int, mut ecs_world ec
 			x: obstacle_move_vector.x
 			y: obstacle_move_vector.y
 		},
+		ecs.DestroyBelowScreen{},
 		ecs.RenderData{
 			image_id: graphics.get_side_obstacle_right_image(app).id
 			orientation: common.Orientation.left

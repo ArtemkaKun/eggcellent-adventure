@@ -36,6 +36,8 @@ pub mut:
 	next_frame_id              int
 }
 
+pub struct DestroyBelowScreen {}
+
 // HACK: This function is a workaround to a limitation in V's interface implementation.
 // In V, a struct automatically implements an interface if it satisfies all of the interface's methods and fields.
 // However, for our empty interface for components, no struct can satisfy it as there are no methods or fields to implement.
@@ -45,5 +47,6 @@ pub mut:
 // The function uses an array to accommodate multiple components, thereby preventing code duplication.
 // This hack should be removed when interface for component will have methods or fields.
 fn component_interface_hack() []Component {
-	return [Position{}, Velocity{}, RenderData{}, Animation{}]
+	return [Position{}, Velocity{}, RenderData{}, Animation{},
+		DestroyBelowScreen{}]
 }

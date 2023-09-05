@@ -60,6 +60,7 @@ mut:
 	chicken_velocity_component    &ecs.Velocity
 
 	side_obstacle_right_image gg.Image
+	bottom_obstacle_image     gg.Image
 }
 
 // create_app creates and sets up graphical app.
@@ -254,4 +255,8 @@ pub fn get_obstacle_image_y_offset(app App, image_id int) int {
 
 pub fn get_side_obstacle_right_image(app App) gg.Image {
 	return app.side_obstacle_right_image
+}
+
+pub fn get_bottom_obstacle_image(app App) gg.Image {
+	return app.bottom_obstacle_image
 }

@@ -49,6 +49,7 @@ fn load_assets(mut app App) ! {
 	}
 
 	app.side_obstacle_right_image = load_image(mut app, common.get_platform_dependent_asset_path('obstacle/side/side_obstacle_right.png'))!
+	app.bottom_obstacle_image = load_image(mut app, common.get_platform_dependent_asset_path('obstacle/bottom/bottom_obstacle.png'))!
 }
 
 fn load_images_right_obstacle_images(mut app App, root_path string) ! {
