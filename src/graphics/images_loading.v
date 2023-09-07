@@ -50,6 +50,11 @@ fn load_assets(mut app App) ! {
 
 	app.side_obstacle_right_image = load_image(mut app, common.get_platform_dependent_asset_path('obstacle/side/side_obstacle_right.png'))!
 	app.bottom_obstacle_image = load_image(mut app, common.get_platform_dependent_asset_path('obstacle/bottom/bottom_obstacle.png'))!
+
+	app.menu_background_image = load_image(mut app, common.get_platform_dependent_asset_path('menu/background.png'))!
+	app.menu_cannon_image = load_image(mut app, common.get_platform_dependent_asset_path('menu/cannon.png'))!
+	app.menu_grass_image = load_image(mut app, common.get_platform_dependent_asset_path('menu/grass.png'))!
+	app.menu_start_game_button = load_image(mut app, common.get_platform_dependent_asset_path('menu/ui/start_game_button.png'))!
 }
 
 fn load_images_right_obstacle_images(mut app App, root_path string) ! {

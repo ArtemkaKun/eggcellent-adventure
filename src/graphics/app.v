@@ -61,6 +61,15 @@ mut:
 
 	side_obstacle_right_image gg.Image
 	bottom_obstacle_image     gg.Image
+
+	menu_background_image  gg.Image
+	menu_cannon_image      gg.Image
+	menu_grass_image       gg.Image
+	menu_start_game_button gg.Image
+
+	menu_start_game_button_position &ecs.Position
+
+	is_game_running bool
 }
 
 // create_app creates and sets up graphical app.
@@ -102,6 +111,10 @@ pub fn set_chicken_data(mut app App, chicken_entity &ecs.Entity) {
 	app.chicken_entity_id = chicken_entity.id
 	app.chicken_render_data_component = chicken_render_data_component
 	app.chicken_velocity_component = chicken_velocity_component
+}
+
+pub fn set_menu_start_game_button_position(mut app App, position &ecs.Position) {
+	app.menu_start_game_button_position = position
 }
 
 fn initialize(mut app App) {
@@ -187,6 +200,33 @@ fn quit(_ &gg.Event, mut app App) {
 }
 
 fn react_on_input_event(event &gg.Event, mut app App) {
+	start_button_x := app.menu_start_game_button_position.x
+	start_button_y := app.menu_start_game_button_position.y
+	start_button_width := get_image_width_by_id(mut app, app.menu_start_game_button.id)
+	start_button_height := get_image_height_by_id(mut app, app.menu_start_game_button.id)
+
+	$if android {
+		if event.typ == .touches_began && event.num_touches > 0 {
+			touch_x := event.touches[0].pos_x
+			touch_y := event.touches[0].pos_y
+
+			if touch_x >= start_button_x && touch_x <= start_button_x + start_button_width
+				&& touch_y >= start_button_y && touch_y <= start_button_y + start_button_height {
+				println('Start button pressed!')
+			}
+		}
+	} $else {
+		if event.typ == .mouse_down && event.mouse_button == .left {
+			mouse_x := event.mouse_x
+			mouse_y := event.mouse_y
+
+			if mouse_x >= start_button_x && mouse_x <= start_button_x + start_button_width
+				&& mouse_y >= start_button_y && mouse_y <= start_button_y + start_button_height {
+				println('Start button pressed!')
+			}
+		}
+	}
+
 	ecs.get_entity_component_by_entity_id[chicken.IsControlledByPlayerTag](app.ecs_world,
 		app.chicken_entity_id) or { return }
 
@@ -259,4 +299,20 @@ pub fn get_side_obstacle_right_image(app App) gg.Image {
 
 pub fn get_bottom_obstacle_image(app App) gg.Image {
 	return app.bottom_obstacle_image
+}
+
+pub fn get_menu_background_image(app App) gg.Image {
+	return app.menu_background_image
+}
+
+pub fn get_menu_cannon_image(app App) gg.Image {
+	return app.menu_cannon_image
+}
+
+pub fn get_menu_grass_image(app App) gg.Image {
+	return app.menu_grass_image
+}
+
+pub fn get_menu_start_game_button(app App) gg.Image {
+	return app.menu_start_game_button
 }
