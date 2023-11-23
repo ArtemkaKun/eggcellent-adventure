@@ -19,7 +19,7 @@ pub:
 
 // CollisionType is an enum that categorizes entities for the purpose of collision detection, used in Collider  component.
 // The flag attribute allows for multiple EntityType values to be combined, enabling entities to be categorized as multiple types.
-[flag]
+@[flag]
 pub enum CollisionType {
 	obstacle
 	chicken

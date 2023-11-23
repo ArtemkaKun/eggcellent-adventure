@@ -2,7 +2,7 @@ module ecs
 
 // World represents the world.
 // It contains a collection of all entities and a counter for unique entity IDs.
-[heap]
+@[heap]
 pub struct World {
 mut:
 	entities_id_counter u64

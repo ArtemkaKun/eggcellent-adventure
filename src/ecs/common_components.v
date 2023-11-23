@@ -8,7 +8,7 @@ import gg
 
 // Position component represents the spatial location of an entity within the game world.
 // It embeds the `Position` struct from the `transform` module.
-[heap]
+@[heap]
 pub struct Position {
 	transform.Position
 }

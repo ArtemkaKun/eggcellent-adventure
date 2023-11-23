@@ -68,7 +68,7 @@ mut:
 	menu_start_game_button gg.Image
 
 	menu_start_game_button_position &ecs.Position
-
+pub mut:
 	is_game_running bool
 }
 
@@ -79,6 +79,7 @@ pub fn create_app(ecs_world &ecs.World) &App {
 		ecs_world: ecs_world
 		chicken_render_data_component: unsafe { nil }
 		chicken_velocity_component: unsafe { nil }
+		menu_start_game_button_position: unsafe { nil }
 	}
 
 	app.graphical_context = gg.new_context(
@@ -212,7 +213,7 @@ fn react_on_input_event(event &gg.Event, mut app App) {
 
 			if touch_x >= start_button_x && touch_x <= start_button_x + start_button_width
 				&& touch_y >= start_button_y && touch_y <= start_button_y + start_button_height {
-				println('Start button pressed!')
+				app.is_game_running = true
 			}
 		}
 	} $else {
@@ -222,7 +223,7 @@ fn react_on_input_event(event &gg.Event, mut app App) {
 
 			if mouse_x >= start_button_x && mouse_x <= start_button_x + start_button_width
 				&& mouse_y >= start_button_y && mouse_y <= start_button_y + start_button_height {
-				println('Start button pressed!')
+				app.is_game_running = true
 			}
 		}
 	}
